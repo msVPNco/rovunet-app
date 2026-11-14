@@ -20,17 +20,23 @@ object PingPresentation {
             val r = sample.result
             val method = sample.cohort?.method.orEmpty()
             val comparableMethod = r is PingResult.Success && if (r.verified) method.startsWith("https:")
-                else r.quick && (method == "tcp" || method.startsWith("handshake:"))
+                else r.quick && (method == "tcp" && !r.handshake || method.startsWith("handshake:") && r.handshake)
             sample.cohort != null && r is PingResult.Success && comparableMethod && r.latencyMs >= 0 &&
                 r == results[p.id] && ProbeCache.fresh(r, now)
         }
         val passed = profiles.filter { success(it) != null }
-        // Sort only within comparable slots. TCP, each handshake protocol, target
-        // and effective network/connection route retain separate measurement cohorts.
-        val queues = passed.groupBy { success(it)!!.cohort }.mapValues { (_, group) ->
-            ArrayDeque(group.sortedBy { (samples.getValue(it.id).result as PingResult.Success).latencyMs })
+        // For quick tests the configured server is the variable being compared:
+        // different server endpoints still measure the same TCP/protocol operation.
+        // HTTPS destinations are control targets, so those remain separate.
+        fun comparison(cohort: Cohort) = when {
+            cohort.method == "tcp" || cohort.method.startsWith("handshake:") -> cohort.copy(target = "configured-endpoint")
+            else -> cohort
         }
-        val ordered = passed.map { queues.getValue(success(it)!!.cohort).removeFirst() }
+        // Keep each method/network group together; never imply a TCP connect and
+        // a protocol-auth handshake or HTTPS request are the same speed metric.
+        val ordered = passed.groupBy { comparison(success(it)!!.cohort!!) }.values.flatMap { group ->
+            group.sortedBy { (samples.getValue(it.id).result as PingResult.Success).latencyMs }
+        }
         val passedIds = passed.map { it.id }.toSet()
         val remaining = profiles.filterNot { it.id in passedIds }
         val (failed, unknown) = remaining.partition { results[it.id]?.let { r -> r is PingResult.Error && ProbeCache.fresh(r, now) } == true }

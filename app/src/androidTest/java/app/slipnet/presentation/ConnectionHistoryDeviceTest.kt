@@ -53,7 +53,7 @@ class ConnectionHistoryDeviceTest {
         } finally { listener.close(); peer.cancelAndJoin(); repository.deleteProfile(id) }
     }
 
-    @Test fun quickCollectionDefersAllTenDnsTypesUntilNoFastPathResponds() = runBlocking<Unit> {
+    @Test fun quickCollectionNeverTestsOrOffersDnsEvenAfterEveryFastPathFails() = runBlocking<Unit> {
         initializeDependencies()
         val listener = ServerSocket(0)
         val peer = async(Dispatchers.IO) { listener.accept().use { it.soTimeout = 5000; it.getInputStream().read() } }
@@ -76,14 +76,51 @@ class ConnectionHistoryDeviceTest {
                 assertEquals(-1, withTimeout(5000) { peer.await() })
                 listener.close()
                 onMain { vm.pingCollection(saved) }
-                val failed = withTimeout(10000) { vm.uiState.first { !it.isPingRunning && it.collectionPrompt } }
+                val failed = withTimeout(10000) { vm.uiState.first { !it.isPingRunning && it.pingResults[ids.first()] is PingResult.Error } }
+                assertFalse(failed.collectionPrompt)
                 assertTrue(failed.collectionQuick)
                 assertFalse(failed.collectionDetailed)
                 assertTrue(ids.drop(1).all { failed.pingResults[it] == null })
                 assertEquals(session, manager.currentSessionId)
-                onMain { vm.dismissCollectionPrompt() }
+                // A stale prompt callback must not re-enter quick DNS either.
+                onMain { vm.acceptCollectionPrompt() }
+                assertFalse(vm.uiState.value.isPingRunning)
+                assertTrue(ids.drop(1).all { vm.uiState.value.pingResults[it] == null })
             }
         } finally { listener.close(); peer.cancelAndJoin(); ids.forEach { repository.deleteProfile(it) } }
+    }
+
+    @Test fun quickCollectionTestsExactlyItsSixOrTwentyFastRoutesAndNoDns() = runBlocking<Unit> {
+        initializeDependencies()
+        val dnsTypes = listOf(TunnelType.DNSTT, TunnelType.DNSTT_SSH, TunnelType.NOIZDNS, TunnelType.NOIZDNS_SSH,
+            TunnelType.VAYDNS, TunnelType.VAYDNS_SSH, TunnelType.SLIPSTREAM, TunnelType.SLIPSTREAM_SSH, TunnelType.SOAR, TunnelType.SOAR_SSH)
+        for (count in listOf(6, 20)) {
+            val listener = ServerSocket(0)
+            val peer = async(Dispatchers.IO) { repeat(count) { listener.accept().use { socket ->
+                socket.soTimeout = 5000; assertEquals(-1, socket.getInputStream().read())
+            } } }
+            val group = "code49-fast-only-" + UUID.randomUUID()
+            val fast = (1..count).map { ServerProfile(name = "Synthetic fast $it", collectionId = group,
+                domain = "127.0.0.1", socks5ServerPort = listener.localPort, tunnelType = TunnelType.SOCKS5) }
+            val dns = dnsTypes.map { ServerProfile(name = "Synthetic DNS", collectionId = group, domain = "example.invalid", tunnelType = it) }
+            val ids = repository.insertCollection(fast + dns)
+            try {
+                openScreen { vm, manager ->
+                    val saved = vm.uiState.value.profiles.single { it.id == ids.first() }
+                    val session = manager.currentSessionId
+                    val selection = repository.getActiveProfile().first()?.id
+                    onMain { vm.pingCollection(saved) }
+                    val done = withTimeout(20_000) { vm.uiState.first { state -> !state.isPingRunning &&
+                        ids.take(count).all { state.pingResults[it] is PingResult.Success } } }
+                    assertEquals(count, ids.take(count).count { done.pingResults[it] is PingResult.Success })
+                    assertTrue(ids.drop(count).all { done.pingResults[it] == null })
+                    assertFalse(done.collectionPrompt)
+                    assertEquals(session, manager.currentSessionId)
+                    assertEquals(selection, repository.getActiveProfile().first()?.id)
+                    withTimeout(5000) { peer.await() }
+                }
+            } finally { listener.close(); peer.cancelAndJoin(); ids.forEach { repository.deleteProfile(it) } }
+        }
     }
 
     private suspend fun initializeDependencies() {

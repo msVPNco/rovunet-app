@@ -42,7 +42,7 @@ class Post48PingPresentationTest {
         assertEquals(profiles, ProfileRanking.sort(profiles, results))
     }
 
-    @Test fun methodsTargetsAndRoutesAreSortedOnlyWithinTheirOwnStableSlots() {
+    @Test fun quickMethodsAndRoutesStaySeparateWhileConfiguredEndpointsSortByLatency() {
         val profiles = (1L..8L).map { p(it) }
         val results = mapOf(1L to ok(80), 2L to ok(70).copy(handshake = true), 3L to ok(60), 4L to ok(50),
             5L to ok(20), 6L to ok(10).copy(handshake = true), 7L to ok(5), 8L to ok(1))
@@ -51,7 +51,19 @@ class Post48PingPresentationTest {
         val route = tcp.copy(route = "different-network")
         val cohorts = listOf(tcp, handshake, target, route, tcp, handshake, target, route)
         val samples = profiles.mapIndexed { i, p -> p.id to PingPresentation.Sample(results.getValue(p.id), cohorts[i]) }.toMap()
-        assertEquals(listOf(5L, 6L, 7L, 8L, 1L, 2L, 3L, 4L), order(profiles, results, samples))
+        assertEquals(listOf(7L, 5L, 3L, 1L, 6L, 2L, 8L, 4L), order(profiles, results, samples))
+    }
+
+    @Test fun differentQuickEndpointsSortUsefullyWhileDifferentHttpsControlTargetsDoNotMix() {
+        val profiles = listOf(p(1), p(2))
+        val results = mapOf(1L to ok(90), 2L to ok(10))
+        val samples = mapOf(1L to PingPresentation.Sample(results.getValue(1), tcp),
+            2L to PingPresentation.Sample(results.getValue(2), tcp.copy(target = "other.invalid:8443")))
+        assertEquals(listOf(2L, 1L), order(profiles, results, samples))
+        val httpsResults = results.mapValues { (_, r) -> r.copy(verified = true, quick = false) }
+        val httpsSamples = mapOf(1L to PingPresentation.Sample(httpsResults.getValue(1), tcp.copy(method = "https:3", target = "https://a.invalid/generate_204")),
+            2L to PingPresentation.Sample(httpsResults.getValue(2), tcp.copy(method = "https:3", target = "https://b.invalid/generate_204")))
+        assertEquals(listOf(1L, 2L), order(profiles, httpsResults, httpsSamples))
     }
 
     @Test fun expiredChangedOrUnknownMeasurementsNeverBecomeZeroLatencySuccesses() {
