@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
 """Build the constrained AWG child from pinned, GPL-3.0 Mihomo sources."""
-import os,pathlib,shutil,subprocess,tempfile
+import hashlib,os,pathlib,shutil,subprocess,tempfile
 ROOT=pathlib.Path(__file__).resolve().parents[2]
 PIN='3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8'
 def run(args,**kw):subprocess.run([str(x) for x in args],check=True,**kw)
+def record_probe_mapping(abi,binary):
+ # An old prebuilt child must never be packaged with the new Kotlin capability.
+ source=(ROOT/'tools/native/awg/probe.go').read_bytes().replace(b'\r\n',b'\n')
+ receipt=ROOT/'app/.native-receipts/awg'/f'{abi}.sha256'
+ receipt.parent.mkdir(parents=True,exist_ok=True)
+ receipt.write_text('probe-mapping-v2\n'+hashlib.sha256(source).hexdigest()+'\n'+hashlib.sha256(binary.read_bytes()).hexdigest()+'\n'+PIN+'\n',encoding='utf-8')
 with tempfile.TemporaryDirectory(prefix='rovunet-awg-build-') as tmp:
  source=pathlib.Path(tmp)/'mihomo'
- run(['git','clone','--no-checkout','https://github.com/MetaCubeX/mihomo.git',source]);run(['git','checkout',PIN],cwd=source)
+ run(['git','clone','--filter=blob:none','--no-checkout','https://github.com/MetaCubeX/mihomo.git',source]);run(['git','checkout',PIN],cwd=source)
  # Backport upstream c65570ed0924a7e48a48160463c68015b9a84ca8 / PR3359.
  # Preserve the reviewed core pin; domain-length byte arithmetic must not crash the child.
  patch=ROOT/'tools/native/mihomo-socks-domain.patch'
@@ -27,10 +33,13 @@ with tempfile.TemporaryDirectory(prefix='rovunet-awg-build-') as tmp:
   run([go,'build','-trimpath','-ldflags=-s -w -checklinkname=0','-o',os.environ['ROVUNET_AWG_HOST'],'./cmd/rovunet-awg'],cwd=source)
  else:
   ndk=pathlib.Path(os.environ['ANDROID_NDK_HOME'])
+  host='windows-x86_64' if os.name=='nt' else 'linux-x86_64'
   for abi,arch,target in [('arm64-v8a','arm64','aarch64-linux-android24'),('armeabi-v7a','arm','armv7a-linux-androideabi24'),('x86_64','amd64','x86_64-linux-android24')]:
-   env=os.environ.copy();env.update(GOOS='android',GOARCH=arch,GOARM='7',CGO_ENABLED='1',CC=str(ndk/'toolchains/llvm/prebuilt/linux-x86_64/bin'/(target+'-clang')))
+   compiler=ndk/'toolchains/llvm/prebuilt'/host/'bin'/(target+'-clang'+('.cmd' if os.name=='nt' else ''))
+   env=os.environ.copy();env.update(GOOS='android',GOARCH=arch,GOARM='7',CGO_ENABLED='1',CC=str(compiler))
    out=ROOT/'app/src/main/jniLibs'/abi/'librovunet_awg.so';out.parent.mkdir(parents=True,exist_ok=True)
    run([go,'build','-trimpath','-buildmode=pie','-ldflags=-s -w -checklinkname=0','-o',out,'./cmd/rovunet-awg'],cwd=source,env=env)
+   record_probe_mapping(abi,out)
   fixture=ROOT/'app/build/rovunet-test-fixtures/udp-protocols'
   fixture.parent.mkdir(parents=True,exist_ok=True)
   run([go,'test','-c','-o',fixture,'./cmd/rovunet-awg'],cwd=source)

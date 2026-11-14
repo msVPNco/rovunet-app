@@ -18,7 +18,7 @@ class ProtocolHandshakeDeviceTest {
             File(native, "libveyra_core_launcher.so"), certificates)
         val links = fixture.getJSONArray("links")
         try {
-            repeat(3) { index ->
+            repeat(links.length()) { index ->
                 val link = links.getString(index)
                 assertTrue(ProtocolHandshake.supports(link))
                 try { assertTrue(withTimeout(15000) { measure(link) } >= 0) }
@@ -26,11 +26,14 @@ class ProtocolHandshakeDeviceTest {
                 assertEquals(before, app.slipnet.tunnel.XrayBridge.activeEndpoint)
             }
             val stored = certificates.listFiles().orEmpty().filter { it.extension == "json" }.associate { it.name to it.readText() }
-            assertEquals(2, stored.size)
-            repeat(2) { offset -> assertTrue(withTimeout(15000) { measure(links.getString(offset + 1)) } >= 0) }
+            assertEquals(links.length() - 1, stored.size)
+            repeat(links.length() - 1) { offset -> assertTrue(withTimeout(15000) { measure(links.getString(offset + 1)) } >= 0) }
             assertEquals(stored, certificates.listFiles().orEmpty().filter { it.extension == "json" }.associate { it.name to it.readText() })
             val failed = runCatching { withTimeout(15000) { measure(fixture.getString("wrongWireguard")) } }
             assertTrue("Wrong WireGuard key was accepted", failed.isFailure)
+            val wrongMask = fixture.getString("wrongHysteriaMask")
+            assertTrue("Wrong HY2 obfuscation secret was accepted", runCatching { withTimeout(15000) { measure(wrongMask) } }.isFailure)
+            assertEquals(stored, certificates.listFiles().orEmpty().filter { it.extension == "json" }.associate { it.name to it.readText() })
             val pending = async(Dispatchers.IO) { measure(fixture.getString("wrongWireguard")) }
             delay(200)
             withTimeout(4000) { pending.cancelAndJoin() }

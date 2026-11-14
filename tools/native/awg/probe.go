@@ -47,12 +47,40 @@ func probeMapping(data []byte) (map[string]any, error) {
 		if !ok || ts["allowInsecure"] == true || ts["cipherSuites"] != nil {
 			return nil, errors.New("TLS verification required")
 		}
-		// Port hopping/finalmask profiles need the original Xray transport. Do not
-		// silently simplify an imported mask or measure another transport instead.
-		if out.Stream["finalmask"] != nil {
-			return nil, errors.New("unsupported probe mask")
-		}
 		proxy = map[string]any{"type": "hysteria2", "server": out.Settings["address"], "port": out.Settings["port"], "password": hs["auth"], "sni": ts["serverName"], "skip-cert-verify": false}
+		if alpn := ts["alpn"]; alpn != nil {
+			values, ok := alpn.([]any)
+			if !ok || len(values) != 1 || values[0] != "h3" {
+				return nil, errors.New("unsupported probe ALPN")
+			}
+			proxy["alpn"] = values
+		}
+		if value := out.Stream["finalmask"]; value != nil {
+			// Only the exact Salamander layer has an equivalent in the pinned
+			// helper. Never drop hopping, TCP masks or another UDP layer.
+			mask, ok := value.(map[string]any)
+			if !ok || len(mask) != 1 {
+				return nil, errors.New("unsupported probe mask")
+			}
+			layers, ok := mask["udp"].([]any)
+			if !ok || len(layers) != 1 {
+				return nil, errors.New("unsupported probe mask")
+			}
+			layer, ok := layers[0].(map[string]any)
+			if !ok || len(layer) != 2 || layer["type"] != "salamander" {
+				return nil, errors.New("unsupported probe mask")
+			}
+			settings, ok := layer["settings"].(map[string]any)
+			if !ok || len(settings) != 1 {
+				return nil, errors.New("unsupported probe mask")
+			}
+			password, ok := settings["password"].(string)
+			if !ok || password == "" {
+				return nil, errors.New("missing obfuscation password")
+			}
+			proxy["obfs"] = "salamander"
+			proxy["obfs-password"] = password
+		}
 	case "wireguard":
 		addresses, ok := out.Settings["address"].([]any)
 		if !ok {
@@ -175,5 +203,5 @@ func runProbe() error {
 	if err := handshaker.RovunetHandshake(ctx); err != nil {
 		return &probeError{"handshake", err}
 	}
-	return json.NewEncoder(os.Stdout).Encode(map[string]any{"kind": "protocol-handshake", "latencyMs": time.Since(started).Milliseconds()})
+	return json.NewEncoder(os.Stdout).Encode(map[string]any{"kind": "protocol-handshake", "mappingRevision": 2, "latencyMs": time.Since(started).Milliseconds()})
 }

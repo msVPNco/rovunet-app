@@ -43,10 +43,11 @@ func probeChild(t *testing.T, outbound map[string]any, directory string) (time.D
 	}
 	if err == nil {
 		var result struct {
-			Kind      string
-			LatencyMs int64
+			Kind            string
+			LatencyMs       int64
+			MappingRevision int
 		}
-		if json.Unmarshal(output, &result) != nil || result.Kind != "protocol-handshake" || result.LatencyMs < 0 {
+		if json.Unmarshal(output, &result) != nil || result.Kind != "protocol-handshake" || result.LatencyMs < 0 || result.MappingRevision != 2 {
 			t.Fatalf("Invalid handshake evidence: %s", output)
 		}
 	}
@@ -104,14 +105,22 @@ func TestWireGuardProbeRequiresTheRealPeerWithoutAnyInternetDestination(t *testi
 }
 
 func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.T) {
-	for _, kind := range []string{"tuic", "hysteria2"} {
+	for _, kind := range []string{"tuic", "hysteria2", "hysteria2-salamander"} {
 		t.Run(kind, func(t *testing.T) {
 			cert, key := testCertificate(t)
 			certPEM, _ := os.ReadFile(cert)
 			keyPEM, _ := os.ReadFile(key)
 			port := freePort(t)
 			password := "synthetic-password"
-			listener := map[string]any{"name": "peer", "type": kind, "listen": "127.0.0.1", "port": port, "certificate": string(certPEM), "private-key": string(keyPEM), "alpn": []string{"h3"}}
+			serverType := kind
+			if kind == "hysteria2-salamander" {
+				serverType = "hysteria2"
+			}
+			listener := map[string]any{"name": "peer", "type": serverType, "listen": "127.0.0.1", "port": port, "certificate": string(certPEM), "private-key": string(keyPEM), "alpn": []string{"h3"}}
+			if kind == "hysteria2-salamander" {
+				listener["obfs"] = "salamander"
+				listener["obfs-password"] = "synthetic-mask"
+			}
 			if kind == "tuic" {
 				listener["users"] = map[string]string{"00000000-0000-4000-8000-000000000001": password}
 			} else {
@@ -122,8 +131,11 @@ func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.
 			defer func() { peer.Process.Kill(); peer.Wait() }()
 			settings := map[string]any{"name": "proxy", "type": "tuic", "server": "127.0.0.1", "port": port, "password": password, "uuid": "00000000-0000-4000-8000-000000000001", "sni": "localhost", "alpn": []string{"h3"}, "skip-cert-verify": false}
 			out := map[string]any{"protocol": "tuic", "settings": settings}
-			if kind == "hysteria2" {
+			if serverType == "hysteria2" {
 				out = map[string]any{"protocol": "hysteria", "settings": map[string]any{"version": 2, "address": "127.0.0.1", "port": port}, "streamSettings": map[string]any{"network": "hysteria", "tlsSettings": map[string]any{"serverName": "localhost"}, "hysteriaSettings": map[string]any{"auth": password}}}
+			}
+			if kind == "hysteria2-salamander" {
+				out["streamSettings"].(map[string]any)["finalmask"] = map[string]any{"udp": []any{salamanderFixture("synthetic-mask")}}
 			}
 			directory := t.TempDir()
 			for attempt := 0; attempt < 2; attempt++ {
@@ -136,13 +148,21 @@ func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.
 				t.Fatal("Certificate was not stored once", len(pins), err)
 			}
 			before, _ := os.ReadFile(pins[0])
-			if kind == "hysteria2" {
+			if serverType == "hysteria2" {
 				auth := out["streamSettings"].(map[string]any)["hysteriaSettings"].(map[string]any)
 				auth["auth"] = "wrong-synthetic-password"
 				if _, err := probeChild(t, out, directory); err == nil {
 					t.Fatal("Hysteria authentication failure became handshake success")
 				}
 				auth["auth"] = password
+			}
+			if kind == "hysteria2-salamander" {
+				mask := out["streamSettings"].(map[string]any)["finalmask"].(map[string]any)["udp"].([]any)[0].(map[string]any)["settings"].(map[string]any)
+				mask["password"] = "wrong-synthetic-mask"
+				if _, err := probeChild(t, out, directory); err == nil {
+					t.Fatal("Wrong obfuscation secret became handshake success")
+				}
+				mask["password"] = "synthetic-mask"
 			}
 			if kind == "tuic" {
 				settings["sni"] = "wrong.example.invalid"

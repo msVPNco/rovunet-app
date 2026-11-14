@@ -18,6 +18,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -102,6 +103,10 @@ func runUdpDeviceFixture() error {
 	if err != nil {
 		return err
 	}
+	maskedHy2Port, err := udpFixturePort()
+	if err != nil {
+		return err
+	}
 	uuid, password := "00000000-0000-4000-8000-000000000001", "synthetic-only"
 	listeners := []any{}
 	for kind, port := range map[string]int{"tuic": tuicPort, "hysteria2": hy2Port} {
@@ -111,6 +116,9 @@ func runUdpDeviceFixture() error {
 		}
 		listeners = append(listeners, map[string]any{"name": kind, "type": kind, "listen": "0.0.0.0", "port": port, "users": users, "certificate": certificate, "private-key": private, "alpn": []string{"h3"}})
 	}
+	listeners = append(listeners, map[string]any{"name": "hy2-salamander", "type": "hysteria2", "listen": "0.0.0.0", "port": maskedHy2Port,
+		"users": map[string]string{"synthetic": password}, "certificate": certificate, "private-key": private, "alpn": []string{"h3"},
+		"obfs": "salamander", "obfs-password": "synthetic-mask"})
 	raw, _ := json.Marshal(map[string]any{"mode": "rule", "log-level": "silent", "dns": map[string]bool{"enable": false}, "listeners": listeners, "rules": []string{"MATCH,REJECT"}})
 	cfg, err := config.Parse(raw)
 	if err != nil {
@@ -121,7 +129,9 @@ func runUdpDeviceFixture() error {
 	wgLink := func(public []byte) string {
 		return fmt.Sprintf("[Interface]\nPrivateKey = %s\nAddress = 10.77.0.2/32\n[Peer]\nPublicKey = %s\nEndpoint = 10.0.2.2:%d\nAllowedIPs = 0.0.0.0/0\n", base64.StdEncoding.EncodeToString(clientKey.Bytes()), base64.StdEncoding.EncodeToString(public), wgPort)
 	}
-	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"links": []string{wgLink(serverKey.PublicKey().Bytes()), fmt.Sprintf("tuic://%s:%s@10.0.2.2:%d?sni=localhost&alpn=h3", uuid, password, tuicPort), fmt.Sprintf("hy2://%s@10.0.2.2:%d?sni=localhost", password, hy2Port)}, "wrongWireguard": wgLink(wrongKey.PublicKey().Bytes())}); err != nil {
+	maskedLink := fmt.Sprintf("hy2://%s@10.0.2.2:%d?sni=localhost&obfs=salamander&obfs-password=synthetic-mask", password, maskedHy2Port)
+	if err = json.NewEncoder(os.Stdout).Encode(map[string]any{"links": []string{wgLink(serverKey.PublicKey().Bytes()), fmt.Sprintf("tuic://%s:%s@10.0.2.2:%d?sni=localhost&alpn=h3", uuid, password, tuicPort), fmt.Sprintf("hy2://%s@10.0.2.2:%d?sni=localhost", password, hy2Port), maskedLink},
+		"wrongWireguard": wgLink(wrongKey.PublicKey().Bytes()), "wrongHysteriaMask": strings.Replace(maskedLink, "obfs-password=synthetic-mask", "obfs-password=wrong-synthetic-mask", 1)}); err != nil {
 		return err
 	}
 	stop := make(chan os.Signal, 1)

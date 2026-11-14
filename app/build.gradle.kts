@@ -483,11 +483,24 @@ ksp {
 // Missing native assets must fail the build rather than advertise unusable protocols.
 val verifyVeyraCore by tasks.registering {
     doLast {
+        fun digest(bytes: ByteArray) = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
+            .joinToString("") { "%02x".format(it.toInt() and 255) }
+        val probeSource = rootProject.file("tools/native/awg/probe.go").readText().replace("\r\n", "\n").toByteArray(Charsets.UTF_8)
         for (abi in listOf("arm64-v8a", "armeabi-v7a", "x86_64")) {
             for (binary in listOf("libveyra_xray.so", "libveyra_core_launcher.so")) {
                 check(file("src/main/jniLibs/$abi/$binary").isFile) {
                     "Missing Veyra core for $abi; run tools/veyra/prepare-native.py first"
                 }
+            }
+            val helper = file("src/main/jniLibs/$abi/librovunet_awg.so")
+            val receipt = file(".native-receipts/awg/$abi.sha256")
+            check(helper.isFile && receipt.isFile) {
+                "HY2 Salamander requires a rebuilt AWG probe and source receipt for $abi; frozen code48 native bytes cannot be reused"
+            }
+            val lines = receipt.readLines()
+            check(lines.size == 4 && lines[0] == "probe-mapping-v2" && lines[1] == digest(probeSource) &&
+                lines[2] == digest(helper.readBytes()) && lines[3] == "3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8") {
+                "AWG probe source/binary mismatch for $abi; rebuild with tools/native/build-awg.py before packaging"
             }
         }
     }
