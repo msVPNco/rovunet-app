@@ -14,4 +14,8 @@
     <string name="account_status_hours">%1$d hours left</string>
     <string name="account_status_minutes">%1$d minutes left</string>
     <string name="account_status_summary">%1$s · %2$s</string>
+    <string name="account_status_volume_limit">%1$s %2$s limit</string>
+    <string name="account_status_expires_at">Expires %1$s</string>
+    <string name="account_status_hold">Account status on hold</string>
+    <string name="account_status_archived">Account archived</string>
 </resources>

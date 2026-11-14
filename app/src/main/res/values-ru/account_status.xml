@@ -14,4 +14,8 @@
     <string name="account_status_hours">Осталось часов: %1$d</string>
     <string name="account_status_minutes">Осталось минут: %1$d</string>
     <string name="account_status_summary">%1$s · %2$s</string>
+    <string name="account_status_volume_limit">Лимит: %1$s %2$s</string>
+    <string name="account_status_expires_at">Действует до %1$s</string>
+    <string name="account_status_hold">Статус аккаунта требует проверки</string>
+    <string name="account_status_archived">Аккаунт архивирован</string>
 </resources>

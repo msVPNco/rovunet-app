@@ -143,6 +143,9 @@ class VpnConnectionManager @Inject constructor(
 
     private var pendingProfile: ServerProfile? = null
     private var pendingChain: ProfileChain? = null
+    /** Transient visual ownership, independent of the persisted user connection history. */
+    var indicatorProfileId: Long? = null
+        private set
 
     init {
         // Observe VPN repository state
@@ -179,6 +182,7 @@ class VpnConnectionManager @Inject constructor(
             return 0
         }
 
+        indicatorProfileId = profile.id
         if (profile.needsCredentials) {
             _connectionState.value = ConnectionState.Error(SAVED_CREDENTIALS_UNAVAILABLE)
             return 0
@@ -228,6 +232,7 @@ class VpnConnectionManager @Inject constructor(
     fun reconnect(profile: ServerProfile, automatic: Boolean = false) {
         if (!automatic) cancelAutomatic?.invoke()
         if (_connectionState.value is ConnectionState.Disconnecting) return
+        indicatorProfileId = profile.id
         app.slipnet.util.ConnectionDiagnostics.record(app.slipnet.util.ConnectionDiagnostics.Event.RECONNECT_REQUEST)
         if (profile.needsCredentials) {
             if (_connectionState.value.isDisconnected) _connectionState.value = ConnectionState.Error(SAVED_CREDENTIALS_UNAVAILABLE)
@@ -275,11 +280,13 @@ class VpnConnectionManager @Inject constructor(
         }
 
         if (firstProfile.needsCredentials) {
+            indicatorProfileId = null
             _connectionState.value = ConnectionState.Error(SAVED_CREDENTIALS_UNAVAILABLE)
             return
         }
         val sessionId = sessions.begin()
         app.slipnet.util.ConnectionDiagnostics.begin(sessionId, "CHAIN")
+        indicatorProfileId = null
         abortedStarts.removeAll { it < sessionId - 16 }
         pendingProfile = firstProfile
         pendingChain = chain

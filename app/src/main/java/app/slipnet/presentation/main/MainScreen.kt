@@ -93,6 +93,10 @@ import androidx.compose.material3.Button
 import androidx.compose.ui.platform.testTag
 import app.slipnet.presentation.theme.SoftPopFab
 import app.slipnet.presentation.theme.SoftPopGlass
+import app.slipnet.presentation.theme.connectionActionColors
+import app.slipnet.presentation.theme.connectionActionDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import app.slipnet.presentation.theme.softPopBackground
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -954,7 +958,7 @@ private fun MainScreenContent(
                                         uiState.dataPathState, uiState.dataPathNoticeUntilElapsedMs, android.os.SystemClock.elapsedRealtime())) item(key = "data-path-check") {
                                     DataPathCheckCard(uiState.dataPathState)
                                 }
-                                uiState.profiles.groupBy { ProfileCollections.key(it) }.values.forEach { collection ->
+                                app.slipnet.domain.model.ConnectionRecency.collections(uiState.profiles).forEach { collection ->
                                     val representative = collection.first()
                                     val collectionKey = ProfileCollections.key(representative)
                                     val selected = collectionKey == uiState.selectedCollection
@@ -962,11 +966,16 @@ private fun MainScreenContent(
                                         CollectionCard(
                                             profiles = collection, results = uiState.pingResults,
                                             accountStatus = uiState.accountStatuses[representative.collectionId]?.view(
-                                                elapsed = maxOf(statusClock, android.os.SystemClock.elapsedRealtime())),
+                                                elapsed = maxOf(statusClock, android.os.SystemClock.elapsedRealtime()))
+                                                ?: if (representative.collectionId in uiState.subscriptionIds && !representative.collectionId.startsWith("public:"))
+                                                    app.slipnet.data.subscription.AccountStatusView(null, null, false,
+                                                        app.slipnet.data.subscription.AccountSeverity.UNKNOWN) else null,
                                             selected = selected, expanded = expandedCollection == collectionKey,
                                             connectedProfileId = uiState.connectedProfileId?.takeIf { id -> collection.any { it.id == id } },
                                             manualProfileId = viewModel.preferredProfile(collection)?.id,
                                             connecting = collection.any { it.id == uiState.connectingProfileId } && uiState.connectionState.isConnecting,
+                                            connectionIndicator = if (collection.any { it.id == uiState.connectionOwnerProfileId })
+                                                uiState.connectionState.indicator else app.slipnet.domain.model.ConnectionIndicator.DISCONNECTED,
                                             busy = uiState.isPingRunning || uiState.collectionPrompt,
                                             canConnect = uiState.connectionState !is ConnectionState.Disconnecting &&
                                                 (!uiState.connectionState.isConnecting || collection.any { it.id == uiState.connectingProfileId }),
@@ -2379,7 +2388,7 @@ private fun formatCountdown(totalSeconds: Int): String {
 // ── Connect FAB ─────────────────────────────────────────────────────────
 
 @Composable
-private fun ConnectFab(
+internal fun ConnectFab(
     connectionState: ConnectionState,
     hasProfile: Boolean,
     snowflakeBootstrapProgress: Int,
@@ -2390,16 +2399,9 @@ private fun ConnectFab(
     val isConnecting = connectionState is ConnectionState.Connecting ||
             connectionState is ConnectionState.Disconnecting
 
-    val statusColor by animateColorAsState(
-        targetValue = when {
-            isConnected -> ConnectedGreen
-            isConnecting -> ConnectingOrange
-            connectionState is ConnectionState.Error -> DisconnectedRed
-            else -> MaterialTheme.colorScheme.primary
-        },
-        animationSpec = tween(300),
-        label = "connectFabColor"
-    )
+    val actionColors = connectionActionColors(connectionState.indicator)
+    val actionDescription = connectionActionDescription(connectionState.indicator)
+    val statusColor by animateColorAsState(actionColors.container, tween(300), label = "connectFabColor")
 
     val pulseScale = if (isConnecting) {
         val transition = rememberInfiniteTransition(label = "connectionPulse")
@@ -2417,18 +2419,15 @@ private fun ConnectFab(
         SoftPopFab(
             onClick = onToggleConnection,
             containerColor = statusColor,
+            contentColor = actionColors.content,
             modifier = Modifier
-                .size(56.dp)
+                .size(56.dp).testTag("main-connect").semantics { stateDescription = actionDescription }
                 .then(if (isConnecting) Modifier.scale(pulseScale) else Modifier),
         ) {
             Icon(
                 imageVector = Icons.Default.PowerSettingsNew,
                 contentDescription = if (isConnected) "Disconnect" else "Connect",
-                tint = when {
-                    isConnected || isConnecting -> MaterialTheme.colorScheme.onPrimary
-                    hasProfile -> MaterialTheme.colorScheme.onPrimary
-                    else -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
-                }
+                tint = actionColors.content.copy(alpha = if (hasProfile) 1f else .5f)
             )
         }
     }

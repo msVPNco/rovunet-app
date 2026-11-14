@@ -11,7 +11,9 @@ data class PrivateAccountStatusEntity(val subscriptionId: String, val sourceFing
     val serverId: String, val accountId: String, val highWater: Long, val payload: String,
     val checkedAt: Long, val checkedElapsed: Long, val serverTime: Long, val error: String) {
     internal fun binding() = PrivateStatusBinding(sourceFingerprint, serverId, accountId, highWater)
-    fun display() = AccountStatusEntity(subscriptionId, sourceFingerprint, payload, checkedAt, checkedElapsed, serverTime, error)
+    fun display() = AccountStatusEntity(subscriptionId, sourceFingerprint,
+        runCatching { PrivateStatusCache.read(payload).current.json() }.getOrDefault(""),
+        checkedAt, checkedElapsed, serverTime, error)
 }
 
 @Dao

@@ -90,8 +90,8 @@ class SoftPopUiDeviceTest {
                     var captured: Bitmap? = null
                     compose.waitUntil(15000) {
                         val frame = requireNotNull(inst.uiAutomation.takeScreenshot())
-                        // The new visible test button makes cards taller; sample the outer
-                        // gutter so the theme check cannot mistake a card for the background.
+                        // Sample the outer gutter so compact cards cannot be mistaken
+                        // for the underlying theme background.
                         val background = frame.getPixel(2, frame.height * 2 / 3)
                         val surface = frame.getPixel(card.center.x.toInt().coerceIn(0, frame.width - 1),
                             card.center.y.toInt().coerceIn(0, frame.height - 1))

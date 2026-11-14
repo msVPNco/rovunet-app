@@ -19,41 +19,41 @@ import app.slipnet.data.local.datastore.DarkMode
 
 // Brand roles are explicit in both themes; cards must remain distinct from the background.
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFFDFBEFF), onPrimary = Color(0xFF39224F),
-    primaryContainer = Color(0xFF49395F), onPrimaryContainer = Color(0xFFFFF1FF),
-    secondary = Color(0xFF67E8D5), onSecondary = Color(0xFF003A33),
-    secondaryContainer = Color(0xFF16434D), onSecondaryContainer = Color(0xFFC2F5FA),
-    tertiary = Color(0xFF9DC4FF), onTertiary = Color(0xFF002F60),
-    background = Color(0xFF0B1020), onBackground = Color(0xFFF1F3FC),
-    surface = Color(0xFF223E61), onSurface = Color(0xFFF1F3FC),
-    surfaceContainerLowest = Color(0xFF0B1020), surfaceContainerLow = Color(0xFF172137),
-    surfaceContainer = Color(0xFF223E61), surfaceContainerHigh = Color(0xFF2D496C),
-    surfaceContainerHighest = Color(0xFF315580), surfaceVariant = Color(0xFF315580),
-    onSurfaceVariant = Color(0xFFD0DCF1), outline = Color(0xFF9AAED0), outlineVariant = Color(0xFF597BA8),
+    primary = Color(0xFFC6BDDB), onPrimary = Color(0xFF292531),
+    primaryContainer = Color(0xFF30313B), onPrimaryContainer = Color(0xFFEEEEF3),
+    secondary = Color(0xFFB4CEC5), onSecondary = Color(0xFF243B32),
+    secondaryContainer = Color(0xFF2E403B), onSecondaryContainer = Color(0xFFE3F1EB),
+    tertiary = Color(0xFFBECBDC), onTertiary = Color(0xFF253449),
+    background = Color(0xFF15171D), onBackground = Color(0xFFF1F2F5),
+    surface = Color(0xFF252F3E), onSurface = Color(0xFFF1F2F5),
+    surfaceContainerLowest = Color(0xFF15171D), surfaceContainerLow = Color(0xFF1E2129),
+    surfaceContainer = Color(0xFF252F3E), surfaceContainerHigh = Color(0xFF2C3747),
+    surfaceContainerHighest = Color(0xFF344357), surfaceVariant = Color(0xFF344357),
+    onSurfaceVariant = Color(0xFFC6CBD4), outline = Color(0xFFAAA8B5), outlineVariant = Color(0xFF526074),
     error = Color(0xFFFFB8BE), onError = Color(0xFF650F21),
     errorContainer = Color(0xFF71262D), onErrorContainer = Color(0xFFFFDAD6)
 )
 
 private val AmoledColorScheme = DarkColorScheme.copy(
-    background = Color.Black, surface = Color(0xFF111F35), surfaceContainerLowest = Color.Black,
-    surfaceContainerLow = Color(0xFF0C1424), surfaceContainer = Color(0xFF111F35),
-    primaryContainer = Color(0xFF302344), surfaceContainerHigh = Color(0xFF20375A),
-    surfaceContainerHighest = Color(0xFF29456C), surfaceVariant = Color(0xFF29456C),
-    outlineVariant = Color(0xFF435A79)
+    background = Color.Black, surface = Color(0xFF171D27), surfaceContainerLowest = Color.Black,
+    surfaceContainerLow = Color(0xFF101319), surfaceContainer = Color(0xFF171D27),
+    primaryContainer = Color(0xFF222229), surfaceContainerHigh = Color(0xFF202938),
+    surfaceContainerHighest = Color(0xFF283445), surfaceVariant = Color(0xFF283445),
+    outlineVariant = Color(0xFF465165)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF7040A4), onPrimary = Color.White,
-    primaryContainer = Color(0xFFE3CEFF), onPrimaryContainer = Color(0xFF302044),
-    secondary = Color(0xFF006B60), onSecondary = Color.White,
-    secondaryContainer = Color(0xFFBEEFF4), onSecondaryContainer = Color(0xFF002F35),
-    tertiary = Color(0xFF315C96), onTertiary = Color.White,
-    background = Color(0xFFF3F5FA), onBackground = Color(0xFF19233A),
-    surface = Color(0xFFE3EEFF), onSurface = Color(0xFF19233A),
-    surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFFAFBFF),
-    surfaceContainer = Color(0xFFE3EEFF), surfaceContainerHigh = Color(0xFFD6E6FF),
-    surfaceContainerHighest = Color(0xFFCADFFF), surfaceVariant = Color(0xFFD6E6FF),
-    onSurfaceVariant = Color(0xFF46526A), outline = Color(0xFF6D7990), outlineVariant = Color(0xFFBCC6D9),
+    primary = Color(0xFF74678B), onPrimary = Color.White,
+    primaryContainer = Color(0xFFE8E6EF), onPrimaryContainer = Color(0xFF2D2C36),
+    secondary = Color(0xFF476B5C), onSecondary = Color.White,
+    secondaryContainer = Color(0xFFE0EBE5), onSecondaryContainer = Color(0xFF243B32),
+    tertiary = Color(0xFF52667E), onTertiary = Color.White,
+    background = Color(0xFFF5F5F7), onBackground = Color(0xFF282B35),
+    surface = Color(0xFFEDF1F6), onSurface = Color(0xFF282B35),
+    surfaceContainerLowest = Color.White, surfaceContainerLow = Color(0xFFFAFAFB),
+    surfaceContainer = Color(0xFFEDF1F6), surfaceContainerHigh = Color(0xFFE8EDF3),
+    surfaceContainerHighest = Color(0xFFE5EBF2), surfaceVariant = Color(0xFFE8EDF3),
+    onSurfaceVariant = Color(0xFF505966), outline = Color(0xFF7B8190), outlineVariant = Color(0xFFC1CAD6),
     error = Color(0xFFB3261E), onError = Color.White,
     errorContainer = Color(0xFFFFDAD6), onErrorContainer = Color(0xFF410002)
 )

@@ -53,6 +53,39 @@ class ConnectionHistoryDeviceTest {
         } finally { listener.close(); peer.cancelAndJoin(); repository.deleteProfile(id) }
     }
 
+    @Test fun quickCollectionDefersAllTenDnsTypesUntilNoFastPathResponds() = runBlocking<Unit> {
+        initializeDependencies()
+        val listener = ServerSocket(0)
+        val peer = async(Dispatchers.IO) { listener.accept().use { it.soTimeout = 5000; it.getInputStream().read() } }
+        val group = "code48-phase-" + UUID.randomUUID()
+        val fast = ServerProfile(name = "Synthetic fast path", collectionId = group,
+            domain = "127.0.0.1", socks5ServerPort = listener.localPort, tunnelType = TunnelType.SOCKS5)
+        val dnsTypes = listOf(TunnelType.DNSTT, TunnelType.DNSTT_SSH, TunnelType.NOIZDNS, TunnelType.NOIZDNS_SSH,
+            TunnelType.VAYDNS, TunnelType.VAYDNS_SSH, TunnelType.SLIPSTREAM, TunnelType.SLIPSTREAM_SSH, TunnelType.SOAR, TunnelType.SOAR_SSH)
+        val ids = repository.insertCollection(listOf(fast) + dnsTypes.map { type ->
+            ServerProfile(name = "Synthetic deferred DNS", collectionId = group, domain = "example.invalid", tunnelType = type)
+        })
+        try {
+            openScreen { vm, manager ->
+                val saved = vm.uiState.value.profiles.single { it.id == ids.first() }
+                val session = manager.currentSessionId
+                onMain { vm.pingCollection(saved) }
+                val passed = withTimeout(10000) { vm.uiState.first { !it.isPingRunning && it.pingResults[ids.first()] is PingResult.Success } }
+                assertFalse(passed.collectionPrompt)
+                assertTrue(ids.drop(1).all { passed.pingResults[it] == null })
+                assertEquals(-1, withTimeout(5000) { peer.await() })
+                listener.close()
+                onMain { vm.pingCollection(saved) }
+                val failed = withTimeout(10000) { vm.uiState.first { !it.isPingRunning && it.collectionPrompt } }
+                assertTrue(failed.collectionQuick)
+                assertFalse(failed.collectionDetailed)
+                assertTrue(ids.drop(1).all { failed.pingResults[it] == null })
+                assertEquals(session, manager.currentSessionId)
+                onMain { vm.dismissCollectionPrompt() }
+            }
+        } finally { listener.close(); peer.cancelAndJoin(); ids.forEach { repository.deleteProfile(it) } }
+    }
+
     private suspend fun initializeDependencies() {
         openScreen { vm, _ -> repository = vm.profileRepository; historyStore = vm.connectionHistoryStore }
         withTimeout(10_000) { check(historyStore.flush()) }

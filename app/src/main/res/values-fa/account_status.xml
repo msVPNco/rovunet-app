@@ -14,4 +14,8 @@
     <string name="account_status_hours">%1$d ساعت باقی‌مانده</string>
     <string name="account_status_minutes">%1$d دقیقه باقی‌مانده</string>
     <string name="account_status_summary">%1$s · %2$s</string>
+    <string name="account_status_volume_limit">سقف %1$s %2$s</string>
+    <string name="account_status_expires_at">اعتبار تا %1$s</string>
+    <string name="account_status_hold">وضعیت حساب در انتظار بررسی</string>
+    <string name="account_status_archived">حساب بایگانی شده</string>
 </resources>

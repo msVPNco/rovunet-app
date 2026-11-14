@@ -66,7 +66,8 @@ class AccountStatusUiDeviceTest {
             assertTrue(compose.onRoot().captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it))
         }
         compose.runOnIdle { view.value = view.value.copy(trustworthy = false, severity = AccountSeverity.UNKNOWN, error = "UNAVAILABLE") }
-        compose.onNodeWithText(resources.getString(R.string.account_status_unavailable)).assertExists()
+        compose.onNodeWithText(resources.getString(R.string.account_status_stale)).assertExists()
+        compose.onNodeWithText("GiB", substring = true).assertExists()
         compose.onAllNodes(progress).assertCountEquals(0)
         compose.onAllNodesWithText(resources.getString(R.string.account_status_limit_reached)).assertCountEquals(0)
         compose.onNodeWithTag("collection-connect-status-ui").performClick()

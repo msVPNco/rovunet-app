@@ -17,6 +17,10 @@ from udp_protocol_fixture import udp_protocol_fixture
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = "app.veyra.client.candidate"
 REQUIRED = {
+    ("app.slipnet.data.subscription.Code48StatusDeviceTest", "status2ReceiptsSurviveReopenUnknownCountersRenewalAndRollback"),
+    ("app.slipnet.presentation.ConnectionHistoryDeviceTest", "quickCollectionDefersAllTenDnsTypesUntilNoFastPathResponds"),
+    ("app.slipnet.presentation.main.ConnectionColorsDeviceTest", "connectionCardAndBottomButtonShareGreenYellowAndRedStates"),
+    ("app.slipnet.presentation.main.ConnectionColorsDeviceTest", "partialUsageStillShowsKnownQuotaAndExpiryAndDoesNotClaimRemainingVolume"),
     ("app.slipnet.core.ProtocolHandshakeDeviceTest", "packagedUdpProbesRequireRealHandshakesAndCancelWithoutTouchingTheLiveCore"),
     ("app.slipnet.presentation.ConnectionHistoryDeviceTest", "quickCollectionUsesOnlyTcpAndPreservesConnectionAndHistory"),
     ("app.slipnet.security.TlsCertificateDeviceTest", "certificateEnrollmentIsAutomaticPersistentAndRejectsChangedIdentityOrWrongName"),
@@ -215,7 +219,9 @@ def main():
     previews.mkdir(exist_ok=True)
     for filename in ("startup-code43-light.png", "startup-code43-dark.png", "startup-code43-amoled.png",
                      "scanner-fa-review02.png", "subscription-fa-code29.png", "account-status-fa-code32.png",
-                     "home-alpha18-en-dark.png", "home-alpha18-fa-dark.png", "home-alpha18-fa-amoled.png", "home-alpha18-en-light.png"):
+                     "home-alpha18-en-dark.png", "home-alpha18-fa-dark.png", "home-alpha18-fa-amoled.png", "home-alpha18-en-light.png",
+                     "connection-code48-connecting.png", "connection-code48-connected.png", "connection-code48-error.png",
+                     "profile-code48-light.png", "profile-code48-dark.png", "profile-code48-amoled.png"):
         with (previews / filename).open("wb") as image:
             subprocess.run(["adb", "-s", serial, "exec-out", "run-as", PACKAGE,
                             "cat", "files/" + filename], stdout=image, check=True)

@@ -23,16 +23,22 @@ import androidx.compose.ui.unit.dp
 val softPopBackground: Brush
     @Composable get() = Brush.verticalGradient(when {
         MaterialTheme.colorScheme.background == Color.Black -> listOf(Color.Black, Color.Black)
-        MaterialTheme.colorScheme.background.luminance() > .5f -> listOf(Color(0xFFF0E7FF), Color(0xFFF3F5FF), Color(0xFFEBF8FA))
-        else -> listOf(Color(0xFF1A2341), Color(0xFF10182F), Color(0xFF0B1020))
+        MaterialTheme.colorScheme.background.luminance() > .5f -> listOf(Color(0xFFF2F1F5), Color(0xFFF5F5F7))
+        else -> listOf(Color(0xFF1E2129), Color(0xFF15171D))
     })
 
 @Composable
 fun SoftPopGlass(modifier: Modifier = Modifier, header: Boolean = false, content: @Composable () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Surface(modifier = modifier, shape = RoundedCornerShape(24.dp),
-        color = colors.primaryContainer.copy(alpha = if (header) .94f else .96f),
-        border = BorderStroke(1.dp, colors.primary.copy(alpha = .22f)), content = content)
+        color = (if (colors.background == Color.Black) {
+            if (header) Color(0xFF263243) else Color(0xFF253B33)
+        } else if (colors.background.luminance() > .5f) {
+            if (header) Color(0xFFEDF1F8) else Color(0xFFEDF5F0)
+        } else {
+            if (header) Color(0xFF303A49) else Color(0xFF2E403B)
+        }).copy(alpha = .8f),
+        border = BorderStroke(1.dp, (if (header) colors.tertiary else colors.secondary).copy(alpha = .35f)), content = content)
 }
 
 @Composable
@@ -51,13 +57,13 @@ fun SoftPopIconButton(onClick: () -> Unit, modifier: Modifier = Modifier, enable
 }
 
 @Composable
-fun SoftPopFab(onClick: () -> Unit, containerColor: Color, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+fun SoftPopFab(onClick: () -> Unit, containerColor: Color, modifier: Modifier = Modifier, contentColor: Color = Color.Unspecified, content: @Composable () -> Unit) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) .94f else 1f, spring(dampingRatio = .7f), label = "softPopFabPress")
     val shape = RoundedCornerShape(20.dp)
     FloatingActionButton(onClick = onClick, interactionSource = interaction, shape = shape,
-        containerColor = containerColor, modifier = modifier.graphicsLayer { scaleX = scale; scaleY = scale },
+        containerColor = containerColor, contentColor = if (contentColor == Color.Unspecified) MaterialTheme.colorScheme.onPrimary else contentColor, modifier = modifier.graphicsLayer { scaleX = scale; scaleY = scale },
         content = { Box(Modifier.clip(shape).background(Brush.verticalGradient(listOf(Color.White.copy(alpha = .22f), Color.Transparent))).padding(16.dp)) { content() } })
 }
 

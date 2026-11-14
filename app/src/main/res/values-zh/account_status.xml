@@ -14,4 +14,8 @@
     <string name="account_status_hours">剩余 %1$d 小时</string>
     <string name="account_status_minutes">剩余 %1$d 分钟</string>
     <string name="account_status_summary">%1$s · %2$s</string>
+    <string name="account_status_volume_limit">限额 %1$s %2$s</string>
+    <string name="account_status_expires_at">有效期至 %1$s</string>
+    <string name="account_status_hold">账户状态待确认</string>
+    <string name="account_status_archived">账户已归档</string>
 </resources>

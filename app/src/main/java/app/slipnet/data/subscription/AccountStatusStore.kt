@@ -49,6 +49,7 @@ internal class AccountStatusStore(private val db: SlipNetDatabase, private val s
                     val response = download(target)
                     require(response.code == 200) { "UNAVAILABLE" }
                     val status = AccountStatus.read(response.text)
+                    require(status.contractVersion == if (java.net.URI(target).rawPath.startsWith("/v2/sub/")) 2 else 1) { "UNTRUSTED_STATUS" }
                     val received = System.currentTimeMillis()
                     val transferTime = (received - response.receivedAt).coerceIn(0, 25_000)
                     PrivateAccountStatusEntity(source.id, key, status.serverId, status.accountId, status.revision,
@@ -66,12 +67,11 @@ internal class AccountStatusStore(private val db: SlipNetDatabase, private val s
                         val latest = db.privateAccountStatusDao().get(source.id, key)
                         if (refreshed != null) {
                             val incoming = AccountStatus.read(refreshed.payload)
-                            val previous = latest?.let { runCatching { AccountStatus.read(it.payload) }.getOrNull() }
                             // Re-read identity and high-water under the commit transaction: a
                             // snapshot taken before HTTP cannot authorize a concurrent rollback.
-                            if (PrivateStatusPolicy.accepts(latest?.binding(), key, incoming, previous,
-                                    latest == null && db.privateAccountStatusDao().hasHistory(source.id)))
-                                db.privateAccountStatusDao().put(refreshed)
+                            val payload = PrivateStatusCache.merge(latest?.binding(), key, incoming, latest?.payload,
+                                latest == null && db.privateAccountStatusDao().hasHistory(source.id))
+                            if (payload != null) db.privateAccountStatusDao().put(refreshed.copy(payload = payload))
                         } else if (latest != null && latest == cached) {
                             // Keep the original good receipt and the independent high-water.
                             db.privateAccountStatusDao().put(latest.copy(error = safeError))

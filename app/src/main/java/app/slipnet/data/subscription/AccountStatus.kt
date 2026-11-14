@@ -8,18 +8,32 @@ import org.json.JSONObject
 data class AccountStatus(val serverId: String, val accountId: String, val periodId: String,
     val state: String, val expiresAt: Long?, val limitBytes: Long?, val usedBytes: Long?,
     val metering: String, val sampledAt: Long?, val generatedAt: Long, val revision: Long, val providerReported: Boolean = false, val volumeKnown: Boolean = true, val expiryKnown: Boolean = true,
-    val usageLowerBound: Long? = null) {
+    val usageLowerBound: Long? = null, val contractVersion: Int = 1,
+    val pendingBytes: Long? = null, val measurement: String? = null) {
     val remainingBytes: Long? get() = if (metering in setOf("partial", "unavailable")) null else
         limitBytes?.let { limit -> usedBytes?.let { (limit - it).coerceAtLeast(0) } }
     fun sameAccountPeriod(other: AccountStatus) = serverId == other.serverId && accountId == other.accountId && periodId == other.periodId
     fun accepts(previous: AccountStatus): Boolean {
         if (providerReported || previous.providerReported || serverId != previous.serverId || accountId != previous.accountId) return false
+        if (contractVersion != previous.contractVersion) return false
+        if (contractVersion == 2 && periodId != previous.periodId) return false // Cache policy must check retired periods first.
+        if (contractVersion == 2 && usageLowerBound != null && previous.usageLowerBound != null && usageLowerBound < previous.usageLowerBound) return false
         // Period renewal keeps the bound account/server and advances the source's
         // independent high-water revision. Equal-revision period changes fail below.
         if (revision < previous.revision) return false
         return revision != previous.revision || copy(sampledAt = null, generatedAt = 0) == previous.copy(sampledAt = null, generatedAt = 0)
     }
-    fun json(): String = JSONObject().put("version", 1).put("server_id", serverId).put("account_id", accountId)
+    fun json(): String = if (contractVersion == 2) JSONObject().put("version", 2).put("server_id", serverId).put("account_id", accountId)
+        .put("period_id", periodId).put("revision", revision).put("account_status", state)
+        .put("limit_kind", if (!volumeKnown) "unknown" else if (limitBytes == null) "unlimited" else "finite")
+        .put("limit_bytes", limitBytes ?: JSONObject.NULL)
+        .put("expiry_kind", if (!expiryKnown) "unknown" else if (expiresAt == null) "none" else "at")
+        .put("expires_at", expiresAt?.let { Instant.ofEpochMilli(it).toString() } ?: JSONObject.NULL)
+        .put("confirmed_bytes", usageLowerBound ?: JSONObject.NULL).put("pending_bytes", pendingBytes ?: JSONObject.NULL)
+        .put("coverage", metering).put("measurement", measurement)
+        .put("sampled_at", sampledAt?.let { Instant.ofEpochMilli(it).toString() } ?: JSONObject.NULL)
+        .put("generated_at", Instant.ofEpochMilli(generatedAt).toString()).toString()
+        else JSONObject().put("version", 1).put("server_id", serverId).put("account_id", accountId)
         .put("period_id", periodId).put("account_status", state)
         .put("expires_at", expiresAt?.let { Instant.ofEpochMilli(it).toString() } ?: JSONObject.NULL)
         .put("limit_bytes", limitBytes ?: JSONObject.NULL).put("used_bytes", usedBytes ?: JSONObject.NULL)
@@ -29,6 +43,7 @@ data class AccountStatus(val serverId: String, val accountId: String, val period
         fun read(text: String): AccountStatus {
             require(text.length <= 65_536 && text.count { it == '{' || it == '[' } <= 32) { "INVALID_STATUS" }
             val root = JSONObject(text)
+            if (root.optInt("version") == 2) return PrivateStatusV2.read(text)
             fun number(key: String, nullable: Boolean = false): Long? {
                 require(root.has(key)) { "INVALID_STATUS" }
                 if (root.isNull(key)) { require(nullable) { "INVALID_STATUS" }; return null }
@@ -61,7 +76,7 @@ enum class AccountSeverity { NORMAL, WARNING, CRITICAL, UNKNOWN }
 
 /** Advance HTTP Date with elapsed time rather than trusting the phone's wall clock. */
 data class AccountStatusView(val status: AccountStatus?, val serverNow: Long?, val trustworthy: Boolean,
-    val severity: AccountSeverity, val error: String = "") {
+    val severity: AccountSeverity, val error: String = "", val detailsCurrent: Boolean = trustworthy) {
     val remainingMillis: Long? get() = status?.expiresAt?.let { expiry -> serverNow?.let { (expiry - it).coerceAtLeast(0) } }
     companion object {
         fun evaluate(status: AccountStatus?, checkedAt: Long, checkedElapsed: Long, serverTime: Long,
@@ -79,6 +94,7 @@ data class AccountStatusView(val status: AccountStatus?, val serverNow: Long?, v
             val trustworthy = freshFile && measured && error.isEmpty()
             val remaining = status?.remainingBytes
             val severity = when {
+                status?.state == "hold" -> AccountSeverity.UNKNOWN
                 !trustworthy || status == null -> AccountSeverity.UNKNOWN
                 status.state != "active" || (status.expiresAt != null && status.expiresAt <= requireNotNull(serverNow)) -> AccountSeverity.CRITICAL
                 status.remainingBytes == 0L -> AccountSeverity.CRITICAL
@@ -88,7 +104,7 @@ data class AccountStatusView(val status: AccountStatus?, val serverNow: Long?, v
                 status.expiresAt != null && status.expiresAt - requireNotNull(serverNow) <= 3 * 86_400_000L -> AccountSeverity.WARNING
                 else -> AccountSeverity.NORMAL
             }
-            return AccountStatusView(status, serverNow, trustworthy, severity, error)
+            return AccountStatusView(status, serverNow, trustworthy, severity, error, freshFile && error.isEmpty())
         }
     }
 }

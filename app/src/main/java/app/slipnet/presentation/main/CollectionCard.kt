@@ -24,7 +24,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.zIndex
 import app.slipnet.presentation.theme.collectionTones
-import app.slipnet.presentation.theme.SoftPopIconButton
+import app.slipnet.presentation.theme.FlatCardIconButton
+import app.slipnet.presentation.theme.connectionActionColors
+import app.slipnet.presentation.theme.connectionActionDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import app.slipnet.presentation.common.components.MarqueeText
 import app.slipnet.R
 import app.slipnet.domain.model.*
@@ -38,7 +42,9 @@ fun CollectionCard(profiles: List<ServerProfile>, results: Map<Long, PingResult>
     onExport: () -> Unit, onDelete: () -> Unit, canDelete: Boolean,
     onShareQr: (() -> Unit)? = null, onUpdate: (() -> Unit)? = null,
     accountStatus: app.slipnet.data.subscription.AccountStatusView? = null, updating: Boolean = false,
-    onAutomatic: (() -> Unit)? = null) {
+    onAutomatic: (() -> Unit)? = null,
+    connectionIndicator: ConnectionIndicator = if (connecting) ConnectionIndicator.CONNECTING
+        else if (connectedProfileId != null) ConnectionIndicator.CONNECTED else ConnectionIndicator.DISCONNECTED) {
     if (profiles.isEmpty()) return
     val connected = connectedProfileId != null
     val path = profiles.firstOrNull { it.id == (connectedProfileId ?: manualProfileId) }
@@ -49,17 +55,17 @@ fun CollectionCard(profiles: List<ServerProfile>, results: Map<Long, PingResult>
     val failed = completed.count { it is PingResult.Error && ProbeCache.fresh(it) }
     var menuOpen by remember { mutableStateOf(false) }
     val colors = MaterialTheme.colorScheme
+    val actionColors = connectionActionColors(connectionIndicator)
+    val actionDescription = connectionActionDescription(connectionIndicator)
     val tones = collectionTones
     val raised = expanded || selected
     val surface = if (raised) tones.raisedHeader else tones.header
-    Card(onClick = onDetails, modifier = Modifier.fillMaxWidth().testTag("collection-${ProfileCollections.key(profiles.first())}"), shape = RoundedCornerShape(24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (expanded) 10.dp else 2.dp),
+    Card(onClick = onDetails, modifier = Modifier.fillMaxWidth().testTag("collection-${ProfileCollections.key(profiles.first())}"), shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(if (selected || connected) 2.dp else 1.dp,
             if (connected) app.slipnet.presentation.theme.ConnectionSuccessColor else if (raised) colors.primary else colors.primary.copy(alpha = .25f)),
         colors = CardDefaults.cardColors(containerColor = surface, contentColor = tones.headerText)) {
-        Column(Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(
-            Color.White.copy(alpha = if (raised) .12f else .06f), Color.Transparent)))
-            .padding(start = 14.dp, end = 4.dp, top = 5.dp, bottom = 7.dp)) {
+        Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 2.dp, top = 4.dp, bottom = 4.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     MarqueeText(ProfileCollections.name(profiles.first()), modifier = Modifier.fillMaxWidth(),
@@ -68,20 +74,27 @@ fun CollectionCard(profiles: List<ServerProfile>, results: Map<Long, PingResult>
                     MarqueeText(if (path != null) "${path.name} · $count" else count, modifier = Modifier.fillMaxWidth(), style = MaterialTheme.typography.bodySmall,
                         color = tones.headerText.copy(alpha = .8f))
                 }
-                SoftPopIconButton(onClick = onDetails) {
+                FlatCardIconButton(onClick = onTest, enabled = !busy,
+                    modifier = Modifier.testTag("collection-quick-test-${ProfileCollections.key(profiles.first())}")) {
+                    Icon(Icons.Default.Speed, stringResource(R.string.probe_quick_test), Modifier.size(20.dp))
+                }
+                FlatCardIconButton(onClick = onDetails) {
                     Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         stringResource(if (expanded) R.string.ui_hide_paths else R.string.ui_show_paths))
                 }
-                SoftPopIconButton(onClick = onConnect, modifier = Modifier.testTag("collection-connect-${ProfileCollections.key(profiles.first())}"), enabled = !busy && canConnect) {
+                FlatCardIconButton(onClick = onConnect, modifier = Modifier.testTag("collection-connect-${ProfileCollections.key(profiles.first())}")
+                    .semantics { stateDescription = actionDescription }, enabled = !busy && canConnect,
+                    containerColor = if (connectionIndicator == ConnectionIndicator.DISCONNECTED) Color.Unspecified else actionColors.container,
+                    contentColor = if (connectionIndicator == ConnectionIndicator.DISCONNECTED) Color.Unspecified else actionColors.content) {
                     Icon(if (connecting) Icons.Default.Close else Icons.Default.PowerSettingsNew,
                         if (connecting) stringResource(R.string.ui_cancel_connection)
                         else if (connected) stringResource(R.string.ui_disconnect)
                         else if (path != null) stringResource(R.string.ui_connect_named, path.name)
                         else stringResource(R.string.ui_choose_path),
-                        tint = if (connected) app.slipnet.presentation.theme.ConnectionSuccessColor else colors.primary)
+                        modifier = Modifier.size(18.dp))
                 }
                 Box {
-                    SoftPopIconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.rv_collection_actions_06a9e8)) }
+                    FlatCardIconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.rv_collection_actions_06a9e8)) }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         app.slipnet.presentation.common.components.ActionMenuSectionLabel(R.string.menu_connection_tests)
                         DropdownMenuItem(text = { Text(stringResource(if (connecting) R.string.ui_cancel_connection else if (connected) R.string.ui_disconnect else R.string.rv_connect_1a2303)) },
@@ -118,12 +131,6 @@ fun CollectionCard(profiles: List<ServerProfile>, results: Map<Long, PingResult>
             }
             if (updating) { Text(stringResource(R.string.subscription_updating_inline), style = MaterialTheme.typography.labelSmall); LinearProgressIndicator(Modifier.fillMaxWidth()) }
             accountStatus?.let { AccountStatusSummary(it) }
-            TextButton(onClick = onTest, enabled = !busy, modifier = Modifier.testTag("collection-quick-test-${ProfileCollections.key(profiles.first())}"),
-                colors = ButtonDefaults.textButtonColors(contentColor = tones.headerText)) {
-                Icon(Icons.Default.Speed, null, Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.probe_quick_test))
-            }
             if (profiles.size > 50) MarqueeText(stringResource(R.string.alpha17_large_batch), style = MaterialTheme.typography.labelSmall, color = tones.headerText.copy(alpha = .8f))
             if (profiles.any { it.needsCredentials }) MarqueeText(stringResource(R.string.collection_needs_credentials),
                 color = colors.error, style = MaterialTheme.typography.bodySmall)

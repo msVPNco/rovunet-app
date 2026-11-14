@@ -20,6 +20,7 @@ import app.slipnet.R
 import app.slipnet.domain.model.*
 import app.slipnet.presentation.theme.ConnectionSuccessColor as ConnectedGreen
 import app.slipnet.presentation.theme.collectionTones
+import app.slipnet.presentation.theme.FlatCardIconButton
 import androidx.compose.ui.text.style.TextDirection
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -49,25 +50,14 @@ fun ProfileListItem(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = BorderStroke(if (isConnected || isSelected) 1.5.dp else 1.dp, if (isConnected || isSelected) border else tones.childOutline),
         colors = CardDefaults.cardColors(containerColor = if (isSelected || isConnected) tones.selectedChild else tones.child)) {
-        Column(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 9.dp, bottom = 5.dp)) {
+        Row(Modifier.fillMaxWidth().padding(start = 12.dp, end = 4.dp, top = 5.dp, bottom = 3.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
                     MarqueeText(profile.name, modifier = Modifier.weight(1f),
                         style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                     if (profile.isPinned) Icon(Icons.Default.PushPin, stringResource(R.string.ui_pinned), Modifier.size(14.dp), tint = colors.primary)
                     if (profile.isLocked) Icon(Icons.Default.Lock, stringResource(R.string.ui_locked), Modifier.size(14.dp))
-                    if (pingResult is PingResult.Success && (pingResult.verified || pingResult.quick)) {
-                        val fresh = ProbeCache.fresh(pingResult, measurementNowMillis) && (!isConnected || measurementNowMillis - pingResult.measuredAt <= 65_000)
-                        val green = if (fresh) ConnectedGreen else app.slipnet.presentation.theme.PreviousResultColor
-                        Text(stringResource(if (pingResult.verified) R.string.alpha17_ping else if (pingResult.handshake) R.string.probe_handshake_latency else R.string.probe_tcp_latency, pingResult.latencyMs), Modifier.testTag("profile-latency-${profile.id}")
-                            .background(green.copy(alpha = .12f), RoundedCornerShape(8.dp)).padding(horizontal = 7.dp, vertical = 3.dp),
-                            color = green, style = MaterialTheme.typography.labelSmall.copy(textDirection = TextDirection.Ltr),
-                            fontWeight = FontWeight.SemiBold)
-                        val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.MEDIUM,
-                            androidx.compose.ui.platform.LocalResources.current.configuration.locales[0]).format(java.util.Date(pingResult.measuredAt))
-                        MarqueeText(if (isConnected && fresh) stringResource(R.string.live_probe_age, ((measurementNowMillis - pingResult.measuredAt).coerceAtLeast(0) / 1000).toInt())
-                            else stringResource(if (fresh) R.string.review02_ping_fresh else R.string.review02_ping_previous, time),
-                            Modifier.widthIn(max = 140.dp).testTag("profile-measured-${profile.id}"), style = MaterialTheme.typography.labelSmall, color = green)
-                    }
                 }
                 val status = when {
                     profile.needsCredentials -> stringResource(R.string.profile_credentials_unavailable)
@@ -90,40 +80,54 @@ fun ProfileListItem(
                     PingResult.ReviewIdentity -> stringResource(R.string.probe_review_identity)
                     else -> ""
                 }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    val destination = if (profile.isLocked) stringResource(R.string.ui_locked) else when (profile.tunnelType) {
-                        TunnelType.SSH -> "${profile.domain}:${profile.sshPort}"
-                        TunnelType.SOCKS5 -> "${profile.domain}:${profile.socks5ServerPort}"
-                        TunnelType.NAIVE, TunnelType.NAIVE_SSH -> "${profile.domain}:${profile.naivePort}"
-                        else -> profile.domain
-                    }
-                    MarqueeText(destination, modifier = Modifier.fillMaxWidth(),
-                        style = MaterialTheme.typography.bodySmall.copy(textDirection = TextDirection.Ltr), color = colors.onSurfaceVariant)
-                    val protocolLabel = if (profile.tunnelType == TunnelType.XRAY) when (profile.coreLink.substringBefore("://").lowercase()) {
-                        "anytls" -> "AnyTLS"
-                        "tuic" -> "TUIC"
-                        "mierus" -> "Mieru"
-                        "ss" -> stringResource(R.string.review02_shadowsocks)
-                        "trojan" -> stringResource(R.string.review03_trojan)
-                        "vmess" -> stringResource(R.string.review03_vmess)
-                        else -> profile.tunnelType.displayName
-                    } else profile.tunnelType.displayName
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        MarqueeText(listOf(protocolLabel, status).filter { it.isNotEmpty() }.joinToString(" · "),
-                            modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
-                            color = if (isConnected) ConnectedGreen else colors.onSurfaceVariant)
-                        if (test.isNotEmpty()) MarqueeText(test,
-                            modifier = Modifier.weight(1f).testTag("profile-test-result-${profile.id}"),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = if (pingResult is PingResult.Error) colors.error else colors.onSurfaceVariant)
-                    }
+                val destination = if (profile.isLocked) stringResource(R.string.ui_locked) else when (profile.tunnelType) {
+                    TunnelType.SSH -> "${profile.domain}:${profile.sshPort}"
+                    TunnelType.SOCKS5 -> "${profile.domain}:${profile.socks5ServerPort}"
+                    TunnelType.NAIVE, TunnelType.NAIVE_SSH -> "${profile.domain}:${profile.naivePort}"
+                    else -> profile.domain
                 }
-                IconButton(onClick = onEditClick, enabled = canEdit, modifier = Modifier.testTag("profile-edit-${profile.id}")) {
-                    Icon(Icons.Default.Edit, stringResource(R.string.ui_edit), Modifier.size(20.dp))
+                MarqueeText(destination, modifier = Modifier.fillMaxWidth(),
+                    style = MaterialTheme.typography.bodySmall.copy(textDirection = TextDirection.Ltr), color = colors.onSurfaceVariant)
+                val protocolLabel = if (profile.tunnelType == TunnelType.XRAY) when (profile.coreLink.substringBefore("://").lowercase()) {
+                    "anytls" -> "AnyTLS"
+                    "tuic" -> "TUIC"
+                    "mierus" -> "Mieru"
+                    "ss" -> stringResource(R.string.review02_shadowsocks)
+                    "trojan" -> stringResource(R.string.review03_trojan)
+                    "vmess" -> stringResource(R.string.review03_vmess)
+                    else -> profile.tunnelType.displayName
+                } else profile.tunnelType.displayName
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    MarqueeText(listOf(protocolLabel, status).filter { it.isNotEmpty() }.joinToString(" · "),
+                        modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodySmall,
+                        color = if (isConnected) ConnectedGreen else colors.onSurfaceVariant)
+                    if (test.isNotEmpty()) MarqueeText(test,
+                        modifier = Modifier.weight(1f).testTag("profile-test-result-${profile.id}"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (pingResult is PingResult.Error) colors.error else colors.onSurfaceVariant)
                 }
+            }
+            if (pingResult is PingResult.Success && (pingResult.verified || pingResult.quick)) {
+                val fresh = ProbeCache.fresh(pingResult, measurementNowMillis) && (!isConnected || measurementNowMillis - pingResult.measuredAt <= 65_000)
+                val green = if (fresh) ConnectedGreen else app.slipnet.presentation.theme.PreviousResultColor
+                Column(Modifier.widthIn(max = 96.dp).padding(start = 4.dp), horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(stringResource(if (pingResult.verified) R.string.alpha17_ping else if (pingResult.handshake) R.string.probe_handshake_latency else R.string.probe_tcp_latency, pingResult.latencyMs), Modifier.testTag("profile-latency-${profile.id}")
+                        .background(green.copy(alpha = .12f), RoundedCornerShape(8.dp)).padding(horizontal = 7.dp, vertical = 3.dp),
+                        color = green, style = MaterialTheme.typography.labelSmall.copy(textDirection = TextDirection.Ltr),
+                        fontWeight = FontWeight.SemiBold)
+                    val time = java.text.DateFormat.getTimeInstance(java.text.DateFormat.MEDIUM,
+                        androidx.compose.ui.platform.LocalResources.current.configuration.locales[0]).format(java.util.Date(pingResult.measuredAt))
+                    MarqueeText(if (isConnected && fresh) stringResource(R.string.live_probe_age, ((measurementNowMillis - pingResult.measuredAt).coerceAtLeast(0) / 1000).toInt())
+                        else stringResource(if (fresh) R.string.review02_ping_fresh else R.string.review02_ping_previous, time),
+                        Modifier.testTag("profile-measured-${profile.id}"), style = MaterialTheme.typography.labelSmall, color = green)
+                }
+            }
+            FlatCardIconButton(onClick = onEditClick, enabled = canEdit, modifier = Modifier.testTag("profile-edit-${profile.id}")) {
+                Icon(Icons.Default.Edit, stringResource(R.string.ui_edit), Modifier.size(20.dp))
+            }
             Box {
-                IconButton(onClick = { menu = true }) { Icon(Icons.Default.MoreVert, stringResource(R.string.ui_more_actions)) }
+                FlatCardIconButton(onClick = { menu = true }, modifier = Modifier.testTag("profile-menu-${profile.id}")) { Icon(Icons.Default.MoreVert, stringResource(R.string.ui_more_actions)) }
                 DropdownMenu(menu, onDismissRequest = { menu = false }) {
                     ActionMenuSectionLabel(R.string.menu_connection_tests)
                     DropdownMenuItem(text = { Text(stringResource(if (isConnecting) R.string.ui_cancel_connection else if (isConnected) R.string.ui_disconnect else R.string.rv_connect_1a2303)) },
@@ -149,12 +153,9 @@ fun ProfileListItem(
                     }
                     HorizontalDivider()
                     DropdownMenuItem(text = { Text(stringResource(R.string.ui_delete), color = colors.error) },
+                        modifier = Modifier.testTag("profile-delete-${profile.id}"),
                         enabled = !isConnected && !isConnecting && !isPingRunning,
                         onClick = { menu = false; onDeleteClick() })
-                }
-            }
-                IconButton(onClick = onDeleteClick, enabled = canEdit, modifier = Modifier.testTag("profile-delete-${profile.id}")) {
-                    Icon(Icons.Default.Delete, stringResource(R.string.ui_delete), Modifier.size(20.dp))
                 }
             }
         }

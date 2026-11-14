@@ -1,6 +1,8 @@
 package app.slipnet.presentation
 
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalConfiguration
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import app.slipnet.presentation.theme.SlipstreamTheme
 import java.util.Locale
+import java.io.File
 import org.junit.Assert.*
 import org.junit.Rule
 import org.junit.Test
@@ -84,6 +87,14 @@ class CardInteractionDeviceTest {
             compose.runOnIdle { mode = theme; result = PingResult.Success(22, quick = true, measuredAt = 1_000_000) }
             compose.waitForIdle()
             assertEquals(expectedGreen, color("profile-latency-701"))
+            val card = compose.onNodeWithTag("profile-701")
+            val context = InstrumentationRegistry.getInstrumentation().targetContext
+            assertTrue("Compact profile grew taller than 68 dp", card.fetchSemanticsNode().boundsInRoot.height / context.resources.displayMetrics.density <= 68f)
+            compose.onNodeWithTag("profile-edit-701").assertIsDisplayed()
+            compose.onNodeWithTag("profile-menu-701").assertIsDisplayed()
+            File(context.filesDir, "profile-code48-${theme.name.lowercase()}.png").outputStream().use {
+                assertTrue(card.captureToImage().asAndroidBitmap().compress(Bitmap.CompressFormat.PNG, 100, it))
+            }
             compose.onNodeWithTag("profile-latency-701", useUnmergedTree = true).assertTextContains("TCP", substring = true)
             compose.runOnIdle { result = PingResult.Success(22, quick = true, measuredAt = 699_999) }
             assertEquals(expectedGray, color("profile-latency-701"))
@@ -154,6 +165,8 @@ class CardInteractionDeviceTest {
         compose.onNodeWithTag("profile-701").performClick()
         compose.runOnIdle { assertTrue(selected); assertEquals(0, connected) }
         compose.onNodeWithTag("profile-edit-701").performClick()
+        compose.onNodeWithTag("profile-delete-701").assertDoesNotExist()
+        compose.onNodeWithTag("profile-menu-701").performClick()
         compose.onNodeWithTag("profile-delete-701").performClick()
         compose.runOnIdle { assertEquals(1, edited); assertEquals(1, deleted); assertEquals(0, connected) }
         compose.onNodeWithTag("profile-701").performClick()
