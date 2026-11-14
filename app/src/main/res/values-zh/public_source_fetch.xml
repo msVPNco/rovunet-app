@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="public_fetch_tls">无法验证与来源的安全连接。请检查连接后重试。</string>
+    <string name="public_fetch_timeout">下载来源超时。请使用正常连接重试。</string>
+    <string name="public_fetch_rate_limit">来源暂时拒绝了请求。请稍后重试。</string>
+    <string name="public_fetch_http">来源未返回可用的下载内容。请稍后重试。</string>
+    <string name="public_decode_failed">来源已下载，但内容无法解密。原有配置已保留。</string>
+    <string name="quick_no_fast_routes">此组没有可测试的快速线路。DNS 线路请使用单独的详细测试。</string>
+</resources>

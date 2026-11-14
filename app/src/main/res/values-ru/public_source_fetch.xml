@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="public_fetch_tls">Не удалось проверить защищённое соединение с источником. Проверьте подключение и повторите попытку.</string>
+    <string name="public_fetch_timeout">Время загрузки источника истекло. Повторите попытку с рабочим подключением.</string>
+    <string name="public_fetch_rate_limit">Источник временно отклонил запрос. Повторите попытку позже.</string>
+    <string name="public_fetch_http">Источник не предоставил пригодный для загрузки ответ. Повторите попытку позже.</string>
+    <string name="public_decode_failed">Источник загружен, но его содержимое не удалось расшифровать. Прежние профили сохранены.</string>
+    <string name="quick_no_fast_routes">В этой группе нет доступных быстрых маршрутов. Для маршрутов DNS используйте отдельный подробный тест.</string>
+</resources>

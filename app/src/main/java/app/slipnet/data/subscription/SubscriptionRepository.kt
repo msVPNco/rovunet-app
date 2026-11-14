@@ -67,14 +67,11 @@ class SubscriptionRepository @Inject constructor(
     }
     internal data class Download(val code: Int, val location: String?, val text: String,
         val serverTime: Long = 0, val receivedAt: Long = 0, val userInfo: String? = null, val title: String? = null)
-    private suspend fun fetch(address: String, limit: Int = 2 * 1024 * 1024): String = fetchDocument(address, limit, false).text
     internal suspend fun fetchAccountStatus(address: String): Download = fetchDocument(address, 65_536, true)
-    private suspend fun fetchDocument(address: String, maxBytes: Int, account: Boolean): Download {
-        var target = url(address)
-        val initialTarget = target.toString()
-        if (account) require(PrivateStatusPolicy.redirectAllowed(initialTarget, initialTarget)) { "UNTRUSTED_STATUS" }
+    private fun downloadRoute() = connection.currentSessionId to connection.connectionState.value.isDisconnected
+    private suspend fun downloadTransport(): OkHttpClient {
         val state = connection.connectionState.value
-        val transport = if (state is app.slipnet.domain.model.ConnectionState.Connected) {
+        return if (state is app.slipnet.domain.model.ConnectionState.Connected) {
             require(state.chainId <= 0) { "DISCONNECT_TO_UPDATE" }
             val endpoint = if (state.profile.tunnelType == app.slipnet.domain.model.TunnelType.XRAY)
                 app.slipnet.tunnel.XrayBridge.activeEndpoint ?: error("DOWNLOAD_FAILED")
@@ -91,19 +88,32 @@ class SubscriptionRepository @Inject constructor(
             require(state.isDisconnected) { "DISCONNECT_TO_UPDATE" }
             client
         }
+    }
+    private suspend fun fetchDocument(address: String, maxBytes: Int, account: Boolean, selectedTransport: OkHttpClient? = null): Download {
+        var target = url(address)
+        val initialTarget = target.toString()
+        if (account) require(PrivateStatusPolicy.redirectAllowed(initialTarget, initialTarget)) { "UNTRUSTED_STATUS" }
+        val fixedPublic = !account && PublicProviders.isDownloadEndpoint(initialTarget)
+        val transport = selectedTransport ?: downloadTransport()
         repeat(4) { redirect ->
             val result = suspendCancellableCoroutine<Download> { continuation ->
-                val call = transport.newCall(Request.Builder().url(target).header("Accept", "application/json, text/plain").build())
+                val request = Request.Builder().url(target).header("Accept",
+                    if (PublicProviders.isApiEndpoint(initialTarget)) "application/vnd.github.raw+json" else "application/json, text/plain")
+                if (fixedPublic) request.header("User-Agent", "Rovunet-Android")
+                val call = transport.newCall(request.build())
                 continuation.invokeOnCancellation { call.cancel() }
                 call.enqueue(object : Callback {
                     override fun onFailure(call: Call, e: java.io.IOException) {
-                        if (continuation.isActive) continuation.resumeWithException(IllegalStateException("DOWNLOAD_FAILED"))
+                        if (continuation.isActive) continuation.resumeWithException(
+                            if (fixedPublic) PublicDownloadException.io(e) else IllegalStateException("DOWNLOAD_FAILED"))
                     }
                     override fun onResponse(call: Call, response: Response) {
                         val result = runCatching { response.use {
+                            if (fixedPublic && it.code in 300..399) throw PublicDownloadException(PublicDownloadException.Kind.REDIRECT)
                             if (it.code in 300..399) Download(it.code, it.header("Location"), "")
                             else if (account && it.code == 404) Download(404, null, "")
                             else {
+                                if (!it.isSuccessful && fixedPublic) throw PublicDownloadException.http(it.code)
                                 require(it.isSuccessful) { "DOWNLOAD_FAILED" }
                                 require(!it.header("Content-Type").orEmpty().contains("text/html", ignoreCase = true)) { "INVALID_FEED" }
                                 val body = it.body ?: error("DOWNLOAD_FAILED")
@@ -124,7 +134,10 @@ class SubscriptionRepository @Inject constructor(
                                 Download(it.code, null, text, serverTime, it.receivedResponseAtMillis, it.header("subscription-userinfo"), it.header("profile-title"))
                             }
                         } }
-                        if (continuation.isActive) continuation.resumeWith(result)
+                        if (continuation.isActive) continuation.resumeWith(result.recoverCatching {
+                            if (fixedPublic && it is java.io.IOException) throw PublicDownloadException.io(it)
+                            throw it
+                        })
                     }
                 })
             }
@@ -136,8 +149,17 @@ class SubscriptionRepository @Inject constructor(
         }
         error("DOWNLOAD_FAILED")
     }
-    suspend fun prepare(name: String, address: String, existingId: String? = null, auto: Boolean = false): SubscriptionPreview =
-        prepareUsing(name, address, existingId, auto) { target, limit -> fetchDocument(target, limit, false) }
+    suspend fun prepare(name: String, address: String, existingId: String? = null, auto: Boolean = false): SubscriptionPreview = withContext(Dispatchers.IO) {
+        val route = downloadRoute()
+        val transport = downloadTransport()
+        prepareUsing(name, address, existingId, auto) { target, limit ->
+            val fixedPublic = PublicProviders.isDownloadEndpoint(target)
+            if (fixedPublic) require(downloadRoute() == route) { "DISCONNECT_TO_UPDATE" }
+            fetchDocument(target, limit, false, transport).also {
+                if (fixedPublic) require(downloadRoute() == route) { "DISCONNECT_TO_UPDATE" }
+            }
+        }
+    }
 
     internal suspend fun prepareUsing(name: String, address: String, existingId: String?, auto: Boolean,
         download: suspend (String, Int) -> Download): SubscriptionPreview = withContext(Dispatchers.IO) {
@@ -157,7 +179,14 @@ class SubscriptionRepository @Inject constructor(
     suspend fun preparePublic(name: String, address: String, updateExisting: Boolean = false): SubscriptionPreview = withContext(Dispatchers.IO) {
         val existing = findSource(address)
         require(existing == null || (updateExisting && PublicProviders.hidesAddress(existing.id, sourceUrl(existing)))) { "SOURCE_EXISTS" }
-        val document = PublicProviders.download(url(address).toString(), ::fetch)
+        val route = downloadRoute()
+        val transport = downloadTransport()
+        val document = PublicProviders.download(url(address).toString()) { target, limit ->
+            require(downloadRoute() == route) { "DISCONNECT_TO_UPDATE" }
+            fetchDocument(target, limit, false, transport).text.also {
+                require(downloadRoute() == route) { "DISCONNECT_TO_UPDATE" }
+            }
+        }
         val preview = prepareDocument(existing?.name ?: name, address, existing?.id, false, document, publicMode = true)
         require(preview.expectedSource == existing) { "SOURCE_CHANGED" }
         preview

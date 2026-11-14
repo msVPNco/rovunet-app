@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="public_fetch_tls">اتصال امن به منبع تأیید نشد. اتصال خود را بررسی و دوباره امتحان کنید.</string>
+    <string name="public_fetch_timeout">زمان دریافت منبع تمام شد. با اتصال سالم دوباره امتحان کنید.</string>
+    <string name="public_fetch_rate_limit">منبع فعلاً درخواست را نپذیرفت. کمی بعد دوباره امتحان کنید.</string>
+    <string name="public_fetch_http">منبع پاسخ قابل دریافت نداد. کمی بعد دوباره امتحان کنید.</string>
+    <string name="public_decode_failed">منبع دریافت شد، اما محتوای آن قابل رمزگشایی نبود. کانفیگ‌های قبلی حفظ می‌شوند.</string>
+    <string name="quick_no_fast_routes">این مجموعه مسیر سریعِ قابل آزمون ندارد. برای مسیرهای DNS از تست دقیقِ جداگانه استفاده کنید.</string>
+</resources>

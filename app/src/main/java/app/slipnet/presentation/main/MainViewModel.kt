@@ -127,6 +127,7 @@ data class MainUiState(
     val sortByHttps: Boolean = false,
     val sortByReliability: Boolean = false,
     val pingResults: Map<Long, PingResult> = emptyMap(),
+    val pingSamples: Map<Long, app.slipnet.domain.model.PingPresentation.Sample> = emptyMap(),
     val isPingRunning: Boolean = false,
     /**
      * Resolvers used by the *current* on-screen ping results when the Global
@@ -204,6 +205,7 @@ class MainViewModel @Inject constructor(
     private var trafficPollingJob: Job? = null
     private var sleepTimerJob: Job? = null
     private var pingJob: Job? = null
+    private val pendingProbeSamples = mutableMapOf<Long, app.slipnet.domain.model.PingPresentation.Sample>()
     private val testBatchOffsets = mutableMapOf<String, Int>()
     private var importJob: Job? = null
     // Cached Room flows may emit synchronously during construction. State used
@@ -293,6 +295,7 @@ class MainViewModel @Inject constructor(
         pingJob?.cancelAndJoin()
         discoveredProfiles.clear()
         _uiState.value = _uiState.value.copy(collectionPrompt = false,
+            pingSamples = emptyMap(),
             error = if (testing) "PROBE_NETWORK_CHANGED" else _uiState.value.error,
             pingResults = app.slipnet.domain.model.ProbeCache.historical(_uiState.value.pingResults))
         rememberHistory()
@@ -578,6 +581,7 @@ class MainViewModel @Inject constructor(
                     profiles = if (sorted) app.slipnet.domain.model.ProfileRanking.sort(profiles, results, reliability) else profiles,
                     activeProfile = activeProfile,
                     pingResults = results,
+                    pingSamples = _uiState.value.pingSamples.filterKeys { it in unchanged },
                     selectedCollection = selectedKey,
                     manualProfileId = ConnectionChoice.rememberedPath(selectedKey, manualChoices, profiles),
                     sortByHttps = sorted, sortByReliability = reliability,
@@ -1312,7 +1316,6 @@ class MainViewModel @Inject constructor(
     fun acceptCollectionPrompt() {
         if (_uiState.value.isPingRunning) return
         val connect = _uiState.value.collectionConnect
-        val quick = _uiState.value.collectionQuick
         val detailed = _uiState.value.collectionDetailed
         _uiState.value = _uiState.value.copy(collectionPrompt = false)
         if (connect) {
@@ -1320,8 +1323,7 @@ class MainViewModel @Inject constructor(
             val target = ProfileCollections.ordered(paths, _uiState.value.pingResults).firstOrNull()
             if (target == null) _uiState.value = _uiState.value.copy(error = "No profile available to connect")
             else connectSelectedPath(target, profileResolvers = true)
-        } else if (quick) startQuickTests(selectedMembers(), batched = true, dnsOnly = true)
-        else runCollection(connectAfter = false, dnsOnly = true, detailed = detailed)
+        } else if (!_uiState.value.collectionQuick) runCollection(connectAfter = false, dnsOnly = true, detailed = detailed)
     }
 
     private class ProbeInterrupted(val reason: Int) : Exception()
@@ -1358,6 +1360,7 @@ class MainViewModel @Inject constructor(
         val batchKey = ProfileCollections.key(members.first()) + ":" + dnsOnly
         val offset = (testBatchOffsets[batchKey] ?: 0).coerceAtMost((ordered.size - 1).coerceAtLeast(0))
         val candidates = (ordered.drop(offset) + ordered.take(offset)).take(50)
+        pendingProbeSamples.clear()
         val originalResults = _uiState.value.pingResults
         smartConnections.cancel(); smartConnections.clearResults()
         val memberIds = candidates.map { it.id }.toSet()
@@ -1419,7 +1422,7 @@ class MainViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isPingRunning = false, collectionProgress = "",
                         pingResults = finishTestResults(originalResults))
                     activePathMonitor.pause(this@MainViewModel, false)
-                    sortProfilesByPing()
+                    publishProbePresentation(candidates)
                 }
             }
         }
@@ -1479,6 +1482,7 @@ class MainViewModel @Inject constructor(
             return
         }
         val originalResults = _uiState.value.pingResults
+        pendingProbeSamples.clear()
         _uiState.value = _uiState.value.copy(isPingRunning = true,
             pingResults = _uiState.value.pingResults + profiles.associate { it.id to PingResult.Pending })
         activePathMonitor.pause(this, true)
@@ -1497,13 +1501,14 @@ class MainViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(isPingRunning = false,
                         pingResults = finishTestResults(originalResults))
                     activePathMonitor.pause(this@MainViewModel, false)
-                    sortProfilesByPing()
+                    publishProbePresentation(profiles)
                 }
             }
         }
     }
 
     private suspend fun probeThroughService(profile: ServerProfile, keepConnected: Boolean = false, profileResolvers: Boolean = false, detailed: Boolean = false): PingResult {
+        val network = physicalNetworkSnapshot()
         val before = connectionManager.connectionState.value
         val reuse = before is ConnectionState.Connected && before.profile.id == profile.id && before.chainId < 0
         if (!reuse && !before.isDisconnected) throw ProbeInterrupted(app.slipnet.R.string.probe_busy)
@@ -1541,6 +1546,7 @@ class MainViewModel @Inject constructor(
             val socks = if (profile.tunnelType == TunnelType.XRAY) {
                 app.slipnet.tunnel.XrayBridge.activeEndpoint ?: throw ProbeInterrupted(app.slipnet.R.string.probe_changed)
             } else preferencesDataStore.configuredSocksEndpoint()
+            val successfulTargets = linkedSetOf<String>()
             val measurements = app.slipnet.core.TunnelProbe.sample(onAttempt = { n ->
                 val current = connectionManager.connectionState.value
                 if (!connectionManager.ownsSession(attemptId) || current !is ConnectionState.Connected ||
@@ -1550,6 +1556,7 @@ class MainViewModel @Inject constructor(
             }, successTarget = if (detailed) 3 else 1) { host ->
                 try {
                     app.slipnet.core.TunnelProbe.measureCancellable(socks.port, socks.user, socks.password, host, policy.httpsMs, diagnosticSession = attemptId).also {
+                        successfulTargets += host
                         app.slipnet.util.ConnectionDiagnostics.record(app.slipnet.util.ConnectionDiagnostics.Event.PROBE_HTTPS_OK, attemptId)
                     }
                 } catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
@@ -1564,7 +1571,13 @@ class MainViewModel @Inject constructor(
                 throw ProbeInterrupted(app.slipnet.R.string.probe_changed)
             val summary = measurements.summary ?: return PingResult.Error("HTTPS 0/${measurements.attempts} · ${measurements.failures}")
             verified = true
-            return PingResult.Success(summary.medianMs, true, summary.successes, summary.attempts, summary.jitterMs, setup, quick = !detailed)
+            return PingResult.Success(summary.medianMs, true, summary.successes, summary.attempts, summary.jitterMs, setup, quick = !detailed).also { result ->
+                val target = successfulTargets.singleOrNull()
+                val cohort = if (network != null && physicalNetworkSnapshot() == network && target != null)
+                    app.slipnet.domain.model.PingPresentation.Cohort(if (detailed) "https:3" else "https:1",
+                        "https://$target${app.slipnet.core.TunnelProbe.PATH}", network) else null
+                pendingProbeSamples[profile.id] = app.slipnet.domain.model.PingPresentation.Sample(result, cohort)
+            }
         } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
             kotlinx.coroutines.currentCoroutineContext().ensureActive()
             return PingResult.Error("Connection timed out")
@@ -1598,14 +1611,12 @@ class MainViewModel @Inject constructor(
         startQuickTests(selectedMembers())
     }
 
-    private fun startQuickTests(selected: List<ServerProfile>, batched: Boolean = false, dnsOnly: Boolean = false, single: Boolean = false) {
+    private fun startQuickTests(selected: List<ServerProfile>, batched: Boolean = false, single: Boolean = false) {
         if (_uiState.value.isPingRunning || onlyUnavailable(selected)) return
         val members = selected.filterNot { it.needsCredentials || it.isExpired || !it.tunnelType.isAvailable() }
-        val eligible = CollectionTestPhase.candidates(members, dnsOnly, single)
+        val eligible = CollectionTestPhase.quickCandidates(members)
         if (eligible.isEmpty()) {
-            if (!single && !dnsOnly && members.any(ProfileCollections::isDns))
-                _uiState.value = _uiState.value.copy(collectionPrompt = true, collectionConnect = false,
-                    collectionQuick = true, collectionDetailed = false)
+            _uiState.value = _uiState.value.copy(error = "QUICK_NO_FAST_ROUTES", collectionPrompt = false)
             return
         }
         val hasUdpHandshake = eligible.any { ProfileCollections.isUdp(it) && app.slipnet.core.ProtocolHandshake.supports(it.coreLink) }
@@ -1616,11 +1627,12 @@ class MainViewModel @Inject constructor(
             return
         }
         val collectionKey = ProfileCollections.key(eligible.first())
-        val batchKey = collectionKey + ":quick:" + dnsOnly
+        val batchKey = collectionKey + ":quick"
         val offset = if (batched) (testBatchOffsets[batchKey] ?: 0).coerceAtMost(eligible.lastIndex) else 0
         val profiles = if (batched) (eligible.drop(offset) + eligible.take(offset)).take(50) else eligible
         val originalResults = _uiState.value.pingResults
-        val network = physicalNetworkSnapshot()
+        val network = quickRouteSnapshot()
+        val samples = mutableMapOf<Long, app.slipnet.domain.model.PingPresentation.Sample>()
         val skipped = PING_UNSUPPORTED_TYPES
         val initial = profiles.associate { profile ->
             profile.id to if (profile.tunnelType in skipped || (ProfileCollections.isUdp(profile) && !app.slipnet.core.ProtocolHandshake.supports(profile.coreLink))) {
@@ -1631,27 +1643,27 @@ class MainViewModel @Inject constructor(
         }
         _uiState.value = _uiState.value.copy(pingResults = _uiState.value.pingResults + initial, isPingRunning = true,
             selectedCollection = if (single) _uiState.value.selectedCollection else collectionKey,
-            collectionConnect = false, collectionQuick = true, collectionDetailed = false)
+            collectionConnect = false, collectionQuick = true, collectionDetailed = false, collectionPrompt = false)
 
         activePathMonitor.pause(this, true)
         pingJob = viewModelScope.launch {
             var completed = initial.values.count { it == PingResult.Skipped }
-            var finished = false
             val owner = kotlinx.coroutines.currentCoroutineContext()[Job]
             val connectionGuard = if (hasUdpHandshake) launch {
                 connectionManager.connectionState.first { !it.isDisconnected }
                 owner?.cancel()
             } else null
             try {
-                _uiState.value = _uiState.value.copy(pingingViaGlobalDns = preferencesDataStore.parsedGlobalResolvers())
+                _uiState.value = _uiState.value.copy(pingingViaGlobalDns = emptyList())
                 app.slipnet.util.scanWorkers(profiles.filter { initial[it.id] == PingResult.Pending }, 4) { profile ->
                     if (ProfileCollections.isUdp(profile)) {
                         val result = pingProtocol(profile)
                         completed++
                         val current = _uiState.value.profiles.firstOrNull { it.id == profile.id }
                         if (current != null && ProfileDuplicates.key(current) == ProfileDuplicates.key(profile)) {
-                            val measurement = if (physicalNetworkSnapshot() == network) result
+                            val measurement = if (network != null && quickRouteSnapshot() == network) result
                                 else app.slipnet.domain.model.ProbeCache.historical(mapOf(profile.id to result)).getValue(profile.id)
+                            samples[profile.id] = app.slipnet.domain.model.PingPresentation.Sample(measurement, handshakeCohort(profile, network))
                             _uiState.value = _uiState.value.copy(pingResults = _uiState.value.pingResults + (profile.id to measurement))
                         }
                     } else {
@@ -1664,25 +1676,42 @@ class MainViewModel @Inject constructor(
                         completed++
                         val current = _uiState.value.profiles.firstOrNull { it.id == profile.id }
                         if (current != null && ProfileDuplicates.key(current) == ProfileDuplicates.key(profile)) {
-                            val measurement = if (physicalNetworkSnapshot() == network) result
+                            val measurement = if (network != null && quickRouteSnapshot() == network) result
                                 else app.slipnet.domain.model.ProbeCache.historical(mapOf(profile.id to result)).getValue(profile.id)
+                            samples[profile.id] = app.slipnet.domain.model.PingPresentation.Sample(measurement,
+                                if (network != null && target != null) app.slipnet.domain.model.PingPresentation.Cohort("tcp", "${target.first.lowercase()}:${target.second}", network) else null)
                             _uiState.value = _uiState.value.copy(pingResults = _uiState.value.pingResults + (profile.id to measurement))
                         }
                     }
                 }
-                finished = true
             } finally {
                 connectionGuard?.cancel()
                 if (batched && completed > 0) testBatchOffsets[batchKey] = (offset + completed) % eligible.size
-                _uiState.value = _uiState.value.copy(isPingRunning = false, pingResults = finishTestResults(originalResults))
+                val current = _uiState.value
+                val completedResults = finishTestResults(originalResults)
+                _uiState.value = current.copy(isPingRunning = false, pingResults = completedResults,
+                    pingSamples = current.pingSamples + samples.filter { (id, sample) -> completedResults[id] == sample.result })
                 activePathMonitor.pause(this@MainViewModel, false)
                 rememberHistory()
-                if (!single && _uiState.value.selectedCollection == collectionKey && physicalNetworkSnapshot() == network &&
-                    CollectionTestPhase.offerDns(members, _uiState.value.pingResults, detailed = false,
-                        completed = finished, dnsOnly = dnsOnly))
-                    _uiState.value = _uiState.value.copy(collectionPrompt = true)
             }
         }
+    }
+
+    private fun quickRouteSnapshot(): String? = physicalNetworkSnapshot()?.let {
+        "$it:${connectionManager.currentSessionId}:${connectionManager.connectionState.value.isDisconnected}"
+    }
+
+    private fun handshakeCohort(profile: ServerProfile, route: String?): app.slipnet.domain.model.PingPresentation.Cohort? {
+        if (route == null) return null
+        return runCatching {
+            val parsed = app.slipnet.core.CoreLink.parse(profile.coreLink)
+            val out = parsed.outbound
+            val settings = out.getJSONObject("settings")
+            val port = if (out.getString("protocol") == "wireguard")
+                java.net.URI("udp://" + settings.getJSONArray("peers").getJSONObject(0).getString("endpoint")).port
+            else settings.getInt("port")
+            app.slipnet.domain.model.PingPresentation.Cohort("handshake:${out.getString("protocol")}", "${parsed.host.lowercase()}:$port", route)
+        }.getOrNull()
     }
 
     private suspend fun getSimplePingTarget(profile: ServerProfile): Pair<String, Int>? {
@@ -1693,10 +1722,7 @@ class MainViewModel @Inject constructor(
         }.getOrNull()
         getTcpTarget(profile)?.let { return it }
         ProfileCollections.coreTcpTarget(profile)?.let { return it }
-        // For DNS-tunneled profiles, ping the first resolver — honoring the
-        // global DNS override so the test mirrors what Connect actually uses.
-        val resolver = effectiveResolvers(profile).firstOrNull() ?: return null
-        return resolver.host to resolver.port
+        return null
     }
 
     /**
@@ -1745,7 +1771,22 @@ class MainViewModel @Inject constructor(
     }
 
     fun clearPingResults() {
-        _uiState.value = _uiState.value.copy(pingResults = emptyMap(), pingingViaGlobalDns = emptyList(), sortByHttps = false)
+        _uiState.value = _uiState.value.copy(pingResults = emptyMap(), pingSamples = emptyMap(), pingingViaGlobalDns = emptyList(), sortByHttps = false)
+        rememberHistory()
+    }
+
+    private fun publishProbePresentation(profiles: List<ServerProfile>) {
+        val state = _uiState.value
+        val samples = profiles.mapNotNull { profile ->
+            val current = state.profiles.firstOrNull { it.id == profile.id }
+            if (current == null || ProfileDuplicates.key(current) != ProfileDuplicates.key(profile)) return@mapNotNull null
+            state.pingResults[profile.id]?.let { result ->
+                profile.id to (pendingProbeSamples[profile.id]?.takeIf { it.result == result }
+                    ?: app.slipnet.domain.model.PingPresentation.Sample(result, null))
+            }
+        }.toMap()
+        _uiState.value = state.copy(pingSamples = state.pingSamples + samples)
+        pendingProbeSamples.clear()
         rememberHistory()
     }
 
@@ -1756,6 +1797,7 @@ class MainViewModel @Inject constructor(
      * state and DB so the new order survives restarts.
      */
     fun sortProfilesByPing(reliability: Boolean = false) {
+        _uiState.value = _uiState.value.copy(pingSamples = emptyMap())
         val current = _uiState.value.profiles
         val pings = _uiState.value.pingResults
         val sorted = app.slipnet.domain.model.ProfileRanking.sort(current, pings, reliability)

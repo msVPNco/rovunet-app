@@ -151,6 +151,11 @@ internal fun subscriptionErrorResource(code: String?): Int = when (code) {
     "PUBLIC_FEED_LIMIT" -> R.string.alpha17_public_limit
     "HTTPS_REQUIRED" -> R.string.subscription_https_required
     "INVALID_FEED", "UNSUPPORTED_FEED" -> R.string.subscription_invalid_feed
+    "PUBLIC_DECODE_FAILED" -> R.string.public_decode_failed
+    "PUBLIC_FETCH_TLS" -> R.string.public_fetch_tls
+    "PUBLIC_FETCH_TIMEOUT" -> R.string.public_fetch_timeout
+    "PUBLIC_FETCH_RATE_LIMIT" -> R.string.public_fetch_rate_limit
+    "PUBLIC_FETCH_HTTP", "PUBLIC_FETCH_NOT_FOUND", "PUBLIC_FETCH_REDIRECT" -> R.string.public_fetch_http
     "FEED_TOO_LARGE" -> R.string.subscription_too_large
     "DISCONNECT_TO_UPDATE" -> R.string.subscription_disconnect
     "REVIEW_REQUIRED" -> R.string.subscription_review_required

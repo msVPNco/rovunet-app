@@ -55,12 +55,13 @@ internal fun PublicSourceDialog(repository: SubscriptionRepository, provider: Pu
     var agreed by remember { mutableStateOf(false) }
     var preview by remember { mutableStateOf<SubscriptionPreview?>(null) }
     var failure by remember { mutableStateOf<String?>(null) }
+    var failureDuringImport by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var work by remember { mutableStateOf<Job?>(null) }
     fun execute(action: suspend () -> Unit) {
         if (busy) return
-        busy = true; failure = null
+        busy = true; failure = null; failureDuringImport = preview != null
         work = scope.launch {
             try { action() }
             catch (e: CancellationException) { throw e }
@@ -90,7 +91,15 @@ internal fun PublicSourceDialog(repository: SubscriptionRepository, provider: Pu
                 "PUBLIC_FEED_LIMIT", "FEED_TOO_LARGE" -> R.string.alpha17_public_limit
                 "SOURCE_EXISTS" -> R.string.subscription_source_exists
                 "HTTPS_REQUIRED" -> R.string.subscription_https_required
-                else -> if (provider != null) R.string.review02_provider_failed else R.string.subscription_failed
+                "INVALID_FEED", "UNSUPPORTED_FEED" -> R.string.subscription_invalid_feed
+                "PUBLIC_DECODE_FAILED" -> R.string.public_decode_failed
+                "PUBLIC_FETCH_TLS" -> R.string.public_fetch_tls
+                "PUBLIC_FETCH_TIMEOUT" -> R.string.public_fetch_timeout
+                "PUBLIC_FETCH_RATE_LIMIT" -> R.string.public_fetch_rate_limit
+                "PUBLIC_FETCH_HTTP", "PUBLIC_FETCH_NOT_FOUND", "PUBLIC_FETCH_REDIRECT" -> R.string.public_fetch_http
+                "DISCONNECT_TO_UPDATE" -> R.string.subscription_disconnect
+                "SOURCE_CHANGED" -> R.string.subscription_source_changed
+                else -> if (provider != null && !failureDuringImport) R.string.review02_provider_failed else R.string.subscription_failed
             }), color = MaterialTheme.colorScheme.error) }
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         } },

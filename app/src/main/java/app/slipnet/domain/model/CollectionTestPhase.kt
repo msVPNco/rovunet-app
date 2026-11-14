@@ -1,10 +1,13 @@
 package app.slipnet.domain.model
 
-/** Collection tests defer DNS until the fast phase finishes without a usable result. */
+/** HTTPS collection tests may offer DNS separately; quick ping never runs DNS. */
 object CollectionTestPhase {
     enum class FastState { SUCCESS, INCOMPLETE, NEEDS_REVIEW, FAILED }
     fun candidates(members: List<ServerProfile>, dnsOnly: Boolean, single: Boolean = false) =
         if (single) members else members.filter { ProfileCollections.isDns(it) == dnsOnly }
+
+    // No fixed count: a limited account tests only its own authorized fast routes.
+    fun quickCandidates(members: List<ServerProfile>) = members.filterNot(ProfileCollections::isDns)
 
     fun fastState(members: List<ServerProfile>, results: Map<Long, PingResult>, detailed: Boolean): FastState {
         val fast = candidates(members, false)
@@ -22,6 +25,6 @@ object CollectionTestPhase {
     }
 
     fun offerDns(members: List<ServerProfile>, results: Map<Long, PingResult>, detailed: Boolean,
-        completed: Boolean, dnsOnly: Boolean = false): Boolean = completed && !dnsOnly &&
+        completed: Boolean, dnsOnly: Boolean = false): Boolean = detailed && completed && !dnsOnly &&
         members.any(ProfileCollections::isDns) && fastState(members, results, detailed) == FastState.FAILED
 }

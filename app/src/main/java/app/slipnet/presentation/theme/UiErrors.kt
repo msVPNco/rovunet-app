@@ -12,6 +12,7 @@ object UiErrors {
             code == "PROBE_CLEANUP" -> R.string.probe_cleanup
             code == "PROBE_CHANGED" -> R.string.probe_changed
             code == "PROBE_NETWORK_CHANGED" -> R.string.review02_network_changed
+            code == "QUICK_NO_FAST_ROUTES" -> R.string.quick_no_fast_routes
             code == "HTTPS_FAILED" -> R.string.live_probe_failed
             code == "DATABASE_UNAVAILABLE" -> R.string.ui_database_unavailable
             code.contains("Unsupported version", true) || code.contains("Unsupported collection version", true) -> R.string.ui_error_update

@@ -958,7 +958,8 @@ private fun MainScreenContent(
                                         uiState.dataPathState, uiState.dataPathNoticeUntilElapsedMs, android.os.SystemClock.elapsedRealtime())) item(key = "data-path-check") {
                                     DataPathCheckCard(uiState.dataPathState)
                                 }
-                                app.slipnet.domain.model.ConnectionRecency.collections(uiState.profiles).forEach { collection ->
+                                app.slipnet.domain.model.PingPresentation.collections(uiState.profiles, uiState.pingResults,
+                                    uiState.pingSamples, uiState.connectedProfileId, measurementClockMillis).forEach { collection ->
                                     val representative = collection.first()
                                     val collectionKey = ProfileCollections.key(representative)
                                     val selected = collectionKey == uiState.selectedCollection

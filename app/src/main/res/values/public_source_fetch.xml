@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="public_fetch_tls">The source connection could not be verified securely. Check your connection and try again.</string>
+    <string name="public_fetch_timeout">Downloading the source timed out. Try again with a working connection.</string>
+    <string name="public_fetch_rate_limit">The source temporarily refused the request. Please try again later.</string>
+    <string name="public_fetch_http">The source did not return a usable download. Please try again later.</string>
+    <string name="public_decode_failed">The source was downloaded, but its contents could not be decoded. Existing profiles are preserved.</string>
+    <string name="quick_no_fast_routes">No eligible fast routes in this collection. Use the separate detailed test for DNS routes.</string>
+</resources>
