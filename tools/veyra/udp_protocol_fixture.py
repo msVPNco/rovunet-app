@@ -16,7 +16,7 @@ def udp_protocol_fixture(root):
         if not select.select([process.stdout], [], [], 20)[0]:
             raise RuntimeError('UDP handshake fixture did not become ready')
         fixture = json.loads(process.stdout.readline())
-        if len(fixture['links']) != 3 or not fixture['wrongWireguard']:
+        if len(fixture['links']) != 4 or not fixture['wrongWireguard'] or not fixture['wrongHysteriaMask']:
             raise RuntimeError('Incomplete UDP handshake fixture')
         yield base64.b64encode(json.dumps(fixture).encode()).decode()
     finally:

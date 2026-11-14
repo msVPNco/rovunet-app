@@ -89,7 +89,7 @@ class SubscriptionRepository @Inject constructor(
             client
         }
     }
-    private suspend fun fetchDocument(address: String, maxBytes: Int, account: Boolean, selectedTransport: OkHttpClient? = null): Download {
+    internal suspend fun fetchDocument(address: String, maxBytes: Int, account: Boolean, selectedTransport: OkHttpClient? = null): Download {
         var target = url(address)
         val initialTarget = target.toString()
         if (account) require(PrivateStatusPolicy.redirectAllowed(initialTarget, initialTarget)) { "UNTRUSTED_STATUS" }

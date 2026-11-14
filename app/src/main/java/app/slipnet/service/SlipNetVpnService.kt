@@ -3587,6 +3587,7 @@ class SlipNetVpnService : VpnService() {
      */
     private suspend fun connectXray(profile: app.slipnet.domain.model.ServerProfile, dnsServer: String) {
         vpnRepository.setCurrentTunnelType(TunnelType.XRAY)
+        var setupStage = 1 // local proxy settings
         try {
             val configured = preferencesDataStore.configuredSocksEndpoint()
             if (isProxyOnly && (configured.user.isNullOrEmpty() || configured.password.isNullOrEmpty())) {
@@ -3595,13 +3596,17 @@ class SlipNetVpnService : VpnService() {
                 stopOwnedService()
                 return
             }
+            setupStage = 2 // private endpoint reservation
             val endpoint = if (configured.user != null) configured else withContext(Dispatchers.IO) {
                 app.slipnet.core.LocalSocksEndpoint.privateCore()
             }
             coreEndpoint = endpoint
+            setupStage = 3 // Android VPN interface
             val tun = if (isProxyOnly) null else {
                 val established = establishVpnInterface(dnsServer)
                 if (established == null) {
+                    app.slipnet.util.ConnectionDiagnostics.record(app.slipnet.util.ConnectionDiagnostics.Event.XRAY_SETUP_FAILED,
+                        failure = app.slipnet.util.ConnectionDiagnostics.Failure.OTHER, code = 3)
                     reportConnectionError(app.slipnet.presentation.theme.RovunetStrings.localizedContext(this).getString(app.slipnet.R.string.vpn_tun_unavailable))
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     stopOwnedService()
@@ -3610,12 +3615,18 @@ class SlipNetVpnService : VpnService() {
                 vpnInterface = established
                 established
             }
+            setupStage = 4 // local routing configuration
             val routing = buildDomainRouter().coreRules()
+            setupStage = 5 // runtime configuration and child startup
             withContext(Dispatchers.IO) { XrayBridge.start(this@SlipNetVpnService, profile.coreLink, endpoint, routing).getOrThrow() }
+            setupStage = 6 // local packet engine
             if (tun == null) vpnRepository.setProxyConnected(profile)
             else vpnRepository.startTun2Socks(profile, tun).getOrThrow()
             finishConnection()
         } catch (e: Exception) {
+            if (e !is kotlinx.coroutines.CancellationException)
+                app.slipnet.util.ConnectionDiagnostics.record(app.slipnet.util.ConnectionDiagnostics.Event.XRAY_SETUP_FAILED,
+                    failure = app.slipnet.util.ConnectionDiagnostics.failure(e), code = setupStage)
             withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) { XrayBridge.stop() }
             vpnInterface?.close(); vpnInterface = null
             if (e is kotlinx.coroutines.CancellationException) throw e

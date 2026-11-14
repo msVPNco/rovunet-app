@@ -21,7 +21,7 @@ require(!minifiedBindingTests || deviceCandidate) { "Minified binding instrument
 // Prepare a non-installable Release artifact for an offline signer; never a debug-signed public APK.
 val unsignedPublication = providers.gradleProperty("rovunetUnsignedPublication").orNull == "true"
 require(!(unsignedPublication && deviceCandidate)) { "Unsigned publication and private-candidate modes are separate" }
-val appVersionName = if (deviceCandidate) "0.3.0-alpha22-review02" else "0.3.0-alpha22"
+val appVersionName = if (deviceCandidate) "0.3.0-alpha22-review03" else "0.3.0-alpha22"
 val appVersionCode = 49
 val cargoProfile = (findProperty("CARGO_PROFILE") as String?) ?: run {
     val isRelease = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
@@ -483,9 +483,14 @@ ksp {
 // Missing native assets must fail the build rather than advertise unusable protocols.
 val verifyVeyraCore by tasks.registering {
     doLast {
-        fun digest(bytes: ByteArray) = java.security.MessageDigest.getInstance("SHA-256").digest(bytes)
+        fun digest(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes)
             .joinToString("") { "%02x".format(it.toInt() and 255) }
-        val probeSource = rootProject.file("tools/native/awg/probe.go").readText().replace("\r\n", "\n").toByteArray(Charsets.UTF_8)
+        val probeInputs = listOf("tools/native/awg/probe.go", "tools/native/handshake/certificates.go",
+            "tools/native/handshake/postproof_mihomo.go", "tools/native/patch-mihomo-tls.py")
+            .map { digest(rootProject.file(it).readText().replace("\r\n", "\n").toByteArray(Charsets.UTF_8)) }
+        val quicInputs = listOf("tools/native/patch-xray-certificates.py", "tools/native/quic/verify_connection.go",
+            "tools/native/handshake/certificates.go", "tools/native/handshake/postproof_xray.go")
+            .map { digest(rootProject.file(it).readText().replace("\r\n", "\n").toByteArray(Charsets.UTF_8)) }
         for (abi in listOf("arm64-v8a", "armeabi-v7a", "x86_64")) {
             for (binary in listOf("libveyra_xray.so", "libveyra_core_launcher.so")) {
                 check(file("src/main/jniLibs/$abi/$binary").isFile) {
@@ -493,13 +498,19 @@ val verifyVeyraCore by tasks.registering {
                 }
             }
             val helper = file("src/main/jniLibs/$abi/librovunet_awg.so")
+            val xray = file("src/main/jniLibs/$abi/libveyra_xray.so")
+            val xrayReceipt = file(".native-receipts/xray/$abi.sha256")
+            check(xrayReceipt.isFile && xrayReceipt.readLines() == listOf("xray-quic-postproof-v2") + quicInputs +
+                listOf(digest(xray.readBytes()), "63ca2e0c1d31b89f67700c33842431f541fedd25")) {
+                "Xray QUIC certificate adapter/source mismatch for $abi; rebuild the pinned native core before packaging"
+            }
             val receipt = file(".native-receipts/awg/$abi.sha256")
             check(helper.isFile && receipt.isFile) {
                 "HY2 Salamander requires a rebuilt AWG probe and source receipt for $abi; frozen code48 native bytes cannot be reused"
             }
             val lines = receipt.readLines()
-            check(lines.size == 4 && lines[0] == "probe-mapping-v2" && lines[1] == digest(probeSource) &&
-                lines[2] == digest(helper.readBytes()) && lines[3] == "3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8") {
+            check(lines == listOf("probe-mapping-v3-postproof") + probeInputs +
+                listOf(digest(helper.readBytes()), "3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8")) {
                 "AWG probe source/binary mismatch for $abi; rebuild with tools/native/build-awg.py before packaging"
             }
         }

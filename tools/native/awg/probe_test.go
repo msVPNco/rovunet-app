@@ -105,7 +105,7 @@ func TestWireGuardProbeRequiresTheRealPeerWithoutAnyInternetDestination(t *testi
 }
 
 func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.T) {
-	for _, kind := range []string{"tuic", "hysteria2", "hysteria2-salamander"} {
+	for _, kind := range []string{"tuic", "tuic-early", "hysteria2", "hysteria2-salamander"} {
 		t.Run(kind, func(t *testing.T) {
 			cert, key := testCertificate(t)
 			certPEM, _ := os.ReadFile(cert)
@@ -113,6 +113,7 @@ func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.
 			port := freePort(t)
 			password := "synthetic-password"
 			serverType := kind
+			if kind == "tuic-early" { serverType = "tuic" }
 			if kind == "hysteria2-salamander" {
 				serverType = "hysteria2"
 			}
@@ -121,7 +122,7 @@ func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.
 				listener["obfs"] = "salamander"
 				listener["obfs-password"] = "synthetic-mask"
 			}
-			if kind == "tuic" {
+			if serverType == "tuic" {
 				listener["users"] = map[string]string{"00000000-0000-4000-8000-000000000001": password}
 			} else {
 				listener["users"] = map[string]string{"synthetic": password}
@@ -131,6 +132,7 @@ func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.
 			defer func() { peer.Process.Kill(); peer.Wait() }()
 			settings := map[string]any{"name": "proxy", "type": "tuic", "server": "127.0.0.1", "port": port, "password": password, "uuid": "00000000-0000-4000-8000-000000000001", "sni": "localhost", "alpn": []string{"h3"}, "skip-cert-verify": false}
 			out := map[string]any{"protocol": "tuic", "settings": settings}
+			if kind == "tuic-early" { settings["reduce-rtt"] = true }
 			if serverType == "hysteria2" {
 				out = map[string]any{"protocol": "hysteria", "settings": map[string]any{"version": 2, "address": "127.0.0.1", "port": port}, "streamSettings": map[string]any{"network": "hysteria", "tlsSettings": map[string]any{"serverName": "localhost"}, "hysteriaSettings": map[string]any{"auth": password}}}
 			}
@@ -164,7 +166,7 @@ func TestQuicProbesEnrollPrivateCertificatesAndUseProtocolHandshakes(t *testing.
 				}
 				mask["password"] = "synthetic-mask"
 			}
-			if kind == "tuic" {
+			if serverType == "tuic" {
 				settings["sni"] = "wrong.example.invalid"
 			} else {
 				out["streamSettings"].(map[string]any)["tlsSettings"].(map[string]any)["serverName"] = "wrong.example.invalid"

@@ -17,8 +17,12 @@ from udp_protocol_fixture import udp_protocol_fixture
 ROOT = Path(__file__).resolve().parents[2]
 PACKAGE = "app.veyra.client.candidate"
 REQUIRED = {
+    ("app.slipnet.data.subscription.PublicFetchTransportDeviceTest", "officialFallbackKeepsTheSameDirectOrAuthenticatedProxyTransport"),
+    ("app.slipnet.data.subscription.PublicFetchTransportDeviceTest", "redirectsRateLimitsAndBothBodyLengthBoundsDoNotBecomeFallbacks"),
+    ("app.slipnet.data.subscription.PublicFetchTransportDeviceTest", "externalCancellationClosesTheCallAndUntrustedTlsNeverReturnsAFeed"),
     ("app.slipnet.data.subscription.Code48StatusDeviceTest", "status2ReceiptsSurviveReopenUnknownCountersRenewalAndRollback"),
-    ("app.slipnet.presentation.ConnectionHistoryDeviceTest", "quickCollectionDefersAllTenDnsTypesUntilNoFastPathResponds"),
+    ("app.slipnet.presentation.ConnectionHistoryDeviceTest", "quickCollectionNeverTestsOrOffersDnsEvenAfterEveryFastPathFails"),
+    ("app.slipnet.presentation.ConnectionHistoryDeviceTest", "quickCollectionTestsExactlyItsSixOrTwentyFastRoutesAndNoDns"),
     ("app.slipnet.presentation.main.ConnectionColorsDeviceTest", "connectionCardAndBottomButtonShareGreenYellowAndRedStates"),
     ("app.slipnet.presentation.main.ConnectionColorsDeviceTest", "partialUsageStillShowsKnownQuotaAndExpiryAndDoesNotClaimRemainingVolume"),
     ("app.slipnet.core.ProtocolHandshakeDeviceTest", "packagedUdpProbesRequireRealHandshakesAndCancelWithoutTouchingTheLiveCore"),
@@ -111,6 +115,26 @@ REQUIRED = {
     ("app.slipnet.presentation.ConnectionHistoryDeviceTest", "completeGroupResultsSurviveProbeCleanupSqlSortAndActivityReturn"),
 }
 
+@contextmanager
+def public_transport_fixture(adb):
+    folder = ROOT / "app/build/rovunet-test-fixtures"
+    folder.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="public-feed-", dir=folder) as directory:
+        store = Path(directory) / "synthetic.p12"
+        subprocess.run(["keytool", "-J-Dkeystore.pkcs12.legacy", "-genkeypair", "-alias", "fixture", "-keyalg", "RSA",
+                        "-keysize", "2048", "-storetype", "PKCS12", "-keystore", str(store),
+                        "-storepass", "synthetic-only", "-keypass", "synthetic-only", "-dname", "CN=Synthetic public feed fixture",
+                        "-ext", "SAN=dns:raw.githubusercontent.com,dns:api.github.com,dns:localhost,ip:127.0.0.1", "-validity", "2"], check=True)
+        remote = "/data/local/tmp/rovunet-public-feed-fixture.p12"
+        adb("push", str(store), remote)
+        adb("shell", "run-as", PACKAGE, "mkdir", "-p", "files")
+        adb("shell", "run-as", PACKAGE, "cp", remote, "files/public-feed-fixture.p12")
+        adb("shell", "rm", "-f", remote)
+        try:
+            yield
+        finally:
+            adb("shell", "run-as", PACKAGE, "rm", "-f", "files/public-feed-fixture.p12")
+
 
 @contextmanager
 def ssh_fixture(adb):
@@ -196,7 +220,7 @@ def main():
             raise RuntimeError(f"Could not install {apk.name}")
     adb("shell", "cmd", "appops", "set", PACKAGE, "ACTIVATE_VPN", "allow")
     adb("shell", "am", "start", "-W", "-n", f"{PACKAGE}/app.slipnet.presentation.MainActivity")
-    with ssh_fixture(adb), soar_fixture() as soar_peers, slipstream_fixture(ROOT) as slipstream_peer, udp_protocol_fixture(ROOT) as udp_peers:
+    with public_transport_fixture(adb), ssh_fixture(adb), soar_fixture() as soar_peers, slipstream_fixture(ROOT) as slipstream_peer, udp_protocol_fixture(ROOT) as udp_peers:
         focused_classes = {"app.slipnet.core.ProtocolHandshakeDeviceTest",
                            "app.slipnet.presentation.CardInteractionDeviceTest",
                            "app.slipnet.service.SlipstreamIsolationDeviceTest"}
@@ -207,6 +231,9 @@ def main():
         print(f"PASS: {len(verified_tests(focused, {case for case in REQUIRED if case[0] in focused_classes}))} focused device tests.", flush=True)
         print("Running device regressions with local SSH and TLS peers", flush=True)
         result = adb("shell", "am", "instrument", "-w", "-r", "-e", "testVpnMtu", "true",
+                     # Explicit live-network fixtures have separate local receipts.
+                     # Exclude them rather than count missing-input assumptions as passes.
+                     "-e", "notClass", "app.slipnet.service.OwnerSourceNetworkDeviceTest,app.slipnet.data.subscription.PublicFeedNetworkDeviceTest",
                      "-e", "sshFixturePort", "39222", "-e", "tlsFixturePort", "39223",
                      "-e", "soarFixture", soar_peers, "-e", "slipstreamFixture", slipstream_peer,
                      "-e", "udpProtocolFixture", udp_peers,

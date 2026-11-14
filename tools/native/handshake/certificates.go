@@ -34,8 +34,8 @@ func rovunetAutomaticCertificate(config *tls.Config, option Option) {
 	host := config.ServerName
 	digest := sha256.Sum256([]byte(endpoint + "|" + strings.ToLower(host)))
 	path := filepath.Join(directory, hex.EncodeToString(digest[:])+".json")
-	// Go verifies CertificateVerify before invoking VerifyConnection. This callback
-	// owns all remaining chain, name, time and previously stored identity checks.
+	// VerifyConnection may precede CertificateVerify. Validate without publishing
+	// until the engine explicitly invokes this policy after its full handshake.
 	config.InsecureSkipVerify = true
 	config.VerifyConnection = func(state tls.ConnectionState) error {
 		if len(state.PeerCertificates) == 0 || len(state.PeerCertificates) > 16 {
@@ -60,6 +60,7 @@ func rovunetAutomaticCertificate(config *tls.Config, option Option) {
 		publicCA := chainError == nil
 		known, err := rovunetReadIdentity(path)
 		if os.IsNotExist(err) {
+			if !state.HandshakeComplete { return nil }
 			created, err := rovunetWriteIdentity(path, rovunetIdentity{Version: 1, PublicCA: publicCA, Certificate: cert.Raw}, false)
 			if err != nil {
 				return err
@@ -88,9 +89,11 @@ func rovunetAutomaticCertificate(config *tls.Config, option Option) {
 		if bytes.Equal(known.Certificate, cert.Raw) {
 			return nil
 		}
+		if !state.HandshakeComplete { return nil }
 		_, err = rovunetWriteIdentity(path, rovunetIdentity{Version: 1, PublicCA: true, Certificate: cert.Raw}, true)
 		return err
 	}
+	rovunetRegisterPostHandshake(config)
 }
 
 func rovunetReadIdentity(path string) (rovunetIdentity, error) {
