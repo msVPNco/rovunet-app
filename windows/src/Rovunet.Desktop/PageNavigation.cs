@@ -25,7 +25,7 @@ public sealed partial class MainWindow
         layout.Children.Remove(body);layout.Children.Remove(contextHost);layout.Children.Remove(header21);homeContent.Content=null;sidebarContent.Content=null;
         if(navigationHeader21!=null)navigationShell.Children.Remove(navigationHeader21);navigationHeader21=header21;Grid.SetColumnSpan(header21,2);navigationShell.Children.Add(header21);
         navigationShell.FlowDirection=L.Direction;navigationShell.ColumnDefinitions[0].Width=new(compactLayout?0:222);
-        homeContent.Content=body;sidebarContent.Content=contextHost;RenderPage();
+        homeContent.Content=body;sidebarContent.Content=contextHost;RenderPage();if(IsLoaded)_=StartHtml29();
     }
     async void NavigateTo(Action action)
     {
@@ -58,6 +58,7 @@ public sealed partial class MainWindow
         if(pageStack.Count==0){sidebarRoute20="HOME";RefreshSidebar20();}
         bool open=pageStack.Count>0;homeContent.Visibility=open?Visibility.Collapsed:Visibility.Visible;pageContent.Visibility=open?Visibility.Visible:Visibility.Collapsed;
         if(open){pageStack[^1].RefreshPageLanguage();pageContent.Content=pageStack[^1].PageVisual;}
+        QueueHtml29();
     }
     async Task<bool> CloseNavigation()
     {

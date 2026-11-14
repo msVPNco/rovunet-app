@@ -13,3 +13,4 @@ engines/**
 
 !engines/tor-manifest.json
 !engines/supplemental-pins.json
+!engines/handshake-pins.json

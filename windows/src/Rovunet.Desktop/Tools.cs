@@ -21,12 +21,12 @@ public sealed partial class MainWindow
         MenuHeading(menu,"MENU_CONNECTION");
         menu.Items.Add(MenuAction("CONNECT",()=>ConnectCollection(members)));
         menu.Items.Add(MenuAction("SHOW_PATHS",()=>ToggleCollection(members)));
-        menu.Items.Add(MenuAction("TEST_COLLECTION", () => CollectionTestDialog(members)));
+        menu.Items.Add(MenuAction("QUICK_PING", () => QuickPing29(members)));
+        menu.Items.Add(MenuAction("DETAILED_HTTPS", () => CollectionTestDialog(members)));
         menu.Items.Add(MenuAction("STABILITY_TEST", () => CollectionTestDialog(members, 3)));
         menu.Items.Add(MenuAction("STOP_TEST",CancelCollectionTest));
         menu.Items.Add(MenuAction("PATH_SELECTION",()=>ChooseCollectionPath(members)));
         var sort=new MenuItem{Header=L.Text("SORT_RESULTS"),Tag="SORT_RESULTS"};sort.Items.Add(MenuAction("SORT_LATENCY",()=>SortGroup(members,false)));sort.Items.Add(MenuAction("SORT_RELIABILITY",()=>SortGroup(members,true)));sort.Items.Add(MenuAction("CLEAR_TESTS",()=>ClearTests(members)));menu.Items.Add(sort);
-        menu.Items.Add(MenuAction("TCP_CHECK",()=>TcpCollection(members)));
         MenuHeading(menu,"MENU_MANAGE");
         if(members[0].SourceId.Length>0){
             menu.Items.Add(MenuAction("UPDATE",()=>_ = UpdateCollection20(members[0].SourceId)));
@@ -96,4 +96,3 @@ public sealed partial class MainWindow
         d.Content = c; d.ShowDialog();
     }
 }
-

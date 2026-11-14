@@ -14,6 +14,8 @@ namespace Rovunet.Desktop;
 
 public sealed partial class MainWindow
 {
+    Func<object,Func<ResolverResult,ValueTask>,CancellationToken,Task>? scannerWorkerFixture32;
+    Func<Profile,CancellationToken,Task<AgentReply>>? scannerVerifyFixture32;
     readonly SemaphoreSlim scannerTrustGate19=new(1,1);
     sealed class ScanEntry : System.ComponentModel.INotifyPropertyChanged
     {
@@ -176,7 +178,7 @@ public sealed partial class MainWindow
         var chosenEntries=new HashSet<ScanEntry>();Button workingToggle=null!,searchAction=null!,moreAction=null!;
         var probeButton=Button("SCAN_ALL_PROBES",()=>{});probeButton.Tag="SCAN_DIAGNOSTIC_FILTER";var probeMenu=new ContextMenu();probeButton.ContextMenu=probeMenu;
         foreach(var (key,label) in new[]{("NS","NS"),("TXT","TXT"),("A","RND"),("LONG-TXT","DPI"),("EDNS","EDNS"),("NXDOMAIN","NXD")}){var item=new MenuItem{Header=label,IsCheckable=true,IsChecked=requiredProbes.Contains(key),StaysOpenOnClick=true};item.Click+=(_,_)=>{if(item.IsChecked)requiredProbes.Add(key);else requiredProbes.Remove(key);FilterResults();SaveView();};probeMenu.Items.Add(item);}
-        probeButton.Click+=(_,_)=>{probeMenu.PlacementTarget=probeButton;probeMenu.IsOpen=true;};
+        probeButton.Click+=(_,_)=>OpenOwnedMenu30(probeButton,probeMenu);
         workingToggle=Button("SCAN_ONLY_WORKING",()=>statusFilter.SelectedValue=statusFilter.SelectedValue?.ToString()=="tunnel"?"passed":"tunnel");workingToggle.Tag="SCAN_WORKING_TOGGLE";
         var selectPassed=Button("SCAN_SELECT_PASSED",()=>{});var clearSelection=Button("SCAN_CLEAR_SELECTION",()=>{});var selectActions=new WrapPanel();selectActions.Children.Add(selectedCount);selectActions.Children.Add(clearSelection);resultTools.Children.Add(selectActions);
         var use=Button("USE_DNS",()=>{},true);use.IsEnabled=false;d.SetPageAction(use);use.Visibility=profile==null?Visibility.Collapsed:Visibility.Visible;
@@ -217,16 +219,16 @@ public sealed partial class MainWindow
             resumeTunnel.Visibility=e2eSupported&&session?.CanResumeTunnel==true&&session.TunnelStarted?Visibility.Visible:Visibility.Collapsed;resumeTunnel.IsEnabled=!running;
             retest.Visibility=e2eSupported&&!running&&session?.TunnelStarted==true?Visibility.Visible:Visibility.Collapsed;retest.IsEnabled=!running;
             var chosen=chosenEntries.Where(e=>e.Selectable&&!e.Stale).ToArray();selectedCount.Text=string.Format(L.Text("SCAN_SELECTION_COUNT"),chosen.Length,8);resultTools.Visibility=chosen.Length>0?Visibility.Visible:Visibility.Collapsed;use.IsEnabled=!applying&&chosen.Length>0;clearSelection.IsEnabled=chosen.Length>0;
-            if(presentation!=null)presentation.StageHint.Text=L.Text(session?.DirectTunnel==true?"SCAN_DIRECT_STAGE":profile==null?"SCAN_NEEDS_PROFILE":session?.CanRetest==true?"SCAN_TWO_STAGES":session?.DnsRunning==true?"SCAN_WAIT_DNS":"SCAN_NO_ELIGIBLE");
+            if(presentation!=null)presentation.StageHint.Text=L.Text(session?.PreparingTunnel==true?"SCAN_PREPARING_CERTIFICATE":session?.DirectTunnel==true?"SCAN_DIRECT_STAGE":profile==null?"SCAN_NEEDS_PROFILE":session?.TunnelRunning==true||session?.CanRetest==true||results.Any(e=>e.TunnelPassed)?"SCAN_TWO_STAGES":session?.DnsRunning==true?"SCAN_WAIT_DNS":"SCAN_NO_ELIGIBLE");
             RefreshPresentation();if(closePending&&!active)Dispatcher.BeginInvoke(()=>d.Close());
         }
         long checkpointRevision19=-1;DateTimeOffset checkpointTime19=DateTimeOffset.UtcNow;
         void SaveCheckpoint(){if(session==null||checkpointRevision19==session.Revision)return;SaveScannerCheckpoint19(scope,session,scanFingerprint19);checkpointRevision19=session.Revision;checkpointTime19=DateTimeOffset.UtcNow;}
         var refreshTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMilliseconds(350)};refreshTimer.Tick+=(_,_)=>{refreshTimer.Stop();RefreshView();Inputs();if(session?.Busy==true&&DateTimeOffset.UtcNow-checkpointTime19>TimeSpan.FromSeconds(10)){try{SaveCheckpoint();}catch{progress.Text=L.Text("PRIVATE_STORE_FAILED");}}};
-        void SessionChanged(){bool ended=active&&session?.Busy==false;active=session?.Busy==true;if(ended){try{SessionHistory();}catch{progress.Text=L.Text("PRIVATE_STORE_FAILED");}}RefreshPresentation();if(!refreshTimer.IsEnabled)refreshTimer.Start();}
+        void SessionChanged(){bool ended=active&&session?.Busy==false;active=session?.Busy==true;if(session?.Error.Length>0){progress.Text=L.Text(session.Error);progress.Foreground=MessageInk28(session.Error);}if(ended){try{SessionHistory();}catch{progress.Text=L.Text("PRIVATE_STORE_FAILED");}}RefreshPresentation();if(!refreshTimer.IsEnabled)refreshTimer.Start();}
         void SessionHistory(){if(session==null)return;SaveCheckpoint();var saved=results.Where(e=>e.Selectable&&!e.Stale).OrderByDescending(e=>e.TunnelPassed).ThenBy(e=>e.TunnelPassed?e.Latency:e.DnsLatency).Take(256).Select(e=>new SavedResolver{Address=e.Address,Transport=e.VerifiedTransport.Length>0?e.VerifiedTransport:e.Result.Transport}).ToList();data.ResolverHistory[scope]=new(){Fingerprint=scanFingerprint19,Time=DateTimeOffset.UtcNow,Entries=saved};Save();}
-        async Task Observe(Task operation){try{Inputs();await operation;if(session?.Error.Length>0)progress.Text=L.Text(session.Error);SessionHistory();}catch(Exception error){progress.Text=L.Text(error is SafeError safe?safe.Code:"DNS_SCAN_INVALID");}finally{refreshTimer.Stop();RefreshView();Inputs();}}
-        async Task RunTunnels(bool fresh){if(profile==null||session==null||session.TunnelRunning)return;if(TransportPlan.UsesSlip(profile.Raw)&&StoredSlipPin(profile).Length==0&&!ChooseSlipCertificate(profile))return;await Observe(session.StartTunnel(fresh));}
+        async Task Observe(Task operation){try{Inputs();await operation;if(session?.Error.Length>0){progress.Text=L.Text(session.Error);progress.Foreground=MessageInk28(session.Error);}SessionHistory();}catch(Exception error){string code=error is SafeError safe?safe.Code:"DNS_SCAN_INVALID";progress.Text=L.Text(code);progress.Foreground=MessageInk28(code);}finally{refreshTimer.Stop();RefreshView();Inputs();}}
+        async Task RunTunnels(bool fresh){if(profile==null||session==null||session.TunnelRunning)return;progress.Text="";progress.Foreground=Muted;await Observe(session.StartTunnel(fresh));}
         testTunnel.Click+=async(_,_)=>await RunTunnels(false);resumeTunnel.Click+=async(_,_)=>await RunTunnels(false);retest.Click+=async(_,_)=>await RunTunnels(true);cancelTunnel.Click+=(_,_)=>{session?.StopTunnel();Inputs();};
         cancel.Click+=async(_,_)=>{if(session==null)return;if(mode.SelectedValue?.ToString() is "simple" or "e2e")await Observe(session.StopAll());else{session.StopDns();Inputs();}};
         resumeDns.Click+=async(_,_)=>{if(session!=null)await Observe(session.ResumeDns());};
@@ -245,9 +247,9 @@ public sealed partial class MainWindow
             var scores=new MenuItem{Header=L.Text("SCAN_SCORE")};foreach(int minimum in Enumerable.Range(0,7)){var item=new MenuItem{Header=minimum==0?L.Text("SCAN_ALL_RESULTS"):minimum+"+",IsCheckable=true,IsChecked=minimum==scoreMinimum};item.Click+=(_,_)=>{scoreMinimum=minimum;FilterResults();SaveView();};scores.Items.Add(item);}menu.Items.Add(scores);
             Item("SCAN_PRISM_SCORE",()=>{var page=Dialog("SCAN_PRISM_SCORE");var body=new StackPanel{Margin=new(18)};var input=new TextBox{Text=prismMinimum.ToString(CultureInfo.InvariantCulture)};body.Children.Add(OutlinedField("SCAN_THRESHOLD",input));body.Children.Add(Button("SAVE",()=>{if(int.TryParse(input.Text,out int n)&&n is >=0 and <=30){prismMinimum=n;FilterResults();SaveView();page.Close();}},true));page.Content=body;page.ShowDialog();});
             Item("SCAN_ALL_RESULTS",()=>statusFilter.SelectedValue="all");Item("SCAN_ONLY_FAILED",()=>statusFilter.SelectedValue="failed");
-            var transfers=new MenuItem{Header=L.Text("SCAN_TRANSPORT_FILTER")};foreach(string method in new[]{"all","udp","tcp","tls","https"}){var item=new MenuItem{Header=method=="all"?L.Text("SCAN_ALL_PROBES"):DnsTransportLabel20(method),IsCheckable=true,IsChecked=transportFilter.SelectedValue?.ToString()==method};item.Click+=(_,_)=>transportFilter.SelectedValue=method;transfers.Items.Add(item);}menu.Items.Add(transfers);menu.PlacementTarget=moreAction;menu.IsOpen=true;
+            var transfers=new MenuItem{Header=L.Text("SCAN_TRANSPORT_FILTER")};foreach(string method in new[]{"all","udp","tcp","tls","https"}){var item=new MenuItem{Header=method=="all"?L.Text("SCAN_ALL_PROBES"):DnsTransportLabel20(method),IsCheckable=true,IsChecked=transportFilter.SelectedValue?.ToString()==method};item.Click+=(_,_)=>transportFilter.SelectedValue=method;transfers.Items.Add(item);}menu.Items.Add(transfers);OpenOwnedMenu30(moreAction,menu);
         };
-        void AttachSession(ScannerPlan19 plan,bool tunnelStarted=false){bool refused=false;var settings=plan.Options;if(plan.Family=="soar")settings.FullVerification=settings.Mode=="e2e";checkpointRevision19=-1;session=new(plan,results,ResolverWorker.Run,async(entry,method,reportPhase,token)=>{if(profile==null)throw new SafeError("SCAN_NEEDS_PROFILE");var candidate=ResolverScan.Candidate(profile,entry.Address,method,true);return await VerifyCandidate(candidate,profile,plan.ProbeUrl.Length>0?plan.ProbeUrl:probeUrl,token,()=>refused,value=>refused=value,plan.Family=="soar"&&settings.Mode=="simple"?settings.Timeout:settings.E2eTimeout,settings.FullVerification,reportPhase);},tunnelStarted);session.Eligible=e=>e.Result.Pass&&ScorePass(e);session.Compare=(a,b)=>CompareScannerEntries19(a,b,sort.SelectedValue?.ToString()??"order");session.Changed=SessionChanged;}
+        void AttachSession(ScannerPlan19 plan,bool tunnelStarted=false){bool refused=false;var settings=plan.Options;if(plan.Family=="soar")settings.FullVerification=settings.Mode=="e2e";checkpointRevision19=-1;session=new(plan,results,(request,receive,token)=>fixtureMode&&scannerWorkerFixture32!=null?scannerWorkerFixture32(request,receive,token):ResolverWorker.Run(request,receive,token),async(entry,method,reportPhase,token)=>{if(profile==null)throw new SafeError("SCAN_NEEDS_PROFILE");var candidate=ResolverScan.Candidate(profile,entry.Address,method,true);return await VerifyCandidate(candidate,profile,plan.ProbeUrl.Length>0?plan.ProbeUrl:probeUrl,token,()=>refused,value=>refused=value,plan.Family=="soar"&&settings.Mode=="simple"?settings.Timeout:settings.E2eTimeout,settings.FullVerification,reportPhase);},tunnelStarted);if(profile!=null&&TransportPlan.UsesSlip(profile.Raw))session.PrepareTunnel=token=>EnsureConnectionCertificates29(profile,token);session.Eligible=e=>e.Result.Pass&&ScorePass(e);session.Compare=(a,b)=>CompareScannerEntries19(a,b,sort.SelectedValue?.ToString()??"order");session.Changed=SessionChanged;}
         var restored=ReadScannerCheckpoint19(scope,scanFingerprint19);
         if(restored!=null){RestoreScannerRows19(restored,results);AttachSession(new(restored.Options,restored.Candidates,restored.Methods,restored.Family,restored.Zone,restored.PublicKey,restored.AutomaticTunnel,restored.ProbeUrl,restored.QuerySize),restored.TunnelStarted);resultsShown=false;showResults.Content=L.Text("SCAN_SAVED_RESULTS");standaloneDomain.Text=restored.Zone;mode.SelectedValue=restored.Options.Mode;progress.Text=string.Format(L.Text("SCAN_RESTORED"),restored.SavedAt.ToLocalTime().ToString("g"));}
         else{var history=data.ResolverHistory.GetValueOrDefault(scope);if(history!=null&&history.Fingerprint==scanFingerprint19){foreach(var row in history.Entries)results.Add(new(){Address=row.Address,Result=new(){Transport=row.Transport},Stale=true});}}
@@ -263,11 +265,10 @@ public sealed partial class MainWindow
                 if(settings.FullVerification)probeUrl=SubscriptionUrls.Validate(target.Text).AbsoluteUri;string baseMode=protocol=="both"?"udp":protocol;
                 IReadOnlyList<string> candidates=sourceName switch{"profile"=>ResolverScan.FromText(current,baseMode,settings.Limit),"input"=>ResolverInputs.Input(input.Text,baseMode,settings.Limit,Read(scanPort,1,65535)),"range"=>ResolverInputs.Ranges(input.Text,baseMode,settings.Limit,Read(scanPort,1,65535)),_=>ResolverCatalog.TestCandidates(sourceName,baseMode,settings.Limit)};
                 candidates=ResolverInputs.Prepare(candidates,baseMode,settings.Port,settings.Shuffle);string zone=standaloneDomain.Text.Trim().TrimEnd('.');if(Uri.CheckHostName(zone)!=UriHostNameType.Dns)throw new SafeError("DNS_SCAN_INVALID");
-                if(profile!=null&&phase is "simple" or "e2e"&&TransportPlan.UsesSlip(profile.Raw)&&StoredSlipPin(profile).Length==0&&!ChooseSlipCertificate(profile))throw new SafeError("SLIP_CERT_REQUIRED");
                 data.ResolverOptions[scope]=settings;Save();if(session!=null)await session.StopAll();chosenEntries.Clear();results.Clear();progress.Text="";
                 var plan=new ScannerPlan19(settings,candidates.ToArray(),protocol=="both"?["udp","tcp"]:[protocol],family,zone,fields[11],profile!=null&&phase is "simple" or "e2e",probeUrl,int.TryParse(fields[39],out int querySize20)?querySize20:0);
                 AttachSession(plan);SaveCheckpoint();ShowResults();await Observe(session!.ResumeDns());
-            }catch(Exception error){progress.Text=L.Text(error is SafeError safe?safe.Code:"DNS_SCAN_INVALID");Inputs();}
+            }catch(Exception error){string code=error is SafeError safe?safe.Code:"DNS_SCAN_INVALID";progress.Text=L.Text(code);progress.Foreground=MessageInk28(code);Inputs();}
         };
         panel.Children.Clear();actions.Children.Clear();panel.Children.Add(modeHost);panel.Children.Add(hint);panel.Children.Add(bankStatus);panel.Children.Add(start);
         standaloneDomain.IsReadOnly=profile!=null;configBody.Children.Add(OutlinedField("TUNNEL_DOMAIN",standaloneDomain));configBody.Children.Add(basicFields);configBody.Children.Add(wireHost);configBody.Children.Add(SettingsRow(shuffle));configBody.Children.Add(SettingsRow(nearby,"SCAN_NEARBY_HINT"));configBody.Children.Add(SettingsRow(wholeBank,"SCAN_WHOLE_BANK_HINT"));configBody.Children.Add(selectors);configBody.Children.Add(input);configBody.Children.Add(pick);configBody.Children.Add(options);panel.Children.Add(Card(configBody));panel.Children.Add(showResults);
@@ -283,6 +284,10 @@ public sealed partial class MainWindow
         await using var probe=new AgentClient(probeOnly:true);
         using var abort=budget.Token.Register(probe.Abort);
         try{
+            // Automatic E2E and explicit tunnel tests use the same trusted
+            // companion path as Connect, before starting any child process.
+            await EnsureConnectionCertificates29(profile,budget.Token);
+            if(fixtureMode&&scannerVerifyFixture32!=null)return await scannerVerifyFixture32(candidate,budget.Token);
             await probe.Start(budget.Token);
             var cmd=new AgentCommand{Action="connect",Profile=candidate,SlipCertificate=StoredSlipPin(profile),SlipInterval=SlipInterval(profile),SshTlsCa=StoredSshTlsCa(profile),HostKey=StoredSshKey(profile)};
             var reply=await probe.Send(cmd);
@@ -308,6 +313,3 @@ public sealed partial class MainWindow
         }finally{probe.Abort();}
     }
 }
-
-
-

@@ -14,6 +14,7 @@ public static class PublicFeed
         public override string ToString()=>Name;
     }
     public const string MahsaUrl="https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/app/sub.txt";
+    internal const string MahsaApi32="https://api.github.com/repos/mahsanet/MahsaFreeConfig/contents/app/sub.txt?ref=main";
 
     public static readonly Preset[] Presets =
     [
@@ -32,6 +33,7 @@ public static class PublicFeed
     public static string CanonicalUrl(string url){if(IsRemoved(url))throw new SafeError("PUBLIC_SOURCE_REMOVED");return Resolve(url)?.Url??url;}
 
     public static bool IsKnown(string url) => Resolve(url)!=null;
+    public static bool IsPartial(CompatibleImport batch)=>batch.Skipped.Values.Any(n=>n>0);
 
     public static string NameFor(string url) => Resolve(url)?.DisplayName??"";
 
@@ -44,12 +46,25 @@ public static class PublicFeed
     }
 
     public static async Task<SubscriptionClient.Payload> Fetch(string url, CancellationToken cancellation = default, int proxyPort = 0)
-        =>await FetchUsing28(url,(uri,stop,port)=>SubscriptionClient.Fetch(uri,port,cancellation:stop),cancellation,proxyPort);
+        =>await FetchUsing28(url,(uri,stop,port)=>SubscriptionClient.Fetch(uri,port,cancellation:stop,githubRaw32:uri.AbsoluteUri==MahsaApi32),cancellation,proxyPort);
     internal static async Task<SubscriptionClient.Payload> FetchUsing28(string url,Func<Uri,CancellationToken,int,Task<SubscriptionClient.Payload>> fetch,CancellationToken cancellation=default,int proxyPort=0)
     {
-        string canonical=CanonicalUrl(url);var first=await fetch(SubscriptionUrls.Validate(canonical),cancellation,proxyPort);
-        if(Resolve(canonical)?.Key!="mahsa")return first;
-        cancellation.ThrowIfCancellationRequested();return new(string.Join('\n',MahsaFeed28.Decode(first.Body)),first.Date,"");
+        string canonical=CanonicalUrl(url);
+        if(Resolve(canonical)?.Key!="mahsa")return await fetch(SubscriptionUrls.Validate(canonical),cancellation,proxyPort);
+        using var budget=CancellationTokenSource.CreateLinkedTokenSource(cancellation);budget.CancelAfter(TimeSpan.FromSeconds(25));
+        try{
+            SubscriptionClient.Payload first;
+            try{first=await fetch(SubscriptionUrls.Validate(canonical),budget.Token,proxyPort);}
+            catch(SafeError error)when(error.Code is "FETCH_FAILED" or "STATUS_NOT_FOUND"){
+                // Same official repository and exact file, with the same chosen
+                // proxy route. Never an ad URL, third-party mirror or TLS bypass.
+                budget.Token.ThrowIfCancellationRequested();
+                first=await fetch(SubscriptionUrls.Validate(MahsaApi32),budget.Token,proxyPort);
+            }
+            budget.Token.ThrowIfCancellationRequested();return new(string.Join('\n',MahsaFeed28.Decode(first.Body)),first.Date,"");
+        }
+        catch(OperationCanceledException)when(budget.IsCancellationRequested&&!cancellation.IsCancellationRequested){throw new SafeError("FETCH_FAILED");}
+        catch(SafeError error)when(error.Code=="CANCELLED"&&budget.IsCancellationRequested&&!cancellation.IsCancellationRequested){throw new SafeError("FETCH_FAILED");}
     }
 
     public static CompatibleImport Preview(string body,bool experimental)
@@ -64,7 +79,7 @@ public static class PublicFeed
             if(line.StartsWith('#')||SubscriptionUsage20.MetadataLine(line,out _,out _))continue;
             CompatibleImport batch;
             try{batch=Importer.ReadCompatible(line,experimental);}
-            catch(SafeError error)when(!line.StartsWith("rovunet",StringComparison.OrdinalIgnoreCase)&&!line.StartsWith("slipnet",StringComparison.OrdinalIgnoreCase)&&error.Code!="IMPORT_TOO_LARGE"){
+            catch(SafeError error)when(error.Code!="IMPORT_TOO_LARGE"){
                 result.Reject(error.Code);continue;
             }
             result.Merge(batch);

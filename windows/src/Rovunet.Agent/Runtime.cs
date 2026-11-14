@@ -228,12 +228,18 @@ public sealed partial class Runtime(bool probeOnly = false) : IDisposable
         if (core != null && core.HasExited) { Stop(); return new() { State = "error", Error = "CORE_EXITED" }; }
         return new() { State = core == null ? "disconnected" : "connected", HttpPort = httpPort, SocksPort = socksPort, Verified = verified };
     }
-    public async Task<AgentReply> Probe(string url, CancellationToken ct, bool live = false,bool fallbacks=false)
+    public async Task<AgentReply> Probe(string url, CancellationToken ct, bool live = false,bool fallbacks=false,int timeoutMs=0)
     {
         if(Status().State!="connected")throw new SafeError("NOT_CONNECTED");
+        using var round=CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if(timeoutMs<0)throw new SafeError("INVALID_MESSAGE");
+        if(timeoutMs>0)round.CancelAfter(Math.Clamp(timeoutMs,1000,90000));
         var targets=HttpsProbePolicy.Targets(url,fallbacks&&!live);AgentReply reply=new();
         for(int i=0;i<targets.Length;i++){
-            ct.ThrowIfCancellationRequested();reply=await ProbeTarget(targets[i],ct,live,i>0);reply.ProbeTargetsTried=i+1;
+            ct.ThrowIfCancellationRequested();
+            if(round.IsCancellationRequested){if(!live)verified=false;reply.Verified=false;reply.Error="PROBE_TIMEOUT";return reply;}
+            reply=await ProbeTarget(targets[i],round.Token,live,i>0);reply.ProbeTargetsTried=i+1;
+            if(round.IsCancellationRequested&&!ct.IsCancellationRequested){if(!live)verified=false;reply.Verified=false;reply.Error="PROBE_TIMEOUT";return reply;}
             if(ct.IsCancellationRequested||reply.Error=="CANCELLED"){reply.Verified=verified;return reply;}
             if(reply.Verified){if(!live)verified=true;reply.ProbeFallbackUsed=i>0;return reply;}
         }

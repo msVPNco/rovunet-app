@@ -25,11 +25,11 @@ public sealed partial class MainWindow
         if (glassSurfaces.TryGetValue(key, out var cached)) return cached;
         Color color = ((SolidColorBrush)Tone(key)).Color;
         Color Lift(double amount) => Color.FromRgb((byte)(color.R + (255 - color.R) * amount), (byte)(color.G + (255 - color.G) * amount), (byte)(color.B + (255 - color.B) * amount));
-        double shine = key is "Sidebar" or "StatusSurface" ? .025 : key == "Collection" ? .10 : .045;
+        double shine = key is "Sidebar" or "StatusSurface" ? .008 : key == "Collection" ? .025 : .018;
         var brush = new LinearGradientBrush { StartPoint = new(0, 0), EndPoint = new(.7, 1) };
-        brush.GradientStops.Add(new(Lift(darkTheme ? shine : .35), 0));
-        brush.GradientStops.Add(new(Lift(darkTheme ? shine * .35 : .12), .20));
-        brush.GradientStops.Add(new(color, 1));
+        brush.GradientStops.Add(new(Lift(darkTheme ? shine : .12), 0));
+        brush.GradientStops.Add(new(Lift(darkTheme ? shine * .35 : .04), .20));
+        brush.GradientStops.Add(new(key is "Soft" or "Selected"?((SolidColorBrush)Tone(key=="Soft"?"Card":"Soft")).Color:color, 1));
         brush.Freeze(); glassSurfaces[key] = brush; return brush;
     }
     Brush GlassEdge(Brush tint)
@@ -91,7 +91,7 @@ public sealed partial class MainWindow
             var paths = new StackPanel { Margin = new(10, 0, 10, 0) };
             void Toggle() => ToggleCollection26(group.Key);
             var toggle = IconButton("SHOW_PATHS", "M4,8 L12,16 L20,8", Toggle);
-            var test = IconButton("TEST_COLLECTION", "M4,5 H20 V20 H4 Z M8,2 V8 M16,2 V8 M8,13 L11,16 L17,10", () => CollectionTestDialog(members));
+            var test = IconButton("QUICK_PING", "M4,5 H20 V20 H4 Z M8,2 V8 M16,2 V8 M8,13 L11,16 L17,10", () => QuickPing29(members));test.Tag="QUICK_PING";
             var power = IconButton("CONNECT", PowerIcon.ToString(), () =>
             {
                 var chosen = members.FirstOrDefault(x => x.Id == data.SelectedId) ?? members.FirstOrDefault(x => x.CanConnect);
@@ -121,7 +121,7 @@ public sealed partial class MainWindow
             stop.ContentTemplate = (DataTemplate)XamlReader.Parse("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{Binding}' TextWrapping='NoWrap' TextAlignment='Center' FontSize='13' FontWeight='SemiBold'/></DataTemplate>"); tools.Children.Add(stop);
             var progress = new ProgressBar { Height = 4, Minimum = 0, Visibility = Visibility.Collapsed, Margin = new(0, 1, 0, 0) }; headerBody.Children.Add(progress);
             var headerCard = new ElevatedBorder { Child = headerBody, MinHeight = 72, Background = GlassSurface("Collection"), CornerRadius = new(18), BorderBrush = GlassEdge(Tone("Outline")), BorderThickness = new(1), Padding = new(10, 6, 6, 6) };
-            headerCard.CornerRadius=new(16);headerCard.BorderThickness=new(.75);CardDepth(headerCard); stack.Children.Add(headerCard);
+            headerCard.CornerRadius=new(23);headerCard.BorderThickness=new(.75);CardDepth(headerCard); stack.Children.Add(headerCard);
             foreach (var item in members)
             {
                 var row = new Grid { Height = 54 };
@@ -154,7 +154,7 @@ public sealed partial class MainWindow
                 var deleteButton = IconButton("DELETE", "M5,6 H19 M8,6 V3 H16 V6 M7,9 V21 H17 V9", () => Delete(item)); deleteButton.SetBinding(IsEnabledProperty, new Binding("IsEnabled") { Source = remove }); controls.Children.Add(deleteButton);
                 foreach (Button button in controls.Children) { button.Width = 44; button.Margin = new(0); button.Padding = new(10); button.Background = Brushes.Transparent; if(button.Content is System.Windows.Shapes.Path shape&&shape.Stroke!=null){shape.StrokeThickness=1.5;shape.Width=shape.Height=20;} }
                 Grid.SetColumn(controls, 2); row.Children.Add(controls);
-                var tile = Card(row, new(0, 6, 0, 0)); tile.Padding = new(9, 5, 5, 5); tile.CornerRadius = new(13); tile.Height = 66; tile.BorderThickness=new(.75);
+                var tile = Card(row, new(0, 6, 0, 0)); tile.Padding = new(9, 5, 5, 5); tile.CornerRadius = new(16); tile.Height = 66; tile.BorderThickness=new(.75);
                 RouteProfileCard20(tile, select, item); row.ClipToBounds = true; CardDepth(tile); LiftOnHover(tile);
                 select.GotKeyboardFocus += (_, _) => tile.BorderBrush = Accent; select.LostKeyboardFocus += (_, _) => RefreshCards(); paths.Children.Add(tile);
                 rows.Add(new() { Profile = item, Tile = tile, Select = select, Connect = connectItem, Result = result, Timing = timing, Protocol = protocol, Edit = edit, Delete = remove });

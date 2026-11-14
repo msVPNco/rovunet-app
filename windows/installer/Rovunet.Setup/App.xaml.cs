@@ -22,6 +22,7 @@ public partial class App : Application
             catch(InstallProblem p){Shutdown(p.Code=="appRunning"?41:p.Code=="unknownFolder"?43:p.Code=="invalidPath"?45:p.Code=="rollbackFailed"?46:42);}catch{Shutdown(42);}return;
         }
         if (e.Args is ["--exercise",var report]) { InstallService.Testing=true;Shutdown(await SetupExercise.Run(report));return; }
+        if (e.Args is ["--runtime-exercise",var runtimeReport]) { Shutdown(await WebViewRuntime29.Exercise(runtimeReport));return; }
         if (e.Args is ["--preview",var preview])
         {
             if(!Path.IsPathFullyQualified(preview)||File.Exists(preview)){Shutdown(12);return;}
@@ -93,7 +94,8 @@ public sealed class SetupWindow : Window
             bool succeeded=false;installing=true;InstallButton.IsEnabled=close.IsEnabled=content.IsEnabled=false;progress.Visibility=Visibility.Visible;status.Text=T("installing");status.BringIntoView();
             try
             {
-                await InstallService.Install(path.Text,desktopChoice.IsChecked==true);succeeded=Completed=true;
+                await WebViewRuntime29.Ensure(()=>status.Text=T("runtimeInstalling"));
+                status.Text=T("installing");await InstallService.Install(path.Text,desktopChoice.IsChecked==true);succeeded=Completed=true;
                 var success=new StackPanel{Margin=new(24,48,24,32),VerticalAlignment=VerticalAlignment.Center};success.Children.Add(new TextBlock{Text="✓",FontSize=72,Foreground=ColorBrush(dark?"#8DDBB6":"#196844"),HorizontalAlignment=HorizontalAlignment.Center});success.Children.Add(Text(T("success"),26));success.Children.Add(Text(T("successHint")));success.Children.Add(new TextBlock{Text=path.Text,TextWrapping=TextWrapping.Wrap,FlowDirection=FlowDirection.LeftToRight,Foreground=ink,Margin=new(0,18,0,18)});scroll.Content=success;scroll.ScrollToTop();InstallButton.Content=T("finish");close.Visibility=Visibility.Collapsed;
             }
             catch(Exception error){status.Text=T(error is InstallProblem p&&strings.ContainsKey(p.Code)?p.Code:"failed");}
@@ -101,7 +103,3 @@ public sealed class SetupWindow : Window
         };
     }
 }
-
-
-
-

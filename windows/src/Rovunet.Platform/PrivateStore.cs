@@ -77,9 +77,11 @@ public sealed class UserData
     public string Language { get; set; } = "fa";
     public string SelectedId { get; set; } = "";
     public List<string> RecentProfileIds { get; set; } = [];
+    public Dictionary<string,string> CollectionRoutingModes { get; set; } = [];
     public HashSet<string> PinnedProfileIds { get; set; } = [];
     public HashSet<string> FastSlipProfiles { get; set; } = [];
     public Dictionary<string,string> SlipCertificates { get; set; } = [];
+    public Dictionary<string,SlipTrustPin29> SlipTrustPins {get;set;}=[];
     public Dictionary<string,string> SshKeys { get; set; } = [];
     public Dictionary<string,string> SshKeyScopes { get; set; } = [];
     public Dictionary<string,string> SshTlsCertificates { get; set; } = [];
@@ -113,6 +115,7 @@ public sealed class UserData
     public int CollectionExpansionRevision { get; set; }
     public Dictionary<string, DateTimeOffset> SubscriptionUpdated { get; set; } = [];
     public Dictionary<string, PathMeasurement> Measurements { get; set; } = [];
+    public Dictionary<string, PingMeasurement> PingMeasurements { get; set; } = [];
     public Dictionary<string, DateTimeOffset> CollectionTestStarted { get; set; } = [];
     public double WindowWidth { get; set; } = 480;
     public bool PortraitShell { get; set; }
@@ -129,6 +132,17 @@ public sealed class PathMeasurement
     public int Attempts { get; set; }
     public int Passes { get; set; }
     public string Stage { get; set; } = "";
+}
+
+// TCP reachability is deliberately separate from HTTPS/tunnel verification.
+public sealed class PingMeasurement
+{
+    public string Mechanism {get;set;}="tcp";
+    public bool Reachable { get; set; }
+    public long ElapsedMs { get; set; }
+    public string Error { get; set; } = "";
+    public string ProfileFingerprint { get; set; } = "";
+    public DateTimeOffset SampledAt { get; set; }
 }
 
 public sealed class ScanOptions

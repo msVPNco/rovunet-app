@@ -257,7 +257,7 @@ public static partial class CoreLinks
         string transport = Get("type", "tcp") switch { "tcp" or "raw" => "raw", "ws" or "websocket" => "ws", "xhttp" => "xhttp", "grpc"=>"grpc","httpupgrade"=>"httpupgrade","kcp" or "mkcp"=>"kcp", _ => throw new SafeError("ENGINE_NOT_READY") };
         var security = Get("security", "none"); var flow = Get("flow");
         if (security is not ("none" or "tls" or "reality") || (security == "reality" && transport == "ws")) throw new SafeError("UNSUPPORTED_FORMAT");
-        if (flow.Length > 0 && (flow != "xtls-rprx-vision" || transport != "raw" || security == "none"&&encryption=="none")) throw new SafeError("UNSUPPORTED_FORMAT");
+        if (flow.Length > 0 && (flow is not ("xtls-rprx-vision" or "xtls-rprx-vision-udp443") || transport != "raw" || security == "none"&&encryption=="none")) throw new SafeError("UNSUPPORTED_FORMAT");
         var stream = Obj(("network", transport), ("security", security));
         if (security == "tls")
         {

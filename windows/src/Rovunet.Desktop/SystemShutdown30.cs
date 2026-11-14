@@ -8,8 +8,8 @@ public sealed partial class MainWindow
     internal void PrepareSystemShutdown30()
     {
         if(SystemSessionEnding30)return;
-        SystemSessionEnding30=true;closing=true;allowClose=true;
-        SaveWindowSize();CancelSleepTimer();poolStop?.Cancel();testStop?.Cancel();usageLifetime20.Cancel();
+        SystemSessionEnding30=true;closing=true;allowClose=true;CancelRouting28(true);
+        SaveWindowSize();CancelSleepTimer();poolStop?.Cancel();testStop?.Cancel();certificateStop29?.Cancel();usageLifetime20.Cancel();
         var owned=new[]{client,testing}.OfType<AgentClient>().Distinct().ToArray();
         // Disconnected shutdown needs no Agent, proxy recovery process or UI.
         // Only our live clients are closed. Their Agents restore their own

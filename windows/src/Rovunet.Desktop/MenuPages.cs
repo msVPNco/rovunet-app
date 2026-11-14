@@ -22,7 +22,8 @@ public sealed partial class MainWindow
         var menu=new ContextMenu{FlowDirection=L.Direction};
         MenuHeading(menu,"MENU_CONNECTION");menu.Items.Add(connectItem);
         menu.Items.Add(MenuAction("LAST_TEST",()=>ShowMeasurement(profile)));
-        menu.Items.Add(MenuAction("QUICK_HTTPS",()=>CollectionTestDialog([profile])));
+        var quick=MenuAction("QUICK_PING",()=>QuickPing29([profile]));quick.IsEnabled=CollectionProbePlan.IsDirect(profile);quick.ToolTip=quick.IsEnabled?L.Text("QUICK_PING"):L.Text("QUICK_DNS_EXCLUDED");menu.Items.Add(quick);
+        menu.Items.Add(MenuAction("DETAILED_HTTPS",()=>CollectionTestDialog([profile])));
         menu.Items.Add(MenuAction("STABILITY_TEST",()=>CollectionTestDialog([profile],3)));
         menu.Items.Add(MenuAction("STOP_TEST",CancelCollectionTest));
         if(ProfileEditing.IsDns(profile))menu.Items.Add(MenuAction("FIND_DNS",()=>ResolverFinder(profile)));
@@ -40,9 +41,10 @@ public sealed partial class MainWindow
             remove.IsEnabled=!busy&&state.State!="connected";edit.IsEnabled=!busy;
             move.IsEnabled=!busy&&state.State!="connected"&&profile.SourceId.Length==0;
             foreach(var item in menu.Items.OfType<MenuItem>()){
-                if(item.Tag is "QUICK_HTTPS" or "STABILITY_TEST")item.IsEnabled=!busy&&state.State!="connected";
+                if(item.Tag is "DETAILED_HTTPS" or "STABILITY_TEST")item.IsEnabled=!busy&&state.State!="connected";
+                if(item.Tag is "QUICK_PING")item.IsEnabled=CollectionProbePlan.IsDirect(profile)&&!busy&&state.State is not("connecting" or "disconnecting");
                 if(item.Tag is "STOP_TEST")item.IsEnabled=currentCollection is{Running:true};
-                if(item.Tag is "LAST_TEST")item.IsEnabled=data.Measurements.ContainsKey(profile.Id);
+                if(item.Tag is "LAST_TEST")item.IsEnabled=data.Measurements.ContainsKey(profile.Id)||HasCurrentPing29(profile,out _);
             }
         };
         return menu;
@@ -52,13 +54,16 @@ public sealed partial class MainWindow
         bool idle=!busy&&state.State is "disconnected" or "error";
         foreach(var item in menu.Items.OfType<MenuItem>().Where(i=>i.Tag is string)){
             item.IsEnabled=!busy;
-            if(item.Tag is "RENAME" or "DELETE_COLLECTION" or "TEST_COLLECTION" or "STABILITY_TEST")item.IsEnabled=idle;
+            if(item.Tag is "CONNECT"){bool active=members.Any(p=>p.Id==activeProfile?.Id)&&state.State is "connected" or "connecting";item.Header=L.Text(active?state.State=="connected"?"DISCONNECT":"CANCEL":"CONNECT");item.IsEnabled=!busy&&(active||members.Any(p=>p.CanConnect));}
+            if(item.Tag is "SHOW_PATHS")item.Header=L.Text(data.OpenCollectionId==CollectionKey(members[0])?"HIDE_PATHS":"SHOW_PATHS");
+            if(item.Tag is "RENAME" or "DELETE_COLLECTION" or "TEST_COLLECTION" or "DETAILED_HTTPS" or "STABILITY_TEST")item.IsEnabled=idle;
+            if(item.Tag is "QUICK_PING")item.IsEnabled=members.Any(p=>SupportPolicy.Allowed(p,data.IncludeExperimental)&&CollectionProbePlan.IsDirect(p))&&!busy&&state.State is not("connecting" or "disconnecting");
             if(item.Tag is "UPDATE")item.IsEnabled=!updatingSubscriptions20.Contains(members[0].SourceId)&&!PublicFeed.IsRemoved(data.Subscriptions.FirstOrDefault(s=>s.Id==members[0].SourceId)?.Url??"");
             if(item.Tag is "MOVE_COLLECTION")item.IsEnabled=idle&&members.All(p=>p.SourceId.Length==0);
             if(item.Tag is "STOP_TEST")item.IsEnabled=currentCollection is{Running:true}&&currentCollection.Key==CollectionKey(members[0]);
             if(item.Tag is "SORT_RESULTS"){
-                item.IsEnabled=!busy&&members.Any(p=>data.Measurements.ContainsKey(p.Id));
-                foreach(var sort in item.Items.OfType<MenuItem>())sort.IsEnabled=sort.Tag is "SORT_LATENCY"?members.Any(p=>data.Measurements.GetValueOrDefault(p.Id)?.Verified==true):members.Any(p=>data.Measurements.ContainsKey(p.Id));
+                item.IsEnabled=!busy&&members.Any(p=>data.Measurements.ContainsKey(p.Id)||HasCurrentPing29(p,out _));
+                foreach(var sort in item.Items.OfType<MenuItem>())sort.IsEnabled=sort.Tag is "SORT_LATENCY"?members.Any(p=>PreferPing29(p,out var ping)?ping.Reachable:data.Measurements.GetValueOrDefault(p.Id)?.Verified==true):sort.Tag is "CLEAR_TESTS"?members.Any(p=>data.Measurements.ContainsKey(p.Id)||HasCurrentPing29(p,out _)):members.Any(p=>data.Measurements.ContainsKey(p.Id));
             }
         }
     }
@@ -92,13 +97,11 @@ public sealed partial class MainWindow
     }
     void ChooseCollectionPath(List<Profile> members)
     {
-        var page=Dialog("PATH_SELECTION");var panel=new StackPanel{Margin=new(20)};
-        panel.Children.Add(Text(L.Text("SELECT_PATH"),14,Muted));
-        foreach(var profile in members){var button=SettingsAction("SELECT",()=>{if(busy)return;SelectProfile20(profile);page.DialogResult=true;});button.Content=profile.Name+" · "+profile.Protocol;button.IsEnabled=profile.CanConnect;panel.Children.Add(Card(button));}
-        page.Content=panel;page.ShowDialog();
+        BuildRoutingPage28(members).ShowDialog();
     }
     void ShowMeasurement(Profile profile)
     {
+        if(PreferPing29(profile,out var ping)){string success=ping.Mechanism=="tuic-authenticated-relay"?"HANDSHAKE_RELAY_OK":ping.Mechanism is not("" or "tcp")?"HANDSHAKE_OK":"PING_REPLIED";Info("LAST_TEST",profile.Name+"\n"+ping.SampledAt.ToLocalTime().ToString("g",CultureInfo.CurrentCulture)+"\n"+L.Text(ping.Reachable?success:ping.Error)+"\n"+(ping.Reachable?ping.ElapsedMs.ToString(CultureInfo.InvariantCulture)+" ms":"—")+"\n"+L.Text(ping.Mechanism is not("" or "tcp")?"HANDSHAKE_SCOPE":"PING_SCOPE"));return;}
         if(!data.Measurements.TryGetValue(profile.Id,out var result))return;
         Info("LAST_TEST",profile.Name+"\n"+result.SampledAt.ToLocalTime().ToString("g",CultureInfo.CurrentCulture)+"\n"+L.Text(result.Verified?"HTTPS_VERIFIED":result.Error.Length>0?result.Error:"TEST_UNCONFIRMED")+"\n"+result.ElapsedMs.ToString(CultureInfo.InvariantCulture)+" ms · "+result.Passes+"/"+result.Attempts);
     }

@@ -6,8 +6,13 @@ public sealed class CollectionProbePlan
     public CollectionProbePlan(IEnumerable<Profile> profiles,IReadOnlyDictionary<string,long>? verifiedLatency=null)
     {
         var all=profiles.ToArray();
-        Direct=all.Where(p=>!ProfileEditing.IsDns(p)).OrderBy(p=>verifiedLatency!=null&&verifiedLatency.TryGetValue(p.Id,out long time)&&time>=0?time:long.MaxValue).ToArray();
-        Dns=all.Where(ProfileEditing.IsDns).ToArray();
+        Direct=all.Where(IsDirect).OrderBy(p=>verifiedLatency!=null&&verifiedLatency.TryGetValue(p.Id,out long time)&&time>=0?time:long.MaxValue).ToArray();
+        Dns=all.Where(p=>!IsDirect(p)).ToArray();
+    }
+    public static bool IsDirect(Profile profile)
+    {
+        try{return ChainProfiles.IsChain(profile.Raw)?ChainProfiles.Read(profile.Raw).Layers.All(IsDirect):!ProfileEditing.IsDns(profile);}
+        catch(SafeError){return false;}
     }
     public bool NeedsDns(bool cancelled,int successfulDirect)=>!cancelled&&successfulDirect==0&&Dns.Length>0;
     public static Profile[] DisplayOrder(IEnumerable<Profile> profiles,IReadOnlyDictionary<string,long> passed)

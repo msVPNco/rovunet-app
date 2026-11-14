@@ -72,7 +72,7 @@ try
                 {
                     "connect" => runtime.Connect(cmd.Profile ?? throw new SafeError("INVALID_MESSAGE"), cmd.SystemProxy && !probeOnly, lifetime.Token, cmd.HostKey, cmd.SlipCertificate, cmd.SlipInterval,cmd.SshTlsCa,cmd.LocalHttpPort,cmd.LocalSocksPort,chainIdentities:cmd.ChainIdentities,enableUdp:cmd.EnableUdp).GetAwaiter().GetResult(),
                     "disconnect" => runtime.Stop(),
-                    "probe" => runtime.Probe(cmd.ProbeUrl, pending.Probe!.Token,false,cmd.ProbeFallbacks).GetAwaiter().GetResult(),
+                    "probe" => runtime.Probe(cmd.ProbeUrl, pending.Probe!.Token,false,cmd.ProbeFallbacks,cmd.ProbeTimeoutMs).GetAwaiter().GetResult(),
                     "status" => runtime.Status(),
                     "telemetry" => runtime.Telemetry(lifetime.Token).GetAwaiter().GetResult(),
                     "latency" => runtime.Probe(cmd.ProbeUrl,pending.Probe!.Token,true).GetAwaiter().GetResult(),

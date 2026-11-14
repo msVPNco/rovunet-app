@@ -87,3 +87,12 @@ fixed card layout, measurement generations and cancellable Agent coordination
 are Windows implementations. Existing Android/SlipNet notices remain in place.
 
 AmneziaWG: separate GPL-3.0 Mihomo-based engine, source pin 3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8. Windows adapter source and build script are included; see licenses/AmneziaWG/SOURCE.txt and dependency notices.
+
+The HTML interface uses Microsoft WebView2 SDK 1.0.4314.35. See licenses/WebView2-LICENSE.txt and licenses/WebView2-NOTICE.txt. The installer includes the official Microsoft WebView2 Evergreen Bootstrapper.
+
+The HANDSHAKE30 helper adds bounded authenticated HY2/TUIC/WireGuard/AmneziaWG quick
+probes. Its implementation, exact Go/module pins and build instructions are in
+native/handshake30. Preserved dependency licences/notices are in licenses/Handshake30;
+the accompanying Rovunet-Handshake30-0.1.4-preview.4-source.zip includes vendor sources.
+No full Mihomo source is copied into the helper. Existing AmneziaWG/Tor/Xray/transport
+notices and their corresponding-source requirements remain unchanged.

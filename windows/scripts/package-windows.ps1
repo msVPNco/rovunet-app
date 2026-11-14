@@ -34,7 +34,7 @@ $commit = $SourceRevision
 $revision = $commit
 $sourceFiles = @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File | Where-Object {
   $relative = [IO.Path]::GetRelativePath($sourceRoot,$_.FullName)
-  $relative -notmatch '(^|\\)(bin|obj|\.git|artifacts)(\\|$)' -and ($relative -notmatch '^engines\\' -or $relative -in @('engines\pins.json','engines\transports-pins.json','engines\tor-manifest.json','engines\supplemental-pins.json')) -and $relative -notmatch '\.bak-' -and $relative -ne 'SOURCE-SHA256.json'
+  $relative -notmatch '(^|\\)(bin|obj|\.git|artifacts)(\\|$)' -and ($relative -notmatch '^engines\\' -or $relative -in @('engines\pins.json','engines\transports-pins.json','engines\tor-manifest.json','engines\supplemental-pins.json','engines\handshake-pins.json')) -and $relative -notmatch '\.bak-' -and $relative -ne 'SOURCE-SHA256.json'
 })
 $sourceManifest = @(foreach ($file in $sourceFiles) { @{ path=[IO.Path]::GetRelativePath($sourceRoot,$file.FullName).Replace('\','/'); sha256=(Get-FileHash -LiteralPath $file.FullName).Hash.ToLowerInvariant(); bytes=$file.Length } })
 $sourceManifest | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $outputRoot 'SOURCE-SHA256.json') -Encoding utf8
@@ -65,8 +65,11 @@ try {
     'naive.exe'='ecf6f56a834a3e945e703ddb766b32c8c474e9767d472bb0b45177c33300aa79'
     'slipstream-client.exe'='206b43eacdae8c035176e458005117b7874d22ad82d896f01524f247bae6f43c'
     'rovunet-awg.exe'='60f283a80f00ed004839cf3fb8e9a129163a3bba3d4ba9f8017bc8af3a51a3fa'
+    'rovunet-handshake.exe'='6bbc096a48a349de766d8ac5d84877d3981fe919649ca0b832acff33889b1b1a'
   }
   New-Item -ItemType Directory -Path (Join-Path $stage 'engines') | Out-Null
+  $handshakePin=Get-Content -LiteralPath (Join-Path $sourceRoot 'engines\handshake-pins.json') -Raw|ConvertFrom-Json
+  if($handshakePin.file -ne 'rovunet-handshake.exe' -or $handshakePin.sha256 -ne $pins['rovunet-handshake.exe']){throw 'Handshake provenance pin mismatch'}
   foreach ($name in $pins.Keys) {
     $engine = Join-Path $EngineDirectory $name
     if ((Get-FileHash -LiteralPath $engine).Hash -ne $pins[$name]) { throw "Engine hash mismatch: $name" }
@@ -82,6 +85,7 @@ try {
   Copy-Item -LiteralPath $torRoot -Destination (Join-Path $stage 'engines') -Recurse
   Copy-Item -LiteralPath $torManifest -Destination (Join-Path $stage 'engines')
   Copy-Item -LiteralPath (Join-Path $EngineDirectory 'supplemental-pins.json') -Destination (Join-Path $stage 'engines')
+  Copy-Item -LiteralPath (Join-Path $sourceRoot 'engines\handshake-pins.json') -Destination (Join-Path $stage 'engines')
   foreach ($folder in @('docs','licenses')) { Copy-Item -LiteralPath $folder -Destination $stage -Recurse }
   $bankStage = Join-Path $stage 'data/dns'
   New-Item -ItemType Directory -Path $bankStage -Force | Out-Null
@@ -107,7 +111,7 @@ try {
   Copy-Item -LiteralPath 'LICENSE','NOTICE.md' -Destination $stage
   Set-Content -LiteralPath (Join-Path $stage 'review-install.marker') -Value 'Rovunet-Windows' -NoNewline
   Copy-Item -LiteralPath (Join-Path $outputRoot 'SOURCE-SHA256.json') -Destination $stage
-  $provenance = @{ version=$packageVersion; platform='windows-x64'; source_commit=$commit; source_origin='local-maintenance-git-commit'; source_baseline='0.1.2-preview.5'; upstream_release='windows-v0.1.1-beta'; source_manifest_sha256=(Get-FileHash (Join-Path $outputRoot 'SOURCE-SHA256.json')).Hash.ToLowerInvariant(); signed=$false; published=$false; rebuilt_native_engines=@(); mihomo_backport='6780eeeb27c7eda5e79a6310a4f7f91ba7cb725d'; tor_manifest_sha256='46ba15e787d7734923a6eb764268d9c4933e173d008e6bb43bfe1d3cb6ffe414'; amnezia_source_pin='3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8'; reused_pinned_engines=@('rovunet-awg.exe','rovunet-extra.exe','rovunet-transports.exe','xray.exe','naive.exe','slipstream-client.exe'); native_engine_baseline_version='0.1.2-preview.5/review4'; native_engine_baseline_go_version='go1.27.3 windows/amd64'; sdk=(& $Dotnet --version); compiler_sha256=(Get-FileHash $MakeNsis).Hash }
+  $provenance = @{ version=$packageVersion; platform='windows-x64'; source_commit=$commit; source_origin='local-maintenance-git-commit'; source_baseline='0.1.4-preview.1/d355541'; upstream_release='windows-v0.1.3-beta'; html_sdk='Microsoft.Web.WebView2/1.0.4314.35'; webview_bootstrapper_sha256='cf2f2445fef0c5c14e372045f84998771eeb8bb01d59be4afd00692fa160082e'; udp_handshake_quick_test_accepted=$true; udp_handshake_scope='authenticated loopback peers and separate quick measurements; not all provider paths or TUN acceptance'; handshake_sha256='6bbc096a48a349de766d8ac5d84877d3981fe919649ca0b832acff33889b1b1a'; source_manifest_sha256=(Get-FileHash (Join-Path $outputRoot 'SOURCE-SHA256.json')).Hash.ToLowerInvariant(); signed=$false; published=$false; rebuilt_native_engines=@(); baseline_rebuilt_native_engines=@('rovunet-handshake.exe'); handshake_baseline_version='0.1.4-preview.4/HANDSHAKE30'; mihomo_backport='6780eeeb27c7eda5e79a6310a4f7f91ba7cb725d'; tor_manifest_sha256='46ba15e787d7734923a6eb764268d9c4933e173d008e6bb43bfe1d3cb6ffe414'; amnezia_source_pin='3f27ef39f8c96bbfbc8b0b9bb10f5c9ef60149d8'; reused_pinned_engines=@('rovunet-handshake.exe','rovunet-awg.exe','rovunet-extra.exe','rovunet-transports.exe','xray.exe','naive.exe','slipstream-client.exe'); native_engine_baseline_version='0.1.2-preview.5/review4'; native_engine_baseline_go_version='go1.27.3 windows/amd64'; sdk=(& $Dotnet --version); compiler_sha256=(Get-FileHash $MakeNsis).Hash }
   $provenance | ConvertTo-Json | Set-Content (Join-Path $stage 'BUILD-PROVENANCE.json')
   $manifest = Join-Path $outputRoot 'delete-manifest.nsh'
   $lines = @(Get-ChildItem -LiteralPath $stage -File -Recurse | Where-Object { $_.FullName -notin @((Join-Path $stage 'Rovunet.exe'), (Join-Path $stage 'review-install.marker')) } | ForEach-Object {
@@ -138,5 +142,3 @@ try {
   Get-FileHash -LiteralPath (Join-Path $outputRoot 'setup/Rovunet.Setup.exe') | Select-Object Algorithm,Hash | ConvertTo-Json | Set-Content (Join-Path $outputRoot 'setup-sha256.json')
   foreach($file in $sourceManifest){if((Get-FileHash -LiteralPath (Join-Path $sourceRoot $file.path)).Hash.ToLowerInvariant() -ne $file.sha256){throw ('Source changed after snapshot: '+$file.path)}}
 } finally { Pop-Location }
-
-

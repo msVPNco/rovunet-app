@@ -12,8 +12,9 @@ public sealed partial class MainWindow
     bool trafficBaselineNeeded=true;
     TransferRates rates = new(null, null); readonly Queue<double> graphSamples = [];
     bool polling; long lastLatencyTick; DateTimeOffset? latencySampled; long? liveLatency; string liveLatencyError = "";
+    string liveLatencyTarget28 = "";
     static string Size(double value) => value >= 1073741824 ? (value / 1073741824).ToString("0.##", CultureInfo.InvariantCulture) + " GiB" : value >= 1048576 ? (value / 1048576).ToString("0.##", CultureInfo.InvariantCulture) + " MiB" : value >= 1024 ? (value / 1024).ToString("0.#", CultureInfo.InvariantCulture) + " KiB" : value.ToString("0", CultureInfo.InvariantCulture) + " B";
-    void ResetTelemetry() { trafficSampler = new();trafficBaselineNeeded=true; lastTraffic = null; rates = new(null, null); liveLatency = null; liveLatencyError = ""; latencySampled = null; lastLatencyTick = 0; graphSamples.Clear(); }
+    void ResetTelemetry() { trafficSampler = new();trafficBaselineNeeded=true; lastTraffic = null; rates = new(null, null); liveLatency = null; liveLatencyError = ""; liveLatencyTarget28 = ""; latencySampled = null; lastLatencyTick = 0; graphSamples.Clear(); }
     void BeginTrafficSampling()
     {
         if(!trafficBaselineNeeded)return;
@@ -41,6 +42,7 @@ public sealed partial class MainWindow
         try
         {
             var reply = await current.Send(new() { Action = "telemetry" }); if (current != client || state.State != "connected" || closing||!routeGeneration.IsCurrent(routeLease)) return;
+            if(reply.State!="connected"){lostClient=current;await Run(HandleLost);return;}
             if (reply.TrafficAvailable)
             {
                 lastTraffic = new(reply.UploadedBytes, reply.DownloadedBytes); rates = trafficSampler.Sample(lastTraffic, Stopwatch.GetTimestamp());
@@ -48,13 +50,15 @@ public sealed partial class MainWindow
             }
             else { rates = new(null, null); }
             RefreshTrafficText();RefreshHero();
-            if (data.LiveLatency && (lastLatencyTick == 0 || Stopwatch.GetElapsedTime(lastLatencyTick).TotalSeconds >= 30) && !busy)
+            if ((data.LiveLatency||RoutingMode28(activeProfile)!="manual") && (lastLatencyTick == 0 || Stopwatch.GetElapsedTime(lastLatencyTick).TotalSeconds >= 30) && !busy)
             {
                 // Separate, bounded request. This is HTTPS latency, not ICMP ping.
                 // It never gates manual connect or changes the active route.
-                lastLatencyTick = Stopwatch.GetTimestamp(); var latency = await current.Send(new() { Action = "latency", ProbeUrl = data.LatencyUrl });
-                if (current != client || state.State != "connected" || closing||!routeGeneration.IsCurrent(routeLease)) return;
-                latencySampled = DateTimeOffset.UtcNow; liveLatency = latency.Verified ? latency.ElapsedMs : null; liveLatencyError = latency.Error; RefreshTrafficText(); RefreshCards();
+                string latencyTarget=data.LatencyUrl;
+                lastLatencyTick = Stopwatch.GetTimestamp(); var latency = await current.Send(new() { Action = "latency", ProbeUrl = latencyTarget });
+                if (current != client || state.State != "connected" || closing||!routeGeneration.IsCurrent(routeLease)||latencyTarget!=data.LatencyUrl) return;
+                if(latency.Verified)routingFailures28=0;else if(RouteFailure28(latency.Error))routingFailures28++;
+                liveLatencyTarget28=latencyTarget;latencySampled = DateTimeOffset.UtcNow; liveLatency = latency.Verified ? latency.ElapsedMs : null; liveLatencyError = latency.Error; RefreshTrafficText(); RefreshCards();
             }
         }
         catch { if (current == client) { rates = new(null, null); RefreshTrafficText(); } }

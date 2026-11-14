@@ -38,6 +38,7 @@ internal sealed class MarqueeLine : Grid
     internal bool HasAnimationClock=>clock!=null;
     internal double Translation => translation.X;
     internal double NaturalWidth => naturalWidth;
+    internal FrameworkElement ContentSource29=>source;
     internal bool? MotionOverride { get; set; }
 
     internal MarqueeLine(FrameworkElement content, double height, FlowDirection direction, Func<bool> enabled)
