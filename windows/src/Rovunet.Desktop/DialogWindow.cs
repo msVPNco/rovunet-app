@@ -71,17 +71,17 @@ public sealed class DialogWindow : Window
     public void UsePageChrome()
     {
         if(toolbar!=null)return;root.Children.Remove(cancel);
-        toolbar=new DockPanel{Margin=new(12,6,12,6)};DockPanel.SetDock(toolbar,Dock.Top);
+        toolbar=new DockPanel{Tag="PAGE_TOOLBAR30",Margin=new(12,6,12,6)};DockPanel.SetDock(toolbar,Dock.Top);
         var back=new Button{IsCancel=true,Content=new System.Windows.Shapes.Path{Data=Geometry.Parse("M16,4 L8,12 L16,20 M8,12 H22"),Stroke=(Brush)FindResource("Ink"),StrokeThickness=1.7,Width=22,Height=22,Stretch=Stretch.Uniform},ToolTip=L.Text("BACK"),Width=48,Height=48,Padding=new(12),Background=Brushes.Transparent};back.Click+=(_,_)=>{if(BackAction!=null)BackAction();else Close();};System.Windows.Automation.AutomationProperties.SetName(back,L.Text("BACK"));DockPanel.SetDock(back,Dock.Left);toolbar.Children.Add(back);
         titleLabel=new TextBlock{Text=pageTitle,FontSize=22,FontWeight=FontWeights.SemiBold,Margin=new(6,0,6,0),VerticalAlignment=VerticalAlignment.Center,TextWrapping=TextWrapping.NoWrap,TextTrimming=TextTrimming.CharacterEllipsis};toolbar.Children.Add(titleLabel);root.Children.Insert(0,toolbar);
     }
     internal void SetPageTitle(string text){UsePageChrome();titleLabel!.Text=text;Title="Rovunet · "+text;}
     internal void RefreshPageLanguage()
     {
-        if(RelocalizePage==null||displayedLanguage==L.Language)return;
+        if(displayedLanguage==L.Language)return;
         root.FlowDirection=L.Direction;root.Language=XmlLanguage.GetLanguage(L.Language);Language=root.Language;FontFamily=Typography.Family(L.Language);
         if(toolbar?.Children.OfType<Button>().FirstOrDefault(button=>button.IsCancel) is {} back){back.ToolTip=L.Text("BACK");System.Windows.Automation.AutomationProperties.SetName(back,L.Text("BACK"));}
-        RelocalizePage();displayedLanguage=L.Language;
+        L.RefreshTree(root);RelocalizePage?.Invoke();displayedLanguage=L.Language;
     }
     internal void AddToolbarAction(Button action){UsePageChrome();DockPanel.SetDock(action,Dock.Right);toolbar!.Children.Insert(1,action);}
     internal void EnableVerticalTouchScroll26()=>root.Children.OfType<ScrollViewer>().Single().PanningMode=PanningMode.VerticalOnly;

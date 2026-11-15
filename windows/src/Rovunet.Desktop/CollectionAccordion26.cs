@@ -32,6 +32,6 @@ public sealed partial class MainWindow
         group.ClosedStatus26.Text=summary;
         group.ClosedStatus26.Foreground=collectionRuns.TryGetValue(group.Key,out var job)&&job.Error.Length>0?Red:Muted;
         group.ClosedLine26.Visibility=(!open||!known)&&summary.Length>0?Visibility.Visible:Visibility.Collapsed;
+        if(CardActivity30(group) is {} activity){group.ClosedStatus26.Text=group.Summary.Text=activity.Text;group.ClosedStatus26.Foreground=group.Summary.Foreground=activity.Ink;group.Summary.Visibility=Visibility.Visible;group.ClosedLine26.Visibility=!open||!known?Visibility.Visible:Visibility.Collapsed;}
     }
 }
-

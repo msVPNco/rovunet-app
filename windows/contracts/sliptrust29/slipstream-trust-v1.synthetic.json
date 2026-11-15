@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "server_id": "5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e",
+  "account_id": "acacacacacacacacacacacacacacacac",
+  "period_id": "9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a9a",
+  "items": [
+    {
+      "profile_id": "slipstream-socks",
+      "transport": "slipstream",
+      "domain": "slip.example.test",
+      "certificate_pem": "-----BEGIN CERTIFICATE-----\nMIHrMIGToAMCAQICAQEwCgYIKoZIzj0EAwIwADAeFw0yNjExMTQwMzAxNTRaFw0z\nNjExMTQwNDAxNTRaMAAwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAAQiy/kLZaR3\nRKHWmXRChzecKvadMlRKvgfxTsoeXO/q6TxT2AYdJufmB3jJ12gcomMMqxm3Pzas\nEQJ8bvx/1b3TMAoGCCqGSM49BAMCA0cAMEQCIE6CKwKJoFafGymFDB3Ty91dllzt\nVVyc/hLVhOqGtB/nAiBb6yZXmyz45sHYr+MtFveTX4ss5mOfFIOmeDW7Pm8K6Q==\n-----END CERTIFICATE-----\n",
+      "certificate_sha256": "ea9c81e30500a7737af5d79ab429a9bf0801414f44a51c10a5cef3bee260f945",
+      "not_after": "2036-11-14T04:01:54Z"
+    }
+  ]
+}

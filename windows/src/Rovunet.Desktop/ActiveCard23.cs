@@ -10,8 +10,10 @@ public sealed partial class MainWindow
         if(cards.Children.IndexOf(group.Card)>1){cards.Children.Remove(group.Card);cards.Children.Insert(1,group.Card);}
         if(group.Paths.Children.IndexOf(row.Tile)>0){group.Paths.Children.Remove(row.Tile);group.Paths.Children.Insert(0,row.Tile);}
         row.Timing.Visibility=Visibility.Visible;
+        if(PreferPing29(row.Profile,out var ping)&&(!latencySampled.HasValue||ping.SampledAt>=latencySampled.Value))return;
         bool fresh=liveLatency.HasValue&&latencySampled.HasValue&&(DateTimeOffset.UtcNow-latencySampled.Value).TotalSeconds<60;
         row.Timing.Text=fresh?liveLatency!.Value.ToString(CultureInfo.InvariantCulture)+" ms":"—";
         row.Timing.Foreground=fresh?Green:Muted;row.Timing.ToolTip=latencySampled?.ToLocalTime().ToString("g");
+        if(fresh){row.Result.Text=L.Text("TEST_OK");row.Result.Foreground=Green;row.Result.Visibility=Visibility.Visible;}
     }
 }

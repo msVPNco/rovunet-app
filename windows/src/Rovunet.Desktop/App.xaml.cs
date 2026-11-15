@@ -28,6 +28,62 @@ public partial class App : Application
             var reviewWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);
             MainWindow=reviewWindow;reviewWindow.Show();bool ok=await reviewWindow.RunReview09(inputRoot,outputPath);reviewWindow.Close();Shutdown(ok?0:1);return;
         }
+        if(e.Args is ["--ui-quickscope35",var quickScopeReport]) {
+            if(!Path.IsPathFullyQualified(quickScopeReport)||File.Exists(quickScopeReport)){Shutdown(12);return;}
+            var quickScopeWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=quickScopeWindow;quickScopeWindow.htmlFixtureFolder29=Path.GetDirectoryName(quickScopeReport);quickScopeWindow.Show();bool passed=await quickScopeWindow.RunQuickScope35(quickScopeReport);quickScopeWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-localdns36",var localDnsReport]) {
+            if(!Path.IsPathFullyQualified(localDnsReport)||File.Exists(localDnsReport)){Shutdown(12);return;}
+            var localDnsWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=localDnsWindow;localDnsWindow.htmlFixtureFolder29=Path.GetDirectoryName(localDnsReport);localDnsWindow.Show();bool passed=await localDnsWindow.RunLocalDns36(localDnsReport);localDnsWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-clipboard33",var clipboardReport]) {
+            if(!Path.IsPathFullyQualified(clipboardReport)||File.Exists(clipboardReport)){Shutdown(12);return;}
+            var clipboardWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=clipboardWindow;clipboardWindow.htmlFixtureFolder29=Path.GetDirectoryName(clipboardReport);clipboardWindow.Show();bool passed=await clipboardWindow.RunClipboard33(clipboardReport);clipboardWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-scanstart32",var scanStartReport]) {
+            if(!Path.IsPathFullyQualified(scanStartReport)||File.Exists(scanStartReport)){Shutdown(12);return;}
+            var scanStartWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=scanStartWindow;scanStartWindow.htmlFixtureFolder29=Path.GetDirectoryName(scanStartReport);scanStartWindow.Show();bool passed=await scanStartWindow.RunScanStart32(scanStartReport);scanStartWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-feed32",var feedReport]) {
+            if(!Path.IsPathFullyQualified(feedReport)||File.Exists(feedReport)){Shutdown(12);return;}
+            var feedWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=feedWindow;feedWindow.htmlFixtureFolder29=Path.GetDirectoryName(feedReport);feedWindow.Show();bool passed=await feedWindow.RunFeed32(feedReport);feedWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-interaction31",var interactionReport]) {
+            if(!Path.IsPathFullyQualified(interactionReport)||File.Exists(interactionReport)){Shutdown(12);return;}
+            var interactionWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=interactionWindow;interactionWindow.htmlFixtureFolder29=Path.GetDirectoryName(interactionReport);interactionWindow.Show();bool passed=await interactionWindow.RunInteraction31(interactionReport);interactionWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-handshake30",var handshakeReport]) {
+            if(!Path.IsPathFullyQualified(handshakeReport)||File.Exists(handshakeReport)){Shutdown(12);return;}
+            var handshakeWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);MainWindow=handshakeWindow;handshakeWindow.Show();bool passed=await handshakeWindow.RunHandshake30(handshakeReport);handshakeWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-html-controls30",var controlsReport]) {
+            if(!Path.IsPathFullyQualified(controlsReport)||File.Exists(controlsReport)){Shutdown(12);return;}
+            var controlsWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=controlsWindow;controlsWindow.htmlFixtureFolder29=Path.GetDirectoryName(controlsReport);controlsWindow.Show();bool passed=await controlsWindow.RunHtmlControls30(controlsReport);controlsWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-card-activity30",var activityReport]) {
+            if(!Path.IsPathFullyQualified(activityReport)||File.Exists(activityReport)){Shutdown(12);return;}
+            var activityWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=activityWindow;activityWindow.htmlFixtureFolder29=Path.GetDirectoryName(activityReport);activityWindow.Show();bool passed=await activityWindow.RunCardActivity30(activityReport);activityWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-html-navigation30",var navigationReport]) {
+            if(!Path.IsPathFullyQualified(navigationReport)||File.Exists(navigationReport)){Shutdown(12);return;}
+            var navigation=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=navigation;navigation.htmlFixtureFolder29=Path.GetDirectoryName(navigationReport);navigation.Show();bool passed=await navigation.RunHtmlNavigation30(navigationReport);navigation.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-html29",var htmlReport]) {
+            if(!Path.IsPathFullyQualified(htmlReport)||File.Exists(htmlReport)){Shutdown(12);return;}
+            var htmlWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=htmlWindow;htmlWindow.htmlFixtureFolder29=Path.GetDirectoryName(htmlReport);htmlWindow.Show();bool passed=await htmlWindow.RunHtml29(htmlReport);htmlWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-pingtrust29",var pingTrustReport]) {
+            if(!Path.IsPathFullyQualified(pingTrustReport)||File.Exists(pingTrustReport)){Shutdown(12);return;}
+            var fixture=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);MainWindow=fixture;fixture.Show();bool passed=await fixture.RunPingTrust29(pingTrustReport);fixture.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-routing-network28",var routingNetworkReport]) {
+            if(!Path.IsPathFullyQualified(routingNetworkReport)||File.Exists(routingNetworkReport)){Shutdown(12);return;}
+            var routingNetworkWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);MainWindow=routingNetworkWindow;routingNetworkWindow.Show();bool passed=await routingNetworkWindow.RunRoutingNetwork28(routingNetworkReport);routingNetworkWindow.Close();Shutdown(passed?0:1);return;
+        }
+        if(e.Args is ["--ui-routing28",var routingReport]) {
+            if(!Path.IsPathFullyQualified(routingReport)||File.Exists(routingReport)){Shutdown(12);return;}
+            var routingWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);MainWindow=routingWindow;routingWindow.Show();bool passed=await routingWindow.RunRouting28(routingReport);routingWindow.Close();Shutdown(passed?0:1);return;
+        }
         if(e.Args is ["--ui-connection27",var connectionReport]) {
             if(!Path.IsPathFullyQualified(connectionReport)||File.Exists(connectionReport)){Shutdown(12);return;}
             var connectionWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);MainWindow=connectionWindow;connectionWindow.Show();bool passed=await connectionWindow.RunConnection27(connectionReport);connectionWindow.Close();Shutdown(passed?0:1);return;

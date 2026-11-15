@@ -6,36 +6,36 @@ namespace Rovunet.Desktop;
 
 public sealed partial class MainWindow
 {
-    bool MarqueeEnabled21 => data.MarqueeMotion switch
+    bool MarqueeEnabled21 => !htmlReady29&&(data.MarqueeMotion switch
     {
         "on" => true,
         "off" => false,
         _ => SystemParameters.ClientAreaAnimation
-    };
+    });
 
     void ApplyApprovedPalette21()
     {
         var palette = !darkTheme ? new Dictionary<string, string>
         {
-            ["Bg"]="#F2F2FB", ["BgTop"]="#FCFCFF", ["Card"]="#FFFFFF", ["Soft"]="#FFFFFF",
-            ["Sidebar"]="#F5F5FD", ["Ink"]="#202C42", ["Muted"]="#526078", ["Accent"]="#6345AC",
-            ["Outline"]="#BDC1D4", ["Selected"]="#E4D7ED", ["Green"]="#125439", ["Red"]="#AD2645", ["Amber"]="#885706",
-            ["PowerSurface"]="#B5E9CC", ["PowerInk"]="#125439", ["AddSurface"]="#D6CAF8", ["AddInk"]="#302748",
-            ["Collection"]="#E8DEEF", ["StatusSurface"]="#FFFFFF", ["Hero"]="#FFFFFF", ["HeroEnd"]="#EDEAF8", ["ScanCyan"]="#146A78"
+            ["Bg"]="#F1F1FA", ["BgTop"]="#E9EDF8", ["Card"]="#E5E9F3", ["Soft"]="#FFFFFF",
+            ["Sidebar"]="#F1F1FA", ["Ink"]="#1A2A3D", ["Muted"]="#4F6175", ["Accent"]="#6345AC",
+            ["Outline"]="#ADB7CB", ["Selected"]="#DED8EB", ["Green"]="#126445", ["Red"]="#AE243F", ["Amber"]="#885706",
+            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#D2C4ED", ["AddInk"]="#302445",
+            ["Collection"]="#DED8EB", ["StatusSurface"]="#E5E9F3", ["Hero"]="#FBFCFF", ["HeroEnd"]="#F1F1FA", ["ScanCyan"]="#146A78"
         } : IsAmoled ? new Dictionary<string, string>
         {
-            ["Bg"]="#000000", ["BgTop"]="#10131C", ["Card"]="#171E29", ["Soft"]="#171E29",
-            ["Sidebar"]="#080B11", ["Ink"]="#F2F5FC", ["Muted"]="#BDC7D5", ["Accent"]="#D1C5ED",
-            ["Outline"]="#596072", ["Selected"]="#50435F", ["Green"]="#A3E7BF", ["Red"]="#FF9BAB", ["Amber"]="#F3CF7D",
-            ["PowerSurface"]="#A3E7BF", ["PowerInk"]="#123C2B", ["AddSurface"]="#D1C5ED", ["AddInk"]="#2A293E",
-            ["Collection"]="#393143", ["StatusSurface"]="#151922", ["Hero"]="#151922", ["HeroEnd"]="#080B11", ["ScanCyan"]="#83D4DD"
+            ["Bg"]="#030506", ["BgTop"]="#0C1016", ["Card"]="#10151D", ["Soft"]="#171D25",
+            ["Sidebar"]="#030506", ["Ink"]="#F1F4FB", ["Muted"]="#C1CCDA", ["Accent"]="#D2C4ED",
+            ["Outline"]="#565766", ["Selected"]="#393447", ["Green"]="#A5E5C8", ["Red"]="#FFB5BE", ["Amber"]="#F3CF7D",
+            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#D2C4ED", ["AddInk"]="#302445",
+            ["Collection"]="#393447", ["StatusSurface"]="#10151D", ["Hero"]="#06080C", ["HeroEnd"]="#030506", ["ScanCyan"]="#83D4DD"
         } : new Dictionary<string, string>
         {
-            ["Bg"]="#17273F", ["BgTop"]="#304367", ["Card"]="#2B3E59", ["Soft"]="#2B3E59",
-            ["Sidebar"]="#101A2B", ["Ink"]="#F4F6FF", ["Muted"]="#D0D6E7", ["Accent"]="#D6C8F2",
-            ["Outline"]="#748299", ["Selected"]="#9C87AE", ["Green"]="#A5E6C0", ["Red"]="#FF9BAB", ["Amber"]="#F3CF7D",
-            ["PowerSurface"]="#A5E6C0", ["PowerInk"]="#164737", ["AddSurface"]="#D6C8F2", ["AddInk"]="#302344",
-            ["Collection"]="#716082", ["StatusSurface"]="#293952", ["Hero"]="#0E1829", ["HeroEnd"]="#18243B", ["ScanCyan"]="#83D4DD"
+            ["Bg"]="#172437", ["BgTop"]="#263850", ["Card"]="#22354B", ["Soft"]="#2A4057",
+            ["Sidebar"]="#172437", ["Ink"]="#F1F4FB", ["Muted"]="#C1CCDA", ["Accent"]="#D2C4ED",
+            ["Outline"]="#64758C", ["Selected"]="#655A7E", ["Green"]="#A5E5C8", ["Red"]="#FFB5BE", ["Amber"]="#F3CF7D",
+            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#D2C4ED", ["AddInk"]="#302445",
+            ["Collection"]="#655A7E", ["StatusSurface"]="#22354B", ["Hero"]="#101B2A", ["HeroEnd"]="#172437", ["ScanCyan"]="#83D4DD"
         };
         foreach (var (key, color) in palette)
         {

@@ -11,7 +11,7 @@ public sealed partial class MainWindow
 {
     void SelectProfile20(Profile profile)
     {
-        if(busy||data.SelectedId==profile.Id)return;string old=data.SelectedId;data.SelectedId=profile.Id;
+        if(busy||data.SelectedId==profile.Id)return;CancelRouting28();string old=data.SelectedId;data.SelectedId=profile.Id;
         try{Save();}catch{data.SelectedId=old;lastError="PRIVATE_STORE_FAILED";}
         RefreshCards();
     }

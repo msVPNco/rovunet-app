@@ -1,3 +1,54 @@
+# Windows 0.1.4 Beta prerelease
+
+The owner accepted the MAINT36 preview.9 application tests and authorized the
+same behavior under the actual0.1.4-beta package identity. This release changes
+version/documentation only from maintenance source6761106. TUIC and US
+WireGuard live data acceptance remains unresolved; no all-provider or TUN pass
+is claimed. See [MAINT36](MAINT36.md) and the accompanying release notes.
+
+--- Maintenance evidence ---
+
+# Current local MAINT36 / 0.1.4-preview.9
+
+See [MAINT36](MAINT36.md). One subscription Paste action, bounded accurate
+HTTPS target coverage/cancellation fixes and IPv4-only Local discovery are
+implemented. Mieru/Naive/SSH fresh precise checks passed; owner-confirmed
+Slipstream Local traffic is preserved. TUIC/US WireGuard gates and final-byte
+package evidence are separate. No new public release or owner install is implied.
+
+--- Previous local stage ---
+
+# Local LIVE35 / 0.1.4-preview.8
+
+See [LIVE35](LIVE35.md) for quick-test/automatic-route DNS exclusions, accurate
+scope counts, certificate download messages and separately recorded live tests.
+Public0.1.3 Beta and all previous preview artifacts remain immutable. The owner
+has authorized the next ready Windows prerelease; final identity, related checks
+and unresolved live-server gates must be settled before publishing.
+
+--- Historical local stage ---
+
+# Local LIVE31 / 0.1.4-preview.5
+See [LIVE31](LIVE31.md): stable collapsing header, distinct ping Stop state,
+unified Slipstream certificate acquisition and dated owner-profile handshake/
+accurate-HTTPS observations. Slipstream SOCKS was verified with a temporary valid
+public certificate; the deployed companion/status mismatch and SSH backend
+failure are separate unresolved server acceptance items. No public release.
+
+--- Previous local stage ---
+# Local HANDSHAKE30 / 0.1.4-preview.4
+
+See [HANDSHAKE30](HANDSHAKE30.md) for HTML controls, live language/menu/state fixes,
+authenticated quick UDP tests, threshold colors and exact verification scope.
+Earlier entries below are historical. Public 0.1.3 Beta remains immutable.
+Remote provider acceptance, clean-machine WebView/bootstrap execution, and native
+TUN/kill-switch/service/reboot gates remain separate from these local tests.
+
+--- Historical stages ---
+# Current local maintenance: ROUTING28 /0.1.4-preview.1
+See [ROUTING28](ROUTING28.md). Published0.1.3 Beta remains immutable; no new native/TUN acceptance. Focused final receipts are in versions/ROUTING28.
+
+--- Historical stages ---
 # Windows 0.1.3 Beta prerelease preparation
 
 See [CONNECTION27](CONNECTION27.md) for the owner-reported stale connection title, loaded-only marquee invalidation, regression evidence and exact test scope. Public 0.1.2 Beta is published; its immutable bytes are not replaced by this local correction. Existing native/TUN/service acceptance gates remain open.
@@ -89,3 +140,12 @@ Historical Hy2 notes above are not a current failure claim: the owner's later su
 # Preview.14 — scoped consumer prerelease
 
 UI26.md documents compact closed collections, fixed 66-DIP profiles and a transactional single-open accordion. Owner23/manager24/26 authorize publication of a fresh prerelease after focused checks, without replacing prior tags/assets or the owner's active install. Native pilot18/tools4 and all four ACT03 macro acceptance scopes remain separate. Panel Review20 stable mapping/tombstones and Review22 internal authority/recovery updates do not require resetting the client feed1/status2 checkpoints; primary/trust and migration Apply remain separate. Numeric-form compatibility (1.0/1e0) is a nonblocking P2 for the canonical-integer current emitter.
+
+# Local HTML preview.2 / SKIN29
+See SKIN29.md for the approved HTML/CSS shell, separate bounded TCP/HTTPS results, automatic trust-v1 public certificates, installer runtime prerequisite and exact acceptance limits. Final payload receipts live beside the SKIN29 delivery. Public0.1.3 remains immutable.
+
+# Local preview.6 / SCANFEED32
+See SCANFEED32.md for the official Mahsa API fallback and cancellable Slipstream scanner setup. Public releases and preview.5 are unchanged; this is a fresh local correction.
+
+# Local preview.7 / CLIPBOARD33
+See CLIPBOARD33.md for explicit subscription address Copy/Paste actions and scoped clipboard verification. Earlier deliveries and managed-source URL hiding are preserved.

@@ -61,6 +61,7 @@ public sealed partial class MainWindow : Window
         RefreshCards();
         Loaded += async (_, _) =>
         {
+            if(WantsHtml29)_=StartHtml29();
             if (uiSmoke) return;
             try { tray = new TrayIcon(ShowExisting, ToggleTrayConnection, () => _ = ExitApplication()); }
             catch { data.CloseToTray = false; lastError = "TRAY_UNAVAILABLE"; }
@@ -74,11 +75,12 @@ public sealed partial class MainWindow : Window
             if (data.CloseToTray && tray != null && !closing) { SaveWindowSize(); Hide(); tray.HiddenNotice(); }
             else _ = ExitApplication();
         };
-        Closed += (_, _) => { usageRefresh20.Stop();usageLifetime20.Cancel();statusExpiry.Stop(); durationTimer.Stop(); CancelSleepTimer(); tray?.Dispose(); SystemEvents.PowerModeChanged -= OnPower;SystemEvents.UserPreferenceChanged-=OnPreferenceChanged; };
+        Closed += (_, _) => { usageRefresh20.Stop();usageLifetime20.Cancel();statusExpiry.Stop(); durationTimer.Stop();CancelRouting28(true); CancelSleepTimer(); tray?.Dispose(); SystemEvents.PowerModeChanged -= OnPower;SystemEvents.UserPreferenceChanged-=OnPreferenceChanged; };
         if (!uiSmoke) {SystemEvents.PowerModeChanged += OnPower; SystemEvents.UserPreferenceChanged+=OnPreferenceChanged;}
         statusExpiry.Tick += (_, _) => { statusExpiry.Stop(); RefreshCards(); };
         sleepTicker.Tick += (_, _) => TickSleepTimer();
         durationTimer.Tick += async (_, _) => { RefreshDuration(); RefreshTrafficText(); await PollTelemetry(); };
+        routingTimer28.Tick+=async(_,_)=>await TickRouting28();
         // The counter clock belongs to the connection, including browser/tray use.
         Activated += (_, _) => { if (state.State == "connected") { durationTimer.Start(); RefreshTrafficText(); } };
         SourceInitialized += (_, _) => UpdateTitleTheme();
@@ -112,7 +114,7 @@ public sealed partial class MainWindow : Window
     Action<Exception>? uiEventError15;
     Button Button(string key, Action action, bool primary = false)
     {
-        var b = new Button { Content = L.Text(key), HorizontalAlignment = HorizontalAlignment.Stretch, BorderThickness = new(1), BorderBrush = GlassEdge(Tone("Outline")), Background = GlassSurface("Selected") };
+        var b = new Button { Uid=key, Content = L.Text(key), HorizontalAlignment = HorizontalAlignment.Stretch, BorderThickness = new(1), BorderBrush = GlassEdge(Tone("Outline")), Background = GlassSurface("Selected") };
         if (primary) { b.Background = Accent; b.Foreground = SystemParameters.HighContrast ? SystemColors.HighlightTextBrush : darkTheme ? Tone("Bg") : Brushes.White; b.FontWeight = FontWeights.SemiBold; }
         b.Click += (_, _) => { try { action(); } catch (Exception e) { if(fixtureMode)uiEventError15?.Invoke(e);lastError = e is SafeError se ? se.Code : "UNEXPECTED_ERROR"; if (errorText != null) SetState(state); } }; System.Windows.Automation.AutomationProperties.SetName(b, L.Text(key)); return b;
     }
@@ -120,25 +122,22 @@ public sealed partial class MainWindow : Window
     Profile? Selected => data.Profiles.FirstOrDefault(p => p.Id == data.SelectedId);
     async Task Run(Func<Task> operation)
     {
-        if (fixtureMode && !networkFixtureMode || busy || closing) return; busy = true; operationDone = new(TaskCreationOptions.RunContinuationsAsynchronously); lastError = ""; SetState(state);
+        if (fixtureMode && !networkFixtureMode && routingConnectFixture28==null || busy || closing) return; busy = true; operationDone = new(TaskCreationOptions.RunContinuationsAsynchronously); lastError = ""; SetState(state);
         try { await operation(); }
-        catch (Exception e) { if (connectCancelled && client == null && (e is OperationCanceledException || e is SafeError { Code: "AGENT_FAILED" })) { lastError = ""; SetState(new()); } else { lastError = connectCancelled ? "CANCELLED" : e is SafeError se ? se.Code : "UNEXPECTED_ERROR"; if (state.State == "connecting" || state.State == "connected" && client == null) SetState(new() { State = "error", Error = lastError }); } }
-        finally { busy = false; connectCancelled = false; operationDone?.TrySetResult(); SetState(state); BuildCards(); if (lostClient != null && !closing) await Run(HandleLost); }
+        catch (Exception e) { if (connectCancelled && client == null && (e is OperationCanceledException || e is SafeError { Code: "AGENT_FAILED" or "CANCELLED" })) { lastError = ""; SetState(new()); } else { lastError = connectCancelled ? "CANCELLED" : e is SafeError se ? se.Code : "UNEXPECTED_ERROR"; if (state.State == "connecting" || state.State == "connected" && client == null) SetState(new() { State = "error", Error = lastError }); } }
+        finally { busy = false; connectCancelled = false; operationDone?.TrySetResult(); SetState(state); BuildCards(); if (lostClient != null && !closing) await Run(HandleLost); _=TickRouting28(); }
     }
     async Task Connect()
     {
-        var p = Selected ?? throw new SafeError("SELECT_PATH"); string support = SupportPolicy.Reason(p, data.IncludeExperimental); if (support.Length > 0) throw new SafeError(support); ResetTelemetry();
+        var p = Selected ?? throw new SafeError("SELECT_PATH");connectionAttempt28=p; string support = SupportPolicy.Reason(p, data.IncludeExperimental); if (support.Length > 0) throw new SafeError(support); if(fixtureMode&&routingConnectFixture28!=null){await routingConnectFixture28(p);return;} ResetTelemetry();
         var resolverPlan = GlobalResolvers.ForConnection(p, data.GlobalResolverEnabled, data.GlobalResolverList);
         p = resolverPlan.Effective;
         if (resolverPlan.Notice.Length > 0) lastError = resolverPlan.Notice;
+        SetState(new(){State="connecting"});
+        await PrepareAutomaticCertificates29(p);
         p = await ApplyDnsPool(p);
-        PrepareChainCertificates25(p);
         string slipPin = StoredSlipPin(p);
-        if (TransportPlan.UsesSlip(p.Raw) && slipPin.Length == 0)
-        {
-            if (!ChooseSlipCertificate(p)) throw new SafeError("SLIP_CERT_REQUIRED");
-            slipPin = StoredSlipPin(p);
-        }
+        if (TransportPlan.UsesSlip(p.Raw) && slipPin.Length == 0)throw new SafeError("CERT_AUTO_UNAVAILABLE");
         // Synthetic UI fixtures must not contend with the owner's network lease or recovery journal.
         client = new AgentClient(probeOnly:fixtureMode&&networkFixtureMode); var current = client;
         client.Lost += () => Dispatcher.BeginInvoke(async () =>
@@ -153,7 +152,7 @@ public sealed partial class MainWindow : Window
             for(int trustAttempt=0;result.State=="trust"&&trustAttempt<4;trustAttempt++)
             {
                 var trustProfile=TrustLayer25(p,result);
-                if (!connectCancelled && !closing && Confirm(L.Text(result.Error) + "\n\n" + trustProfile.Name + "\n" + L.Text("SSH_TRUST_HINT"), result.Fingerprint))
+                if (!automaticConnecting28 && !connectCancelled && !closing && Confirm(L.Text(result.Error) + "\n\n" + trustProfile.Name + "\n" + L.Text("SSH_TRUST_HINT"), result.Fingerprint))
                 {
                     data.SshKeys[trustProfile.Id] = result.HostKey; data.SshKeyScopes[trustProfile.Id]=SshHostKey.Scope(trustProfile); Save();
                     result = await current.Send(new() { Action = "connect", Profile = p, SystemProxy = proxy.IsChecked == true, LocalHttpPort=fixtureMode?0:data.LocalHttpPort, LocalSocksPort=fixtureMode?0:data.LocalSocksPort, SlipCertificate = slipPin, SlipInterval = SlipInterval(p), SshTlsCa=StoredSshTlsCa(p), HostKey = ChainProfiles.IsChain(p.Raw)?StoredSshKey(p):result.HostKey,ChainIdentities=ChainIdentityOptions25(p) });
@@ -183,7 +182,7 @@ public sealed partial class MainWindow : Window
         stack.Children.Add(imported); stack.Children.Add(Button("FAST_TIMING", () => Apply(true), SlipInterval(p) != null));
         dialog.Content = stack; dialog.ShowDialog();
     }
-    string StoredSlipPin(Profile p) => TransportPlan.UsesSlip(p.Raw) ? data.SlipCertificates.GetValueOrDefault(SlipCertificate.Scope(p), "") : "";
+    string StoredSlipPin(Profile p) => TransportPlan.UsesSlip(p.Raw) ? data.SlipCertificates.GetValueOrDefault(SlipCertificate.Scope(p), "") is {Length:>0} manual?manual:AutomaticSlipPin29(p) : "";
     bool ChooseSlipCertificate(Profile p)
     {
         var picker = new OpenFileDialog { Title = L.Text("SLIP_CERT_CHOOSE"), Filter = "PEM (*.pem;*.crt;*.cer)|*.pem;*.crt;*.cer" };
@@ -191,9 +190,8 @@ public sealed partial class MainWindow : Window
         if (new FileInfo(picker.FileName).Length > 32768) throw new SafeError("SLIP_CERT_INVALID");
         var pem = SlipCertificate.ReadPublic(File.ReadAllText(picker.FileName));
         string scope = SlipCertificate.Scope(p);
-        using var certificate = System.Security.Cryptography.X509Certificates.X509Certificate2.CreateFromPem(pem);
-        if (!Confirm(L.Text("SLIP_CERT_CONFIRM") + "\n" + Importer.Fields(p.Raw)[3], "SHA256 " + certificate.GetCertHashString(System.Security.Cryptography.HashAlgorithmName.SHA256))) return false;
-        data.SlipCertificates[scope] = pem; Save(); return true;
+        bool had=data.SlipCertificates.TryGetValue(scope,out var old);data.SlipCertificates[scope] = pem;
+        try{Save();}catch{if(had)data.SlipCertificates[scope]=old!;else data.SlipCertificates.Remove(scope);throw;}return true;
     }
     async Task ResolveRecovery()
     {
@@ -252,7 +250,7 @@ public sealed partial class MainWindow : Window
         var d = Dialog("SUBSCRIPTIONS", 620, 500); var content = new StackPanel { Margin = new(24) };
         content.Children.Add(Text(L.Text("SUBSCRIPTION_HINT"), 14, Muted));
         var choose = new ComboBox { Margin = new(4, 12, 4, 8), MinHeight = 34, DisplayMemberPath = "Name", ItemsSource = data.Subscriptions };
-        var subscriptionName=new TextBox{Text=selectedSource!=null?data.Subscriptions.FirstOrDefault(s=>s.Id==selectedSource)?.Name??"":"",Tag="SUBSCRIPTION_NAME"};content.Children.Add(OutlinedField("COLLECTION_NAME",subscriptionName));var input=new TextBox{FlowDirection=FlowDirection.LeftToRight,MinHeight=48};var inputFrame=OutlinedField("SUBSCRIPTION_URL",input);content.Children.Add(inputFrame);
+        var subscriptionName=new TextBox{Text=selectedSource!=null?data.Subscriptions.FirstOrDefault(s=>s.Id==selectedSource)?.Name??"":"",Tag="SUBSCRIPTION_NAME"};content.Children.Add(OutlinedField("COLLECTION_NAME",subscriptionName));var input=new TextBox{FlowDirection=FlowDirection.LeftToRight,MinHeight=48,Tag="SUBSCRIPTION_URL_INPUT"};var inputFrame=OutlinedField("SUBSCRIPTION_URL",input);var urlEditor=new StackPanel();urlEditor.Children.Add(inputFrame);urlEditor.Children.Add(SubscriptionClipboardActions33(input,inputFrame));content.Children.Add(urlEditor);
         string managedUrl="";bool settingSource=false;var managedLabel=Text("",15);managedLabel.Tag="PUBLIC_SOURCE_IDENTITY";managedLabel.Visibility=Visibility.Collapsed;content.Children.Add(managedLabel);
 
         var publicBox = new ComboBox { Margin = new(4, 8, 4, 4), MinHeight = 34, DisplayMemberPath = "DisplayName", ItemsSource = PublicFeed.Presets, SelectedIndex = -1 };
@@ -261,7 +259,7 @@ public sealed partial class MainWindow : Window
         var publicConsent=new CheckBox{Content=L.Text("PUBLIC_ACCEPT"),Visibility=Visibility.Collapsed};content.Children.Add(SettingsRow(publicConsent));
         string CurrentUrl()=>managedUrl.Length>0?managedUrl:input.Text.Trim();
         void SelectSource(string url){
-            settingSource=true;try{var preset=PublicFeed.Resolve(url);managedUrl=preset?.Url??"";input.Text=preset==null?url:"";inputFrame.Visibility=preset==null?Visibility.Visible:Visibility.Collapsed;managedLabel.Text=preset==null?"":preset.DisplayName+" · "+L.Text("PUBLIC_SOURCE_MANAGED");managedLabel.Visibility=preset==null?Visibility.Collapsed:Visibility.Visible;publicHint.Visibility=publicConsent.Visibility=preset==null?Visibility.Collapsed:Visibility.Visible;publicConsent.IsChecked=false;}finally{settingSource=false;}
+            settingSource=true;try{var preset=PublicFeed.Resolve(url);managedUrl=preset?.Url??"";input.Text=preset==null?url:"";urlEditor.Visibility=inputFrame.Visibility=preset==null?Visibility.Visible:Visibility.Collapsed;managedLabel.Text=preset==null?"":preset.DisplayName+" · "+L.Text("PUBLIC_SOURCE_MANAGED");managedLabel.Visibility=preset==null?Visibility.Collapsed:Visibility.Visible;publicHint.Visibility=publicConsent.Visibility=preset==null?Visibility.Collapsed:Visibility.Visible;publicConsent.IsChecked=false;}finally{settingSource=false;}
         }
         input.TextChanged+=(_,_)=>{if(settingSource)return;if(PublicFeed.Resolve(input.Text.Trim())!=null)SelectSource(input.Text.Trim());else{managedUrl="";managedLabel.Visibility=publicHint.Visibility=publicConsent.Visibility=Visibility.Collapsed;publicConsent.IsChecked=false;}};
         publicBox.SelectionChanged+=(_,_)=>{if(publicBox.SelectedItem is PublicFeed.Preset pr)SelectSource(pr.Url);};
@@ -272,7 +270,7 @@ public sealed partial class MainWindow : Window
         var error = Text("", 13, Muted); content.Children.Add(error); var actions = new WrapPanel(); content.Children.Add(actions);
         var cancellation = new CancellationTokenSource();
         d.Closed += (_, _) => {cancellation.Cancel();cancellation.Dispose();};
-        string fetchedUrl = ""; List<Profile>? preview = null; bool fetching = false;
+        string fetchedUrl = ""; List<Profile>? preview = null; CompatibleImport? previewBatch28=null; bool fetching = false;
         string FeedError(string code, string sourceId)
         {
             if (code == "STATUS_NOT_FOUND" && statuses.TryGetValue(sourceId, out var snap))
@@ -296,25 +294,25 @@ public sealed partial class MainWindow : Window
             var sub = data.Subscriptions.FirstOrDefault(s => s.Id == source);
             bool publicFeed=PublicFeed.IsKnown(CurrentUrl());if(!publicFeed){await RefreshStatus(uri,sub,cancellation.Token);RequireV2StatusReady21(uri,source);}BuildCards();
             int proxyPort=state.State=="connected"?state.HttpPort:0;
-            var payload = publicFeed ? await FetchPublic28(uri.AbsoluteUri,cancellation.Token,proxyPort) : await SubscriptionClient.Fetch(uri,proxyPort,cancellation: cancellation.Token); if(!publicFeed)CaptureUsage20(source,payload); var batch = publicFeed?PublicFeed.Preview(payload.Body,data.IncludeExperimental):Importer.ReadCompatible(SubscriptionUsage20.ConfigBody(payload.Body), data.IncludeExperimental); previewSummary.Text=ImportSummary(batch);PublicFeed.ValidateForApply(uri.AbsoluteUri,batch);preview = batch.Profiles; if (preview.Count == 0) throw new SafeError("NO_SUPPORTED_IMPORT"); fetchedUrl = uri.AbsoluteUri;
-            error.Text = L.Text("UPDATE_READY"); BuildCards();
+            var payload = publicFeed ? await FetchPublic28(uri.AbsoluteUri,cancellation.Token,proxyPort) : await SubscriptionClient.Fetch(uri,proxyPort,cancellation: cancellation.Token); if(!publicFeed)CaptureUsage20(source,payload); var batch = publicFeed?PublicFeed.Preview(payload.Body,data.IncludeExperimental):Importer.ReadCompatible(SubscriptionUsage20.ConfigBody(payload.Body), data.IncludeExperimental); previewSummary.Text=ImportSummary(batch);previewSummary.Foreground=PublicFeed.IsPartial(batch)?Amber:Muted;previewBatch28=batch;preview = batch.Profiles; if (preview.Count == 0) throw new SafeError("NO_SUPPORTED_IMPORT"); fetchedUrl = uri.AbsoluteUri;
+            error.Text = L.Text(publicFeed&&PublicFeed.IsPartial(batch)?"PUBLIC_PARTIAL_READY":"UPDATE_READY");error.Foreground=publicFeed&&PublicFeed.IsPartial(batch)?Amber:Green; BuildCards();
         }
         var update = Button("UPDATE", () => { }); var import = Button("IMPORT", () => { }, true);
         update.Click += async (_, _) =>
-        { if (fetching) return; fetching = true; input.IsEnabled = choose.IsEnabled = false; update.IsEnabled = import.IsEnabled = false; try { await Update(); } catch (Exception e) { preview = null; error.Text = FeedError(e is SafeError se ? se.Code : "FETCH_FAILED", SourceOf(CurrentUrl())); } finally { fetching = false; input.IsEnabled = choose.IsEnabled = true; update.IsEnabled = import.IsEnabled = true; } };
+        { if (fetching) return; fetching = true; urlEditor.IsEnabled = input.IsEnabled = choose.IsEnabled = false; update.IsEnabled = import.IsEnabled = false; try { await Update(); } catch (Exception e) { preview = null; error.Foreground=Red;error.Text = FeedError(e is SafeError se ? se.Code : "FETCH_FAILED", SourceOf(CurrentUrl())); } finally { fetching = false; urlEditor.IsEnabled = input.IsEnabled = choose.IsEnabled = true; update.IsEnabled = import.IsEnabled = true; } };
         import.Click += async (_, _) =>
         {
-            if (fetching) return; fetching = true; input.IsEnabled = choose.IsEnabled = false; update.IsEnabled = import.IsEnabled = false;
+            if (fetching) return; fetching = true; urlEditor.IsEnabled = input.IsEnabled = choose.IsEnabled = false; update.IsEnabled = import.IsEnabled = false;
             try
             {
                 var uri = SubscriptionUrls.Validate(PublicFeed.CanonicalUrl(CurrentUrl())); if (preview == null || fetchedUrl != uri.AbsoluteUri){await Update();error.Text+="\n"+L.Text("IMPORT_REVIEW_CONFIRM");return;}
                 if (!d.IsVisible) return;
                 string? keep=choose.SelectedItem is Subscription selected&&(ManagedSource28(selected)?.Key==PublicFeed.Resolve(uri.AbsoluteUri)?.Key&&PublicFeed.IsKnown(uri.AbsoluteUri)||selected.Url==uri.AbsoluteUri)?selected.Id:null;
-                CommitSubscription20(uri,preview!,subscriptionName.Text,keep);
+                if(previewBatch28==null)throw new SafeError("NO_SUPPORTED_IMPORT");CommitPublicBatch28(uri,previewBatch28,subscriptionName.Text,keep);
                 BuildCards(); d.DialogResult = true;
             }
-            catch (Exception e) { error.Text = FeedError(e is SafeError se ? se.Code : "FETCH_FAILED", SourceOf(CurrentUrl())); }
-            finally { fetching = false; input.IsEnabled = choose.IsEnabled = true; update.IsEnabled = import.IsEnabled = true; }
+            catch (Exception e) { error.Foreground=Red;error.Text = FeedError(e is SafeError se ? se.Code : "FETCH_FAILED", SourceOf(CurrentUrl())); }
+            finally { fetching = false; urlEditor.IsEnabled = input.IsEnabled = choose.IsEnabled = true; update.IsEnabled = import.IsEnabled = true; }
         };
         import.MinWidth=280;import.MinHeight=58;import.FontSize=18;import.Padding=new(24,10,24,10);actions.Children.Add(import);
         var summary = Text("", 13, Muted); content.Children.Insert(2, summary);
@@ -343,7 +341,7 @@ public sealed partial class MainWindow : Window
             if(active)return;string url;try{url=SubscriptionUrls.Validate(input.Text).AbsoluteUri;}catch(SafeError e){result.Text=L.Text(e.Code);return;}
             active=true;written=cancellationSent=false;manualStop=new();test.IsEnabled=input.IsEnabled=false;cancel.Content=L.Text("STOP_TEST");cancel.Visibility=Visibility.Visible;cancel.IsEnabled=true;
             var profile=activeProfile??Selected;if(profile!=null){string key=CollectionKey(profile);data.CollectionTestStarted[key]=DateTimeOffset.UtcNow;collectionRuns.Remove(key);liveMeasurements.ExceptWith(data.Profiles.Where(p=>CollectionKey(p)==key).Select(p=>p.Id));}
-            try{await Run(async()=>{AgentReply reply;try{reply=await connection.Send(new(){Action="probe",ProbeUrl=url,ProbeFallbacks=data.ProbeFallbacks},manualStop.Token,()=>{written=true;if(manualStop.IsCancellationRequested)_=SendCancellation();});}catch(OperationCanceledException)when(manualStop.IsCancellationRequested){result.Text=L.Text("CANCELLED");result.Foreground=Muted;return;}bool stopped=reply.Error=="CANCELLED";result.Text=(stopped?L.Text("CANCELLED"):ProbeResultText(reply))+" · "+reply.ElapsedMs+" ms";result.Foreground=stopped?Muted:ProbeInk28(reply);
+            try{await Run(async()=>{AgentReply reply;try{reply=await connection.Send(new(){Action="probe",ProbeUrl=url,ProbeFallbacks=data.ProbeFallbacks,ProbeTimeoutMs=25000},manualStop.Token,()=>{written=true;if(manualStop.IsCancellationRequested)_=SendCancellation();});}catch(OperationCanceledException)when(manualStop.IsCancellationRequested){result.Text=L.Text("CANCELLED");result.Foreground=Muted;return;}bool stopped=reply.Error=="CANCELLED";result.Text=(stopped?L.Text("CANCELLED"):ProbeResultText(reply))+" · "+reply.ElapsedMs+" ms";result.Foreground=stopped?Muted:ProbeInk28(reply);
                 if(!stopped&&profile!=null){measurements[profile.Id]=reply;data.Measurements[profile.Id]=new(){Verified=reply.Verified,ProbeFallbackUsed=reply.ProbeFallbackUsed,ElapsedMs=reply.ElapsedMs,Error=reply.Error,Stage=reply.ProbeStage,Attempts=1,Passes=reply.Verified?1:0,SampledAt=DateTimeOffset.UtcNow};liveMeasurements.Add(profile.Id);Save();}
                 if(stopped)reply.Error="";SetState(reply);
             });}finally{active=false;manualStop.Dispose();manualStop=null;test.IsEnabled=input.IsEnabled=true;cancel.Visibility=Visibility.Collapsed;if(closePending)d.Close();}

@@ -50,7 +50,7 @@ public sealed partial class MainWindow
     {
         if(group.Count>0)collectionRuns.Remove(CollectionKey(group[0]));
         bool Fresh(Rovunet.Platform.PathMeasurement m)=>UiPolicy.MeasurementFresh(m.SampledAt,DateTimeOffset.UtcNow);
-        var measured=group.Where(p=>data.Measurements.TryGetValue(p.Id,out var m)&&m.Verified&&Fresh(m)&&LatestRound(p,m)).ToDictionary(p=>p.Id,p=>data.Measurements[p.Id].ElapsedMs);
+        var measured=group.Where(p=>PreferPing29(p,out var ping)?ping.Reachable&&UiPolicy.MeasurementFresh(ping.SampledAt,DateTimeOffset.UtcNow):data.Measurements.TryGetValue(p.Id,out var m)&&m.Verified&&Fresh(m)&&LatestRound(p,m)).ToDictionary(p=>p.Id,p=>PreferPing29(p,out var ping)?ping.ElapsedMs:data.Measurements[p.Id].ElapsedMs);
         var order=reliability?group.OrderByDescending(p=>data.Measurements.TryGetValue(p.Id,out var m)&&Fresh(m)&&LatestRound(p,m)&&m.Attempts>0?(double)m.Passes/m.Attempts:0).ThenBy(p=>measured.GetValueOrDefault(p.Id,long.MaxValue)).ToArray():CollectionProbePlan.DisplayOrder(group,measured);
         var ids=group.Select(p=>p.Id).ToHashSet();int i=0;var old=data.Profiles;
         data.Profiles=old.Select(p=>ids.Contains(p.Id)?order[i++]:p).ToList();try{Save();}catch{data.Profiles=old;throw;}BuildCards();
@@ -58,8 +58,8 @@ public sealed partial class MainWindow
     void ClearTests(List<Profile> group)
     {
         if(group.Count>0)collectionRuns.Remove(CollectionKey(group[0]));
-        var old=data.Measurements;var ids=group.Select(p=>p.Id).ToHashSet();data.Measurements=old.Where(x=>!ids.Contains(x.Key)).ToDictionary();
-        try{Save();}catch{data.Measurements=old;throw;}foreach(string id in ids)measurements.Remove(id);BuildCards();
+        var old=data.Measurements;var oldPings=data.PingMeasurements;var ids=group.Select(p=>p.Id).ToHashSet();data.Measurements=old.Where(x=>!ids.Contains(x.Key)).ToDictionary();data.PingMeasurements=oldPings.Where(x=>!ids.Contains(x.Key)).ToDictionary();
+        try{Save();}catch{data.Measurements=old;data.PingMeasurements=oldPings;throw;}foreach(string id in ids){measurements.Remove(id);livePings29.Remove(id);}BuildCards();
     }
     void TcpCollection(List<Profile> group) => StartCollectionTest(group,1,true);
     void RemoveDuplicates()
@@ -111,6 +111,3 @@ public sealed partial class MainWindow
         }catch(Exception e){Info("EXPORT_ENCRYPTED",L.Text(e is SafeError se?se.Code:"SAVE_FAILED"));}
     }
 }
-
-
-

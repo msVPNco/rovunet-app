@@ -20,9 +20,19 @@ public static class CollectionActions
             if(f[1]=="vless")return(f[66].Length>0?f[66]:f[3],Importer.Port(f[67]));
             if(f[1]=="socks5")return(f[3],Importer.Port(f[40]));
         }
-        if(!profile.Raw.StartsWith("vless://",StringComparison.OrdinalIgnoreCase) && !profile.Raw.StartsWith("socks5://",StringComparison.OrdinalIgnoreCase))return null;
-        if(Uri.TryCreate(profile.Raw,UriKind.Absolute,out var uri))return(uri.IdnHost.Trim('[',']'),uri.Port>0?uri.Port:profile.Protocol=="SOCKS5"?1080:443);
-        return null;
+        var outbound=Importer.Connection(profile).Outbound;
+        string protocol=outbound["protocol"]?.ToString()??"";
+        var settings=outbound["settings"];
+        string network=outbound["streamSettings"]?["network"]?.ToString()??"";
+        if(network is "kcp" or "quic")return null;
+        if(protocol=="anytls"||protocol=="mieru"&&settings?["transport"]?.ToString()=="TCP")
+            return(settings!["server"]!.ToString(),settings["port"]!.GetValue<int>());
+        var server=protocol switch{
+            "vless" or "vmess"=>settings?["vnext"]?[0],
+            "socks" or "shadowsocks" or "trojan"=>settings?["servers"]?[0],
+            _=>null
+        };
+        return server==null?null:(server["address"]!.ToString(),server["port"]!.GetValue<int>());
     }
     public static async Task<long?> Tcp(Profile p,CancellationToken stop)
     {

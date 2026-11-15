@@ -46,9 +46,11 @@ public sealed partial class MainWindow
         var old=data.Profiles.Where(p=>p.SourceId==source).GroupBy(p=>p.ItemId.Length>0?p.ItemId:Importer.Fingerprint(p.Raw)).ToDictionary(g=>g.Key,g=>g.First());
         string collectionName=name.Trim().Length>0?name.Trim():data.Subscriptions.FirstOrDefault(s=>s.Id==source)?.Name??PublicFeed.NameFor(uri.AbsoluteUri);
         var overrides=new Dictionary<string,string>(data.LocalOverrideSources);var names=new Dictionary<string,string>(data.LocalOverrideNames);
+        var outsideIds=data.Profiles.Where(p=>p.SourceId!=source).Select(p=>p.Id).ToHashSet();
         foreach(var profile in imported){
             profile.SourceId=source;profile.CollectionId="sub:"+source;if(collectionName.Length>0)profile.CollectionName=collectionName;
             if(profile.ItemId.Length==0)profile.ItemId=Importer.Fingerprint(profile.Raw);
+            if(outsideIds.Contains(profile.Id))profile.Id=Importer.Fingerprint("subscription/"+source+"/"+profile.ItemId);
             if(!old.TryGetValue(profile.ItemId,out var prior))continue;
             SubscriptionEndpoint.RequireSame(data.LocalOverrideSources.GetValueOrDefault(prior.Id,prior.Raw),profile);
             profile.Id=prior.Id;
@@ -72,6 +74,7 @@ public sealed partial class MainWindow
     async Task UpdateCollection20(string source)
     {
         var sub=data.Subscriptions.FirstOrDefault(s=>s.Id==source);if(sub==null||!updatingSubscriptions20.Add(source))return;
+        subscriptionOutcomes30.Remove(source);
         string validationSummary="";
         try{
             RefreshCards();Notify(L.Text("SUBSCRIPTION_UPDATING"));var uri=SubscriptionUrls.Validate(SubscriptionUrl28(sub));bool publicFeed=PublicFeed.IsKnown(uri.AbsoluteUri);int port=state.State=="connected"?state.HttpPort:0;var stop=usageLifetime20.Token;
@@ -81,9 +84,13 @@ public sealed partial class MainWindow
             if(!publicFeed)CaptureUsage20(source,payload);
             var batch=publicFeed?PublicFeed.Preview(payload.Body,data.IncludeExperimental):Importer.ReadCompatible(SubscriptionUsage20.ConfigBody(payload.Body),data.IncludeExperimental);
             validationSummary=ImportSummary(batch);
-            PublicFeed.ValidateForApply(uri.AbsoluteUri,batch);
-            stop.ThrowIfCancellationRequested();CommitSubscription20(uri,batch.Profiles,sub.Name,sub.Id);Notify(L.Text("SUBSCRIPTION_UPDATED")+" · "+ImportSummary(batch));
-        }catch(Exception error){string code=error is SafeError safe?safe.Code:error is OperationCanceledException?"CANCELLED":"FETCH_FAILED";Notify(L.Text(code)+(code=="MAHSA_VALIDATION_FAILED"?" · "+validationSummary:""),MessageInk28(code));}
+            stop.ThrowIfCancellationRequested();
+            if(publicFeed&&PublicFeed.IsPartial(batch)){
+                int added=CommitPublicBatch28(uri,batch,sub.Name,sub.Id);
+                subscriptionOutcomes30[source]=new("PUBLIC_PARTIAL_ADDED",DateTimeOffset.UtcNow,added,batch.Skipped.Values.Sum());
+                Notify(string.Format(L.Text("PUBLIC_PARTIAL_ADDED"),added,batch.Skipped.Values.Sum())+" · "+ImportSummary(batch),Amber);
+            }else{PublicFeed.ValidateForApply(uri.AbsoluteUri,batch);CommitSubscription20(uri,batch.Profiles,sub.Name,sub.Id);subscriptionOutcomes30[source]=new("SUBSCRIPTION_UPDATED",DateTimeOffset.UtcNow);Notify(L.Text("SUBSCRIPTION_UPDATED")+" · "+ImportSummary(batch));}
+        }catch(Exception error){string code=error is SafeError safe?safe.Code:error is OperationCanceledException?"CANCELLED":"FETCH_FAILED";subscriptionOutcomes30[source]=new(code,DateTimeOffset.UtcNow);Notify(L.Text(code)+(code=="MAHSA_VALIDATION_FAILED"?" · "+validationSummary:""),MessageInk28(code));}
         finally{updatingSubscriptions20.Remove(source);RefreshCards();}
     }
 }

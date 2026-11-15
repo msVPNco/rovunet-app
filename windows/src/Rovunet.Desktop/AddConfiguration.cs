@@ -141,10 +141,10 @@ public sealed partial class MainWindow
         }
         var family=new ComboBox{ItemsSource=types,SelectedItem=types.Contains(initial)?initial:types[0],MinHeight=48};panel.Children.Add(OutlinedField("PROTOCOL",family));
         var name=Field("PROFILE_NAME");name.FlowDirection=L.Direction;
-        var zone=Field("TUNNEL_DOMAIN");var resolvers=Field("DNS_RESOLVERS","",true);var key=Field("SERVER_PUBLIC_KEY");
+        var zone=Field("TUNNEL_DOMAIN");var resolvers=Field("DNS_RESOLVERS","",true);resolvers.Tag="DNS_RESOLVER_INPUT36";var key=Field("SERVER_PUBLIC_KEY");
         var method=new ComboBox{MinHeight=48};panel.Children.Add(OutlinedField("TRANSPORT",method));
         LabelDnsTransport20(method);
-        var local=Button("DNS_LOCAL_NETWORK",()=>{try{var values=NetworkResolvers20();if(values.Length==0){Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));return;}resolvers.Text=string.Join('\n',values);}catch{Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));}});local.Tag="DNS_LOCAL_NETWORK";local.ToolTip=L.Text("DNS_LOCAL_HINT");panel.Children.Add(local);
+        var local=Button("DNS_LOCAL_NETWORK",()=>{try{var values=LocalNetworkResolvers36();if(values.Length==0){Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));return;}resolvers.Text=string.Join('\n',values);}catch{Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));}});local.Tag="DNS_LOCAL_NETWORK";local.ToolTip=L.Text("DNS_LOCAL_HINT");panel.Children.Add(local);
         var ssh=new CheckBox{Content=L.Text("SCAN_USE_SSH"),Margin=new(4)};panel.Children.Add(SettingsRow(ssh));
         var host=Field("SSH_HOST");var port=Field("SERVER_PORT","22");var user=Field("ID_OR_USER");
         var pass=new PasswordBox{MinHeight=48,FlowDirection=FlowDirection.LeftToRight};var passLabel=OutlinedField("PASSWORD",pass);panel.Children.Add(passLabel);
@@ -175,4 +175,3 @@ public sealed partial class MainWindow
         foreach(string notice in batch.Notices)text+="\n"+L.Text(notice);return text;
     }
 }
-

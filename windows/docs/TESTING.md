@@ -1,3 +1,50 @@
+# MAINT36 development checks
+
+See [MAINT36](MAINT36.md) for393 portable cases, Local UI146 checks/96 pointer
+clicks, subscription Paste117 checks/51 pointer clicks, six fresh live precise
+routes and the six-check warm-cancellation IPC regression. Exact DLL hashes,
+UTC windows, failed fixture attempts and preserved negative observations are
+recorded outside public source. Remote UDP, installation, TUN and public release
+are not certified by synthetic UI results. Final package receipts are separate.
+
+--- Previous local stage ---
+
+# LIVE35 candidate checks
+
+390 portable-domain assertions passed after adding the quick-scope and nested
+DNS-chain boundary cases. The new `--ui-quickscope35` fixture uses real loopback
+TCP, actual HTML pointer Start/Stop and synthetic route/UDP callbacks; it does
+not certify remote HTTPS, owner installation or TUN. Historical failed fixture
+attempts are retained, including stale-build runs, with their actual hashes.
+Certificate404/download error mapping must pass the ping/trust and scan-start
+fixtures on the exact new candidate. See [LIVE35](LIVE35.md) and staged receipts.
+
+--- Historical local stage ---
+
+# Local LIVE31 / 0.1.4-preview.5
+See [LIVE31](LIVE31.md). `--ui-interaction31` measures real renderer frames around
+the collapse boundary and uses pointer start/stop clicks in four languages and
+three themes. `--ui-pingtrust29` additionally checks concurrent acquisition,
+detached-layer binding, scanner preparation, certificate-before-pool order and
+cancellation before an Agent starts. Owner-network reports separate quick
+authenticated handshakes, accurate HTTPS and temporary Slipstream backend probes.
+Final-byte receipts describe the executed checks; the historical preview.4
+loopback/UDP evidence is not relabelled as new live-server acceptance.
+
+--- Previous local stage ---
+# Local HANDSHAKE30 / 0.1.4-preview.4
+
+See [HANDSHAKE30](HANDSHAKE30.md) for HTML controls, live language/menu/state fixes,
+authenticated quick UDP tests, threshold colors and exact verification scope.
+Earlier entries below are historical. Public 0.1.3 Beta remains immutable.
+Remote provider acceptance, clean-machine WebView/bootstrap execution, and native
+TUN/kill-switch/service/reboot gates remain separate from these local tests.
+
+--- Historical stages ---
+# Current local maintenance: ROUTING28 /0.1.4-preview.1
+See [ROUTING28](ROUTING28.md). Published0.1.3 Beta remains immutable; no new native/TUN acceptance. Focused final receipts are in versions/ROUTING28.
+
+--- Historical stages ---
 # Windows 0.1.3 Beta prerelease preparation
 
 See [CONNECTION27](CONNECTION27.md) for the owner-reported stale connection title, loaded-only marquee invalidation, regression evidence and exact test scope. Public 0.1.2 Beta is published; its immutable bytes are not replaced by this local correction. Existing native/TUN/service acceptance gates remain open.
@@ -94,3 +141,12 @@ Pinned-engine finding: this exact Xray build rejects 32-byte keys for AES128, de
 
 STATUS21.md documents the exact commands and scope: 375 portable-domain checks, 378 status2 mock HTTP/private-store/WPF assertions, 10 successful-connection ordering assertions and 44 legacy status assertions. Final payload receipts, loaded DLL/report hashes and source/installer identity accompany the delivery. No full 800-assertion UI rerun or new native/network acceptance is claimed. The historical preview.12 scroll checks remain distinct from the latest successful-connection policy.
 
+
+# Local HTML preview.2 / SKIN29
+See SKIN29.md for the approved HTML/CSS shell, separate bounded TCP/HTTPS results, automatic trust-v1 public certificates, installer runtime prerequisite and exact acceptance limits. Final payload receipts live beside the SKIN29 delivery. Public0.1.3 remains immutable.
+
+# SCANFEED32 focused coverage
+The new --ui-feed32 and --ui-scanstart32 fixtures exercise managed-source import/update, default TLS transport error handling, proxy-route preservation, data rollback, hidden URLs, actual Start/Stop pointer hits, delayed certificate acquisition, late HTTP404/503 setup failure, retry and Back/close. Final payload receipts are required separately. See SCANFEED32.md.
+
+# CLIPBOARD33
+--ui-clipboard33 covers four languages/three themes, single-click clipboard controls, pending-field flush, hidden managed actions, errors, fetch-busy guards and a safely restored native text clipboard. Exact payload receipts distinguish native clipboard execution from injected clipboard callback tests.

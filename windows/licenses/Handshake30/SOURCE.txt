@@ -1,0 +1,15 @@
+Rovunet authenticated quick-probe helper, local 0.1.4-preview.4.
+
+New Windows helper source: native/handshake30 in the Windows source archive.
+Complete corresponding helper/dependency source: the accompanying
+Rovunet-Handshake30-0.1.4-preview.4-source.zip, including vendor/ and modules.txt.
+Exact module versions/checksums: native/handshake30/go.mod and go.sum.
+Rebuild instructions and test scope: native/handshake30/BUILDING.md.
+Compiler: go1.27.3 windows/amd64, CGO_ENABLED=0.
+Executable SHA256: 6bbc096a48a349de766d8ac5d84877d3981fe919649ca0b832acff33889b1b1a.
+
+All original licence and patent notices found in the vendored modules are copied
+under this directory with their module-relative paths. This supplements rather
+than replaces existing AmneziaWG, Go and application notices. The application's
+AGPL-3.0 licence remains in LICENSE. This local delivery has not been published;
+no unavailable public source URL is asserted.

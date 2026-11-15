@@ -14,7 +14,7 @@ namespace Rovunet.Desktop;
 
 public sealed partial class MainWindow
 {
-    string ProbeResultText(AgentReply reply)=>reply.Verified?L.Text(reply.ProbeFallbackUsed?"TEST_OK_FALLBACK":"TEST_OK"):reply.Error.Length==0?L.Text("TEST_UNCONFIRMED"):reply.Error=="SSH_TRUST_REQUIRED"?L.Text("TEST_IDENTITY_PENDING"):HttpsProbePolicy.Unconfirmed(reply.Error)?L.Text("TEST_UNCONFIRMED")+" · "+L.Text(reply.Error):L.Text(reply.Error.Length>0?reply.Error:"TEST_UNCONFIRMED");
+    string ProbeResultText(AgentReply reply)=>reply.Verified?L.Text(reply.ProbeFallbackUsed?"TEST_OK_FALLBACK":"TEST_OK"):reply.ProbeFailureType=="tls-stream-closed"?L.Text("PROBE_TLS_STREAM_CLOSED36"):reply.Error.Length==0?L.Text("TEST_UNCONFIRMED"):reply.Error=="SSH_TRUST_REQUIRED"?L.Text("TEST_IDENTITY_PENDING"):L.Text(reply.Error);
     TrayIcon? tray;
     TaskCompletionSource? operationDone;
     bool connectCancelled, reportingError;
@@ -103,7 +103,7 @@ public sealed partial class MainWindow
     void SetState(AgentReply value)
     {
         if(state.State!=value.State||state.HttpPort!=value.HttpPort||state.SocksPort!=value.SocksPort)routeGeneration.Advance();
-        state = value; RefreshLocalProxyPanels19(); if (connectionText == null) return; UpdateSleepTimer();
+        state = value;RefreshRoutingTimer28(); RefreshLocalProxyPanels19(); if (connectionText == null) return; UpdateSleepTimer();
         if(addButton!=null)addButton.IsEnabled=!busy&&!closing;
         connectionText.Text = L.Text(value.State.ToUpperInvariant()); globalStatus.Text = connectionText.Text;
         Brush color = ConnectionInk28(value.State);
@@ -138,7 +138,7 @@ public sealed partial class MainWindow
     void RefreshDuration() { if (durationValue != null) durationValue.Text = state.State == "connected" ? (DateTimeOffset.UtcNow - connectedSince).ToString(@"hh\:mm\:ss", CultureInfo.InvariantCulture) : "—"; }
     void RefreshCards()
     {
-        RefreshHero(); 
+        RefreshHero();
         if (cards == null) return; string query = search?.Text.Trim() ?? "";
         foreach (var row in rows)
         {
@@ -155,6 +155,7 @@ public sealed partial class MainWindow
                 bool fresh = data.Measurements.TryGetValue(p.Id, out var saved) && liveMeasurements.Contains(p.Id)&&LatestRound(p,saved)&&UiPolicy.MeasurementFresh(saved.SampledAt, DateTimeOffset.UtcNow);row.Result.Foreground=ProbeInk28(measured!,fresh);row.Timing.Foreground=fresh&&measured!.Verified?Green:Muted;if(saved?.Attempts>1)row.Result.Text+=" · "+saved.Passes+"/"+saved.Attempts;if(!fresh)row.Result.Text+=" · "+L.Text("RESULT_STALE");row.Result.ToolTip=row.Result.Text; row.Timing.Text = measured!.Verified ? measured.ElapsedMs.ToString(CultureInfo.InvariantCulture) + " ms" : "—"; row.Timing.ToolTip = saved?.SampledAt.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
             }
             RenderCollectionRow(row);
+            RenderPing29(row);
         }
         foreach (var group in groups)
         {
@@ -169,6 +170,7 @@ public sealed partial class MainWindow
         }
         PromoteActive23();
         ApplyUsageOrder17();
+        QueueHtml29();
         statusExpiry.Stop(); var pending = statuses.Values.Select(s => 901 - Stopwatch.GetElapsedTime(s.ReceivedTick).TotalSeconds).Where(n => n > 0).ToList(); if (data.Measurements.Values.Any(m => UiPolicy.MeasurementFresh(m.SampledAt, DateTimeOffset.UtcNow))) pending.AddRange(data.Measurements.Values.Select(m => 901 - (DateTimeOffset.UtcNow - m.SampledAt).TotalSeconds).Where(n => n > 0)); if (pending.Count > 0) { statusExpiry.Interval = TimeSpan.FromSeconds(pending.Min()); statusExpiry.Start(); }
     }
     static System.Windows.Shapes.Path FilledMoreIcon28()
@@ -185,22 +187,25 @@ public sealed partial class MainWindow
     void SwitchPath(Profile p)
     {
         if (busy || !SupportPolicy.Allowed(p, data.IncludeExperimental)) return;
+        CancelRouting28();
         _ = Run(async () => { if (client != null) await Disconnect();var oldId=data.SelectedId;data.SelectedId=p.Id;try{Save();}catch{data.SelectedId=oldId;throw;}await Connect(); });
     }
-    void Notify(string text,Brush? ink=null) { if (notice != null) { notice.Text = text;notice.Foreground=ink??Green; notice.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible; } }
+    void Notify(string text,Brush? ink=null) { if (notice != null) { notice.Text = text;notice.Foreground=ink??Green; notice.Visibility = string.IsNullOrEmpty(text) ? Visibility.Collapsed : Visibility.Visible;QueueHtml29(); } }
     string ErrorHelp(string code) => L.Text(code switch { "SLIP_CERT_REQUIRED" or "SLIP_CERT_INVALID" => "ACTION_CERT", "SSH_TRUST_REQUIRED" or "SSH_KEY_CHANGED" => "SSH_TRUST_HINT", "PROXY_RECOVERY_CONFLICT" or "RECOVERY_REQUIRED" or "PROXY_RECOVERY_FAILED" => "ACTION_RECOVER", "INVALID_IMPORT" => "IMPORT_HINT", _ => "ACTION_CONNECTION" });
     void SaveWindowSize() { if (WindowState == WindowState.Normal) { data.WindowWidth = ActualWidth; data.WindowHeight = ActualHeight; } try { Save(); } catch { lastError = "SAVE_FAILED"; } }
     [DllImport("user32.dll")] static extern bool SetForegroundWindow(IntPtr handle);
     public void ShowExisting() { Show(); if (WindowState == WindowState.Minimized) WindowState = WindowState.Normal; Activate(); SetForegroundWindow(new System.Windows.Interop.WindowInteropHelper(this).Handle); }
     void RequestDisconnect()
     {
+        certificateStop29?.Cancel();
+        CancelRouting28(true);
         poolStop?.Cancel();
         if (busy) { timerDisconnectClient = client; connectCancelled = true; testStop?.Cancel(); testing?.Abort(); client?.Abort(); }
         else _ = Run(Disconnect);
     }
     public async Task ExitApplication()
     {
-        if (closing) return; closing = true; ShowExisting(); SaveWindowSize(); poolStop?.Cancel(); testStop?.Cancel(); testing?.Abort();
+        if (closing) return; closing = true; certificateStop29?.Cancel();CancelRouting28(true);ShowExisting(); SaveWindowSize(); poolStop?.Cancel(); testStop?.Cancel(); testing?.Abort();
         if(!await CloseNavigation()){closing=false;return;}
         if (busy) { connectCancelled = true; client?.Abort(); if (operationDone != null) { try { await operationDone.Task.WaitAsync(TimeSpan.FromSeconds(35)); } catch { closing = false; lastError = "RECOVERY_REQUIRED"; SetState(state); return; } } }
         SetState(new() { State = "disconnecting" });

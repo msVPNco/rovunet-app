@@ -33,6 +33,8 @@ public sealed partial class MainWindow
         internal Action Changed=()=>{};
         internal Comparison<ScanEntry> Compare=(a,b)=>a.ScanIndex.CompareTo(b.ScanIndex);
         internal Func<ScanEntry,bool> Eligible=e=>e.Result.Pass;
+        internal Func<CancellationToken,Task>? PrepareTunnel;
+        internal bool PreparingTunnel{get;private set;}
         internal string Error="";
         internal long Revision{get;private set;}
         internal bool DnsRunning{get;private set;}
@@ -116,7 +118,7 @@ public sealed partial class MainWindow
         internal Task StartTunnel(bool fresh)
         {
             if(TunnelRunning)return tunnelTask;
-            tunnelStop?.Dispose();tunnelStop=new();allowTunnel=true;
+            tunnelStop?.Dispose();tunnelStop=new();allowTunnel=true;Error="";
             if(fresh)foreach(var entry in entries.Where(Qualifies)){entry.TunnelFinished=entry.TunnelVerified=entry.HttpsVerified=entry.TunnelCached=false;if(DirectTunnel)entry.Selectable=false;entry.VerifiedTransport="";entry.VerifiedElapsedMs=null;entry.Detail=entry.TunnelError="";entry.Refresh();}
             foreach(var entry in entries.Where(e=>Ready(e)&&!e.TunnelFinished&&!e.Pending&&!e.Testing)){entry.Pending=true;pending.Add(entry);entry.Refresh();}
             tunnelCompleted=entries.Count(e=>Qualifies(e)&&e.TunnelFinished);tunnelPassed=entries.Count(e=>Qualifies(e)&&e.TunnelFinished&&e.TunnelVerified);tunnelTotal=tunnelCompleted+pending.Count;
@@ -148,9 +150,13 @@ public sealed partial class MainWindow
                     finally{entry.Testing=false;entry.Phase="";running.Remove(entry);entry.Refresh();Notify();}
                 }}catch(OperationCanceledException)when(token.IsCancellationRequested){}
             }
-            try{await Task.WhenAll(Enumerable.Range(0,Math.Clamp(plan.Options.E2eConcurrency,1,plan.Family=="slipstream"?1:plan.Family=="soar"?4:10)).Select(_=>Consume()));}
+            try{
+                if(PrepareTunnel!=null){PreparingTunnel=true;Notify();await PrepareTunnel(token);token.ThrowIfCancellationRequested();PreparingTunnel=false;Notify();}
+                await Task.WhenAll(Enumerable.Range(0,Math.Clamp(plan.Options.E2eConcurrency,1,plan.Family=="slipstream"?1:plan.Family=="soar"?4:10)).Select(_=>Consume()));
+            }catch(OperationCanceledException)when(token.IsCancellationRequested){}
+            catch(Exception error){Error=error is SafeError safe?safe.Code:"CERT_AUTO_UNAVAILABLE";allowTunnel=false;}
             finally{
-                foreach(var entry in pending){entry.Pending=false;entry.Detail=L.Text("CANCELLED");entry.Refresh();}pending.Clear();TunnelRunning=false;Notify();
+                PreparingTunnel=false;foreach(var entry in pending){entry.Pending=false;entry.Detail=L.Text(Error.Length>0?Error:"CANCELLED");entry.Refresh();}pending.Clear();TunnelRunning=false;Notify();
             }
         }
         internal void StopDns(){dnsStop?.Cancel();Notify();}

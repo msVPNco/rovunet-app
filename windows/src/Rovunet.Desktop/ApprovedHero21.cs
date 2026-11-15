@@ -37,6 +37,6 @@ public sealed partial class MainWindow
         heroDetail = Text("", 12, Green); heroDetailLine17 = MovingLine21(heroDetail, 20, L.Direction); meta.Children.Add(heroDetailLine17); copy.Children.Add(meta);
         Grid.SetColumn(copy, 1); grid.Children.Add(copy);
         var card = Card(grid); card.Tag = "HERO"; card.Background = HeroSurface(); card.Height = HeroExpanded19;
-        card.Padding = new(10); card.CornerRadius = new(22); card.Margin = new(HomeInset21, 0, HomeInset21, 13); CardDepth(card); return card;
+        card.Padding = new(10); card.CornerRadius = new(28); card.Margin = new(HomeInset21, 0, HomeInset21, 13); CardDepth(card); return card;
     }
 }

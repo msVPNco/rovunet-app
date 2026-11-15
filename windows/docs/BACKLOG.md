@@ -1,3 +1,57 @@
+# Current MAINT36 / 0.1.4-preview.9
+
+- Complete isolated TUIC GitHub control with an independently timed Panel
+  capture; distinguish authentication/data from service liveness or UDP counts.
+- Test the authenticated existing US WireGuard fixture after the owner's
+  explicit idle-pair confirmation, preserving the healthy Canada session.
+- Bind the maintenance source to a fresh installer, checksum and final-byte
+  validation; retain all frozen/public artifacts and evidence. Publication still
+  needs an authenticated release uploader; never extract session credentials.
+- Existing experimental TUN/service/reboot and physical-display matrix work is
+  separate. Manual/system IPv6 remains supported; no global IPv6 workaround.
+
+--- Previous local stage ---
+
+# Local LIVE35 / 0.1.4-preview.8
+
+- Complete exact candidate checks for non-DNS quick/automatic routing and
+  certificate-specific companion failure feedback; preserve manual DNS scans.
+- After Panel's authorized deployment, repeat real same-source trust/DER
+  validation and independent Slipstream SOCKS/SSH authentication/data tests.
+- Reconcile unsuccessful TUIC/Mieru/Naive/DNS probes with the fresh source's
+  actual configuration/runtime. Keep the first20-second diagnostic and the
+  production-budget retry separate; concurrent-session/SSH/trust skips are not
+  protocol failures.
+- Produce a separately versioned release candidate and update public pages only
+  after its relevant checks. Existing native/service/TUN/reboot gates remain
+  separate; no host networking change is authorized by this scope.
+
+--- Historical local stage ---
+
+# Local LIVE31 / 0.1.4-preview.5
+- After the actual Panel upgrade, repeat status1/trust bootstrap and DPAPI reuse
+  on the existing subscriptions, preserving all account identities and pins.
+- Resolve the observed Slipstream SSH missing-banner/30-second close with Panel;
+  do not substitute a SOCKS certificate or claim readiness as data verification.
+- Recheck failed HY2/TUIC/WireGuard endpoints with the responsible server/runtime
+  version. Preserve the successful live handshake/accurate-HTTPS distinctions.
+- Existing native TUN/kill-switch/SCM/reboot/clean-machine gates remain independent.
+See [LIVE31](LIVE31.md) for exact observations and completed client/UI work.
+
+--- Previous local stage ---
+# Local HANDSHAKE30 / 0.1.4-preview.4
+
+See [HANDSHAKE30](HANDSHAKE30.md) for HTML controls, live language/menu/state fixes,
+authenticated quick UDP tests, threshold colors and exact verification scope.
+Earlier entries below are historical. Public 0.1.3 Beta remains immutable.
+Remote provider acceptance, clean-machine WebView/bootstrap execution, and native
+TUN/kill-switch/service/reboot gates remain separate from these local tests.
+
+--- Historical stages ---
+# Current local maintenance: ROUTING28 /0.1.4-preview.1
+See [ROUTING28](ROUTING28.md). Published0.1.3 Beta remains immutable; no new native/TUN acceptance. Focused final receipts are in versions/ROUTING28.
+
+--- Historical stages ---
 # Windows 0.1.3 Beta prerelease preparation
 
 See [CONNECTION27](CONNECTION27.md) for the owner-reported stale connection title, loaded-only marquee invalidation, regression evidence and exact test scope. Public 0.1.2 Beta is published; its immutable bytes are not replaced by this local correction. Existing native/TUN/service acceptance gates remain open.
@@ -74,3 +128,12 @@ WIN24-STATUS2-NUMBER-FORMS-01 (P2): support schema-permitted exact integer numer
 # Preview.13 continuation boundary
 
 Independent status2 adapter and successful-connection MRU are implemented; see STATUS21.md. The four ACTIONS03 macro actions remain partial. Migration Apply/recovery acceptance, Panel order-dependent -ipN mapping, live v2 deployment, native boot/SCM/WFP/IPC races, service-specific DPAPI, independent AWG/SS2022 peers, cold payload, publisher/live updater, physical touch and mixed-DPI remain separate gates. Do not substitute fixture counts for those observations. The owner's later successful Hy2 report supersedes any interpretation of the old failure note as a current Windows result.
+
+# SKIN29 continuation
+Real authenticated per-protocol UDP handshake timings remain open: QUIC alone is insufficient for HY2/TUIC credentials, SOCKS-ready does not attest WG/AWG. Keep separate from accurate HTTPS and never substitute ICMP/UDP-send success. Clean-machine WebView2 bootstrap installation, low-end GPU/memory/CPU and physical touch/DPI remain acceptance gates. See SKIN29.md.
+
+# SCANFEED32 continuation
+Local Mahsa acquisition and scanner-navigation fixes have targeted fixtures. Live Slipstream acceptance remains paused until the owner upgrades the Panel server; then record deployed source/hash/status/trust before banner/auth/HTTPS tests. Manager review of preview.5 is conditional and does not certify this correction or public release. Keep the previous native/SCM/reboot gates separate.
+
+# CLIPBOARD33 scope
+Custom subscription clipboard actions are implemented; no live Anonymous/Slipstream or owner-install acceptance is added. Historical scanner19 fixture migration and compact scanner footer usability remain queued. Native-engine provenance now distinguishes unchanged reused helper bytes from its earlier baseline rebuild.

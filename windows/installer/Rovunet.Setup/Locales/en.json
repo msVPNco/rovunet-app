@@ -27,5 +27,7 @@
   "successHint": "Rovunet is ready. Select Finish to close the installer.",
   "admin": "Installing in Program Files requires administrator approval in the Windows prompt.",
   "appRunning": "Rovunet is open or an installation file is in use. Choose Exit from its menu, then retry.",
-  "launchUser": "After closing this elevated installer, open Rovunet from your regular account."
+  "launchUser": "After closing this elevated installer, open Rovunet from your regular account.",
+  "runtimeInstalling": "Preparing WebView2 for the application…",
+  "runtimeFailed": "WebView2 installation did not complete. Check access to Microsoft servers and retry. The existing Rovunet installation was preserved."
 }

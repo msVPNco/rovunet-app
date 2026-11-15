@@ -72,7 +72,7 @@ try
                 {
                     "connect" => runtime.Connect(cmd.Profile ?? throw new SafeError("INVALID_MESSAGE"), cmd.SystemProxy && !probeOnly, lifetime.Token, cmd.HostKey, cmd.SlipCertificate, cmd.SlipInterval,cmd.SshTlsCa,cmd.LocalHttpPort,cmd.LocalSocksPort,chainIdentities:cmd.ChainIdentities,enableUdp:cmd.EnableUdp).GetAwaiter().GetResult(),
                     "disconnect" => runtime.Stop(),
-                    "probe" => runtime.Probe(cmd.ProbeUrl, pending.Probe!.Token,false,cmd.ProbeFallbacks).GetAwaiter().GetResult(),
+                    "probe" => runtime.Probe(cmd.ProbeUrl, pending.Probe!.Token,false,cmd.ProbeFallbacks,cmd.ProbeTimeoutMs).GetAwaiter().GetResult(),
                     "status" => runtime.Status(),
                     "telemetry" => runtime.Telemetry(lifetime.Token).GetAwaiter().GetResult(),
                     "latency" => runtime.Probe(cmd.ProbeUrl,pending.Probe!.Token,true).GetAwaiter().GetResult(),
@@ -82,7 +82,7 @@ try
             catch (Exception e)
             {
                 var code = e is SafeError se ? se.Code : e is OperationCanceledException ? "CANCELLED" : "CONNECTION_FAILED";
-                if (cmd.Action is "probe" or "latency" or "telemetry") { reply = runtime.Status(); reply.Error = code; }
+                if (cmd.Action is "probe" or "latency" or "telemetry") { reply = runtime.Status(); reply.Error = code;if(cmd.Action is "probe" or "latency"){reply.Verified=false;reply.ProbeStage=code=="CANCELLED"?"caller-cancelled":"probe";reply.ProbeFailureType=code=="CANCELLED"?"caller-cancelled":"agent-exception";} }
                 else { try { runtime.Stop(); } catch (SafeError recoveryError) { code = recoveryError.Code; } reply = new() { State = "error", Error = code, ProbeStage=code.StartsWith("SSH_")?"ssh":code.StartsWith("DNS_")||code.StartsWith("SLIP_")?"tunnel":"startup" }; }
             }
             if(pending.Probe!=null)lock(probeGate){if(ReferenceEquals(probeCancellation,pending.Probe))probeCancellation=null;pending.Probe.Dispose();}

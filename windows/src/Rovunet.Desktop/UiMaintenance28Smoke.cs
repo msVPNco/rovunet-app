@@ -70,7 +70,7 @@ public sealed partial class MainWindow
             foreach(string failure in new[]{"network","decode","empty","invalid-config","mixed-invalid-config","mixed-tls","native-validation","cancel","save"}){
                 storeSaveFixture28=failure=="save"?()=>throw new SafeError("PRIVATE_STORE_FAILED"):null;
                 subscriptionFetchFixture28=(uri,stop,port)=>failure is "network" or "cancel"?Task.FromException<SubscriptionClient.Payload>(new SafeError(failure=="cancel"?"CANCELLED":"FETCH_FAILED")):Task.FromResult(new SubscriptionClient.Payload(failure switch{"decode"=>"invalid base64","empty"=>Encrypt("{\"mci\":[],\"mtn\":[]}"),"invalid-config"=>Cipher("unsupported://bad","unsupported://also-bad"),"mixed-invalid-config"=>Cipher(a,"unsupported://bad"),"mixed-tls"=>Cipher(a,"trojan://fixture@server.example.invalid:443?allowInsecure=1#Unsafe"),"native-validation"=>Cipher("rovunet://broken",a),_=>Cipher(b,"socks5://127.0.0.1:14#Replacement")},null,""));
-                await UpdateCollection20(source);checks["failed_"+failure+"_keeps_complete_old_subscription"]=Snapshot()==baseline;checks["failed_"+failure+"_notice_has_correct_error_or_cancel_colour"]=notice.Foreground==(failure=="cancel"?Muted:Red);storeSaveFixture28=null;
+                await UpdateCollection20(source);checks["failed_"+failure+"_keeps_complete_old_subscription"]=Snapshot()==baseline;checks["failed_"+failure+"_notice_has_current_validation_colour"]=notice.Foreground==(failure=="cancel"?Muted:failure is "mixed-invalid-config" or "mixed-tls" or "native-validation"?Amber:Red);storeSaveFixture28=null;
                 if(failure=="mixed-tls")checks["partial_mahsa_validation_shows_the_rejection_reason"]=notice.Text.Contains(L.Text("TLS_UNVERIFIED"));
             }
             int removedSourceRequests=0;data.Subscriptions.Add(new(){Id="removed-source",Url="https://raw.githubusercontent.com/patterniha/Free-Configs/refs/heads/main/configs.txt",Name="Old stored source"});
@@ -87,11 +87,11 @@ public sealed partial class MainWindow
                     checks[id+"_"+preset.Key+"_details_have_no_url_or_copy"]=!Visuals<TextBox>(detail.PageVisual).Any(t=>Equals(t.Tag,"SAVED_SUBSCRIPTION_URL"))&&!Visuals<Button>(detail.PageVisual).Any(t=>AutomationProperties.GetName(t)==L.Text("COPY"));detail.Close();
                 }
                 data.Profiles=[P("socks5://127.0.0.1:9#Fresh success"),P("socks5://127.0.0.1:10#Old success"),P("socks5://127.0.0.1:11#TLS failure"),P("socks5://127.0.0.1:12#Timeout"),P("socks5://127.0.0.1:13#Not tested")];
-                data.Subscriptions=[];data.ExpandedCollections["fixture"]=true;data.Measurements.Clear();measurements.Clear();liveMeasurements.Clear();
+                data.Subscriptions=[];data.OpenCollectionId="fixture";data.CollectionExpansionRevision=1;data.ExpandedCollections["fixture"]=true;data.Measurements.Clear();measurements.Clear();liveMeasurements.Clear();
                 for(int i=0;i<4;i++){var p=data.Profiles[i];var m=new PathMeasurement{Verified=i<2,ElapsedMs=i<2?21:0,Error=i==2?"PROBE_TLS_FAILED":i==3?"PROBE_TIMEOUT":"",SampledAt=DateTimeOffset.UtcNow.AddHours(i==1?-2:0),Attempts=1,Passes=i<2?1:0};data.Measurements[p.Id]=m;measurements[p.Id]=new(){Verified=m.Verified,ElapsedMs=m.ElapsedMs,Error=m.Error};if(i!=1)liveMeasurements.Add(p.Id);}
                 cardsSignature="";SetState(new());BuildCards();await Idle();
                 checks[id+"_fresh_ping_green_old_ping_muted"]=rows[0].Timing.Foreground==Green&&rows[1].Timing.Foreground==Muted;
-                checks[id+"_failed_test_text_red_without_fake_certainty"]=rows[2].Result.Foreground==Red&&rows[3].Result.Foreground==Red&&rows[3].Result.Text.Contains(L.Text("TEST_UNCONFIRMED"));
+                checks[id+"_incomplete_tests_amber_with_specific_cause"]=rows[2].Result.Foreground==Amber&&rows[3].Result.Foreground==Amber&&rows[3].Result.Text.Contains(L.Text("PROBE_TIMEOUT"));
                 checks[id+"_disconnected_title_red"]=connectionText.Foreground==Red&&heroTitle.Foreground==Red;
                 SetState(new(){State="error",Error="CORE_START_FAILED"});checks[id+"_connection_error_text_red"]=errorText.Foreground==Red&&heroTitle.Foreground==Red&&heroDetail.Foreground==Red;SetState(new());
                 var more=Visuals<Button>((FrameworkElement)Content).Where(x=>Equals(x.Tag,"CARD_MORE")).ToArray();
@@ -108,7 +108,7 @@ public sealed partial class MainWindow
                 checks["owner_sample_partial_validation_never_replaces_saved_collection"]=canApply==!preview.Skipped.Values.Any(count=>count>0);
                 File.WriteAllText(Path.Combine(folder,"owner-sample-redacted.json"),JsonSerializer.Serialize(new{decoded=links.Length,accepted=preview.Profiles.Count,skipped=preview.Skipped,automaticReplacementAllowed=canApply,containsRawLinks=false,connectionTested=false}));
             }
-        }catch(Exception ex){checks["exception_"+ex.GetType().Name]=false;error=ex is SafeError safe?safe.Code:ex.GetType().Name;}
+        }catch(Exception ex){checks["exception_"+ex.GetType().Name]=false;error=ex is SafeError safe?safe.Code:ex.GetType().Name;File.WriteAllText(report+".error",ex.ToString());}
         finally{
             storeSaveFixture28=null;subscriptionFetchFixture28=null;SetState(new());
             string full=Path.GetFullPath(privateRoot);if(full.StartsWith(Path.GetFullPath(Path.GetTempPath())+"RovunetMaintenance28-",StringComparison.OrdinalIgnoreCase))try{Directory.Delete(full,true);}catch{}

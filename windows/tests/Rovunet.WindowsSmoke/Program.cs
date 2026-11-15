@@ -11,6 +11,14 @@ using Rovunet.Core;
 using Rovunet.Desktop;
 using Rovunet.Platform;
 
+// Raw profiles enter only through redirected stdin. This diagnostic branch
+// creates no Agent, proxy lease, adapter, store or owner credential file.
+if(args is ["--handshake30-stdin"]){
+    try{var raw=await Console.In.ReadToEndAsync();if(raw.Length>65536)return 12;var plan=ProtocolHandshake30.Plan(Importer.Single(raw))??throw new SafeError("HANDSHAKE_UNSUPPORTED");var result30=await ProtocolHandshakeClient30.Probe(plan,CancellationToken.None);Console.WriteLine(JsonSerializer.Serialize(new{version=1,authenticated=result30.Reachable,mechanism=result30.Mechanism,elapsed_ms=result30.ElapsedMs,error=result30.Error}));return 0;}
+    catch(SafeError e){Console.WriteLine(JsonSerializer.Serialize(new{error=e.Code}));return 2;}catch{Console.WriteLine("{\"error\":\"HANDSHAKE_FAILED\"}");return 2;}
+}
+if(args is ["--handshake30-contract",var contractReport])return Rovunet.WindowsSmoke.Handshake30Contract.Run(contractReport);
+
 if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19045)) return 10;
 bool applyProxy = args.Contains("--system-proxy");
 int reportIndex=Array.IndexOf(args,"--report");
@@ -136,4 +144,3 @@ finally
     Console.WriteLine(json);
 }
 return result;
-

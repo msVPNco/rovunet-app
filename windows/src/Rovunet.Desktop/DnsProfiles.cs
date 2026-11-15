@@ -41,9 +41,10 @@ public sealed partial class MainWindow
         if(family=="slipstream")choiceFrames[transport].Visibility=Visibility.Collapsed;
         string resolverWire=f[4];
         var addresses=Field(content,"DNS_RESOLVERS",string.Join('\n',f[4].Split(',',StringSplitOptions.RemoveEmptyEntries).Select(x=>TransportPlan.SlipResolver(x).Address)),true);
+        addresses.Tag="DNS_RESOLVER_INPUT36";
         var doh=Field(content,"DOH_URL",f[21]);var dohLabel=textFrames[doh];
         var addressLabel=textFrames[addresses];
-        var local=Button("DNS_LOCAL_NETWORK",()=>{try{var values=NetworkResolvers20();if(values.Length==0){Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));return;}addresses.Text=string.Join('\n',values);}catch{Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));}});local.Tag="DNS_LOCAL_NETWORK";local.ToolTip=L.Text("DNS_LOCAL_HINT");content.Children.Add(local);
+        var local=Button("DNS_LOCAL_NETWORK",()=>{try{var values=LocalNetworkResolvers36();if(values.Length==0){Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));return;}addresses.Text=string.Join('\n',values);}catch{Info("DNS_LOCAL_NETWORK",L.Text("DNS_LOCAL_UNAVAILABLE"));}});local.Tag="DNS_LOCAL_NETWORK";local.ToolTip=L.Text("DNS_LOCAL_HINT");content.Children.Add(local);
         void WireChanged(){bool https=transport.SelectedItem?.ToString()=="https";dohLabel.Visibility=https?Visibility.Visible:Visibility.Collapsed;addressLabel.Visibility=local.Visibility=https?Visibility.Collapsed:Visibility.Visible;}
         transport.SelectionChanged+=(_,_)=>WireChanged();WireChanged();
         var options=new StackPanel();var advanced=new Expander{Header=L.Text("SCAN_OPTIONS"),Margin=new(0,8,0,6),Content=options};

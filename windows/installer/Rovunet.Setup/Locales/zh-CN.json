@@ -27,5 +27,7 @@
   "successHint": "Rovunet 已准备就绪。点击“完成”关闭安装程序。",
   "admin": "安装到 Program Files 需要在 Windows 提示中批准管理员权限。",
   "appRunning": "Rovunet 正在运行或安装文件被占用。请从程序菜单中选择“退出”，然后重试。",
-  "launchUser": "关闭此管理员安装程序后，请从普通账户打开 Rovunet。"
+  "launchUser": "关闭此管理员安装程序后，请从普通账户打开 Rovunet。",
+  "runtimeInstalling": "正在为应用准备 WebView2…",
+  "runtimeFailed": "WebView2 安装未完成。请检查与 Microsoft 服务器的连接后重试。现有 Rovunet 安装未更改。"
 }

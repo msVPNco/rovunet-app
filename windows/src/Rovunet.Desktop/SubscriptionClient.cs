@@ -11,7 +11,7 @@ public sealed class SubscriptionClient
     {
         public override string ToString()=>"SubscriptionPayload(redacted)";
     }
-    public static async Task<Payload> Fetch(Uri uri, int proxyPort = 0, int maxBytes = Importer.MaxBytes, CancellationToken cancellation = default)
+    public static async Task<Payload> Fetch(Uri uri, int proxyPort = 0, int maxBytes = Importer.MaxBytes, CancellationToken cancellation = default, bool githubRaw32 = false)
     {
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation); timeout.CancelAfter(TimeSpan.FromSeconds(20));
         using var handler = HttpFixture?.Invoke(proxyPort) ?? new SocketsHttpHandler { AllowAutoRedirect = false, UseProxy = proxyPort > 0, Proxy = proxyPort > 0 ? new WebProxy($"http://127.0.0.1:{proxyPort}") : null, ConnectTimeout = TimeSpan.FromSeconds(10) };
@@ -20,6 +20,11 @@ public sealed class SubscriptionClient
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, uri);
             request.Headers.TryAddWithoutValidation("Cache-Control", "no-cache");
+            if(githubRaw32){
+                if(uri.AbsoluteUri!=PublicFeed.MahsaApi32)throw new SafeError("INVALID_IMPORT");
+                request.Headers.UserAgent.ParseAdd("Rovunet-Windows");
+                request.Headers.Accept.ParseAdd("application/vnd.github.raw+json");
+            }
             using var response = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
             if (response.StatusCode == HttpStatusCode.NotFound) throw new SafeError("STATUS_NOT_FOUND");
             if (!response.IsSuccessStatusCode) throw new SafeError("FETCH_FAILED");

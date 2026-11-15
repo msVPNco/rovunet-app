@@ -19,6 +19,7 @@ public sealed class AgentCommand
     public List<ChainIdentity> ChainIdentities {get;set;}=[];
     public string ProbeUrl { get; set; } = "";
     public bool ProbeFallbacks { get; set; }
+    public int ProbeTimeoutMs { get; set; }
     public override string ToString() => "AgentCommand(redacted)";
 }
 public sealed class AgentReply
@@ -41,6 +42,11 @@ public sealed class AgentReply
     public string ProbeStage { get; set; } = "";
     public bool ProbeFallbackUsed { get; set; }
     public int ProbeTargetsTried { get; set; }
+    public long ProbeRoundElapsedMs { get; set; }
+    public int ProbeAttemptBudgetMs { get; set; }
+    public int ProbeHttpStatus { get; set; }
+    public string ProbeFailureType { get; set; } = "";
+    public string ProbeSocketError { get; set; } = "";
 }
 public static class Wire
 {

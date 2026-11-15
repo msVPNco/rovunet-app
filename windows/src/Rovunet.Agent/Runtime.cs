@@ -228,23 +228,35 @@ public sealed partial class Runtime(bool probeOnly = false) : IDisposable
         if (core != null && core.HasExited) { Stop(); return new() { State = "error", Error = "CORE_EXITED" }; }
         return new() { State = core == null ? "disconnected" : "connected", HttpPort = httpPort, SocksPort = socksPort, Verified = verified };
     }
-    public async Task<AgentReply> Probe(string url, CancellationToken ct, bool live = false,bool fallbacks=false)
+    public async Task<AgentReply> Probe(string url, CancellationToken ct, bool live = false,bool fallbacks=false,int timeoutMs=0)
     {
         if(Status().State!="connected")throw new SafeError("NOT_CONNECTED");
-        var targets=HttpsProbePolicy.Targets(url,fallbacks&&!live);AgentReply reply=new();
+        using var round=CancellationTokenSource.CreateLinkedTokenSource(ct);
+        if(timeoutMs<0)throw new SafeError("INVALID_MESSAGE");
+        if(timeoutMs>0)round.CancelAfter(Math.Clamp(timeoutMs,1000,90000));
+        var targets=HttpsProbePolicy.Targets(url,fallbacks&&!live);AgentReply reply=new();var roundClock=Stopwatch.StartNew();
+        int roundBudget=timeoutMs>0?Math.Clamp(timeoutMs,1000,90000):0;
         for(int i=0;i<targets.Length;i++){
-            ct.ThrowIfCancellationRequested();reply=await ProbeTarget(targets[i],ct,live,i>0);reply.ProbeTargetsTried=i+1;
-            if(ct.IsCancellationRequested||reply.Error=="CANCELLED"){reply.Verified=verified;return reply;}
+            ct.ThrowIfCancellationRequested();
+            if(round.IsCancellationRequested){if(!live)verified=false;reply.Verified=false;reply.Error="PROBE_TIMEOUT";reply.ProbeStage="round-timeout";reply.ProbeRoundElapsedMs=roundClock.ElapsedMilliseconds;return reply;}
+            // Reserve a fair part of the existing round for each allowed fallback.
+            // With one target, preserve its full budget. No direct/network retry is added.
+            int attemptBudget=roundBudget>0&&targets.Length>1?HttpsProbePolicy.AttemptBudget((int)(roundBudget-roundClock.ElapsedMilliseconds),targets.Length-i):0;
+            reply=await ProbeTarget(targets[i],round.Token,live,i>0,attemptBudget);reply.ProbeTargetsTried=i+1;reply.ProbeRoundElapsedMs=roundClock.ElapsedMilliseconds;
+            if(round.IsCancellationRequested&&!ct.IsCancellationRequested){if(!live)verified=false;reply.Verified=false;reply.Error="PROBE_TIMEOUT";reply.ProbeStage="round-timeout";return reply;}
+            if(ct.IsCancellationRequested||reply.Error=="CANCELLED"){reply.Verified=false;return reply;}
             if(reply.Verified){if(!live)verified=true;reply.ProbeFallbackUsed=i>0;return reply;}
         }
         if(!live)verified=false;
         return reply;
     }
-    async Task<AgentReply> ProbeTarget(string url,CancellationToken ct,bool live,bool alternative)
+    async Task<AgentReply> ProbeTarget(string url,CancellationToken ct,bool live,bool alternative,int attemptBudgetMs=0)
     {
         if(Status().State!="connected")throw new SafeError("NOT_CONNECTED");
         if (!Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != "https" || uri.UserInfo.Length > 0 || uri.Fragment.Length > 0) throw new SafeError("HTTPS_REQUIRED");
-        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(live?TimeSpan.FromSeconds(5):alternative?TimeSpan.FromSeconds(8):probeBudget);
+        var targetBudget=live?TimeSpan.FromSeconds(5):alternative?TimeSpan.FromSeconds(8):probeBudget;
+        if(attemptBudgetMs>0)targetBudget=TimeSpan.FromMilliseconds(Math.Min(targetBudget.TotalMilliseconds,attemptBudgetMs));
+        using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct); deadline.CancelAfter(targetBudget);
         var clock = Stopwatch.StartNew();
         try
         {
@@ -256,12 +268,14 @@ public sealed partial class Runtime(bool probeOnly = false) : IDisposable
             // A valid TLS session and a 2xx HTTP response are sufficient for
             // this latency check; waiting for a slow body adds false timeouts.
             bool success = (int)response.StatusCode is >= 200 and < 300;
-            return new() { State = "connected", HttpPort = httpPort, SocksPort = socksPort, Verified = success, ProbeStage = "https", Error = success ? "" : "HTTPS_STATUS_FAILED", ElapsedMs = clock.ElapsedMilliseconds };
+            return new() { State = "connected", HttpPort = httpPort, SocksPort = socksPort, Verified = success, ProbeStage = "https",ProbeAttemptBudgetMs=(int)targetBudget.TotalMilliseconds,ProbeHttpStatus=(int)response.StatusCode, Error = success ? "" : "HTTPS_STATUS_FAILED", ElapsedMs = clock.ElapsedMilliseconds };
         }
         catch(Exception e)
         {
             string error=e is OperationCanceledException?ct.IsCancellationRequested?"CANCELLED":"PROBE_TIMEOUT":e is HttpRequestException http?http.HttpRequestError switch {HttpRequestError.SecureConnectionError=>"PROBE_TLS_FAILED",HttpRequestError.ProxyTunnelError=>"PROBE_PROXY_FAILED",HttpRequestError.NameResolutionError=>"PROBE_DNS_FAILED",_=>"HTTPS_TEST_FAILED"}:"HTTPS_TEST_FAILED";
-            return new(){State="connected",HttpPort=httpPort,SocksPort=socksPort,Error=error,ProbeStage=error=="PROBE_TLS_FAILED"?"tls":error=="PROBE_TIMEOUT"?"timeout":"proxy",ElapsedMs=clock.ElapsedMilliseconds};
+            var causes=new List<Exception>();for(Exception? cause=e;cause!=null;cause=cause.InnerException)causes.Add(cause);
+            string failure=causes.Any(cause=>cause is System.Security.Authentication.AuthenticationException)?"tls-authentication":causes.Any(cause=>cause is IOException)&&error=="PROBE_TLS_FAILED"?"tls-stream-closed":e is OperationCanceledException?ct.IsCancellationRequested?"caller-cancelled":"target-deadline":e.GetType().Name;
+            return new(){State="connected",HttpPort=httpPort,SocksPort=socksPort,Error=error,ProbeStage=error=="PROBE_TLS_FAILED"?"tls":error=="PROBE_TIMEOUT"?"target-timeout":error=="PROBE_DNS_FAILED"?"dns":error=="CANCELLED"?"caller-cancelled":"proxy",ProbeAttemptBudgetMs=(int)targetBudget.TotalMilliseconds,ProbeFailureType=failure,ProbeSocketError=causes.OfType<SocketException>().FirstOrDefault()?.SocketErrorCode.ToString()??"",ElapsedMs=clock.ElapsedMilliseconds};
         }
     }
     public async Task<AgentReply> Telemetry(CancellationToken ct)

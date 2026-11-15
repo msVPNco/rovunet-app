@@ -55,6 +55,6 @@ public sealed partial class MainWindow
     {
         if (connect == null) return;
         connect.Content=new System.Windows.Shapes.Path{Data=PowerIcon,Stroke=Tone(state.State=="connected"?"PowerInk":"AddInk"),StrokeThickness=2.5,StrokeStartLineCap=PenLineCap.Round,StrokeEndLineCap=PenLineCap.Round,Width=34,Height=34,Stretch=Stretch.Uniform};
-        connect.Background=state.State=="connected"?Tone("PowerSurface"):Tone("AddSurface");connect.ToolTip=L.Text(state.State=="connected"?"DISCONNECT":state.State=="connecting"?"CANCEL":"CONNECT");
+        connect.Background=PowerMaterial29(state.State=="connected");connect.ToolTip=L.Text(state.State=="connected"?"DISCONNECT":state.State=="connecting"?"CANCEL":"CONNECT");
     }
 }

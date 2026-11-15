@@ -25,7 +25,7 @@ public sealed partial class MainWindow
     {
         if (state.State is "connected" or "connecting") { RequestDisconnect(); return; }
         if (Selected == null) {var candidate=RandomConnectableProfile20();if(candidate==null){OpenAddHub();return;}SelectProfile20(candidate);if(Selected==null)return;}
-        _ = Run(Connect);
+        CancelRouting28();_ = Run(Connect);
     }
     bool CanConnectFromTray20()=>data.Profiles.Count==0||(Selected is {} selected?SupportPolicy.Allowed(selected,data.IncludeExperimental):data.Profiles.Any(p=>p.CanConnect&&SupportPolicy.Allowed(p,data.IncludeExperimental)));
     void ToggleTrayConnection()

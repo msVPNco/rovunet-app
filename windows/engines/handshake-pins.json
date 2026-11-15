@@ -1,0 +1,13 @@
+{
+  "version": "0.1.4-preview.4",
+  "file": "rovunet-handshake.exe",
+  "sha256": "6bbc096a48a349de766d8ac5d84877d3981fe919649ca0b832acff33889b1b1a",
+  "go": "go1.27.3 windows/amd64",
+  "go_exe_sha256": "83b7ba66215e696414fa49462d0db2da4f4cf15c7bebd42f0b189fa04866999d",
+  "CGO_ENABLED": "0",
+  "source": "native/handshake30",
+  "build": "go build -mod=vendor -trimpath -buildvcs=false -ldflags=-s -w",
+  "corresponding_source": "Rovunet-Handshake30-0.1.4-preview.4-source.zip",
+  "provider_profiles_certified": false,
+  "host_tun_required": false
+}
