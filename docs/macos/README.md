@@ -11,6 +11,21 @@
 
 Preview for **macOS 15+**, with separate Apple Silicon and Intel installers. Public version: **0.1.8 Beta**. Internal build: **0.1.7.20**.
 
+### Opening the package without Apple signing
+
+This preview uses a local ad hoc signature and has no Apple Developer ID or notarization. macOS may therefore display “Apple could not verify…” or “Not Opened.”
+
+1. Download the processor-matching PKG only from the [official Rovunet release](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) and compare its hash with that release's `SHA256SUMS.txt`.
+2. Open the PKG. If the Apple verification warning appears, click **Done**.
+3. Open **Apple menu → System Settings → Privacy & Security**, then scroll to **Security**.
+4. Find the blocked-file message for **that exact Rovunet file** and click **Open Anyway**.
+5. Read the next warning. Only if you trust the file's source, **personally click Open and complete any Touch ID or Mac password confirmation**.
+6. Continue in Installer. Preserve application data and Keychain items when upgrading. If the installed Rovunet app is also blocked, repeat these steps for the app.
+
+If Open Anyway is missing, try opening the same file again, then return to Privacy & Security; an administrator's policy may restrict this on managed Macs. Do not disable Gatekeeper globally, remove quarantine through Terminal, or enable “Anywhere.” These instructions cover an unverified-developer warning; stop and investigate the file/hash if macOS explicitly says it will damage your computer or is damaged.
+
+[Apple's official instructions](https://support.apple.com/en-us/102445)
+
 ### Changes
 
 - Compact DNS Scanner results with expandable technical details. DNS, tunnel, HTTPS, progress and errors remain visible; expanding a result does not select its resolver.
