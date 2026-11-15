@@ -1,5 +1,9 @@
 <div dir="rtl">
 
+<!-- android-code49-release -->
+**Android alpha22 / code49:** [Release & known limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22) · [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22/Rovunet-v0.3.0-alpha22-code49-Full.apk) · [Exact source](https://github.com/msVPNco/rovunet-app/tree/d5e16e2f6bef8f7a204830f6dfce4a380b03b3df)
+
+
 <p align="center"><img src="assets/rovunet-logo.png" alt="Rovunet" width="140"></p>
 
 <h1 align="center">رووُنت (Rovunet)</h1>
