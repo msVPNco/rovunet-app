@@ -1,8 +1,5 @@
 <p align="center"><img src="assets/rovunet-logo.png" alt="Rovunet" width="140"></p>
 
-<!-- android-code49-release -->
-**Android alpha22 / code49:** [Release & known limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22) · [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22/Rovunet-v0.3.0-alpha22-code49-Full.apk) · [Exact source](https://github.com/msVPNco/rovunet-app/tree/d5e16e2f6bef8f7a204830f6dfce4a380b03b3df)
-
 
 <h1 align="center">Rovunet</h1>
 
@@ -28,6 +25,9 @@
 **macOS Beta：** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · 紧凑 DNS 结果，快速与 HTTPS 测试分开。Apple Silicon 安装及日常 TUN 已获用户确认；**Intel 未经实体设备测试**。本地 ad hoc 签名，无 Apple Developer ID 或公证。[Mac 指南](docs/macos/README.zh-CN.md)。
 
 <a id="apps"></a>
+
+<!-- android-code50-release -->
+**Android code50 · Release:** [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) · [Release / limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) · [Source](https://github.com/msVPNco/rovunet-app/tree/0c107ddd49ade077770ee86b0493f81181e8a202)
 
 ## 应用
 
