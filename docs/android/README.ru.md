@@ -1,4 +1,4 @@
-**Публичный Android alpha:** [alpha21 Full / код46](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — доверие аккаунта, отдельные кеши и Room50→51. Не Latest; alpha20 остаётся доступной. [Проверки и ограничения обновления](../releases/alpha21.md).
+**Выпуск Android:** [alpha22 Full / код50](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) — Прежняя производственная подпись; исправлены реальные HTTPS-тесты. TUIC не исправлен; см. ограничения выпуска.
 
 <p align="center"><img src="../../assets/rovunet-logo.png" alt="Rovunet" width="140"></p>
 
@@ -13,7 +13,7 @@ Alpha20 Full, код 43: обновление подписки прямо на �
 <p align="center"><b>Несколько путей к вашему серверу в одном Android-приложении</b><br>DNS-туннели, SSH, HTTPS-прокси и профили Xray в именованных группах, с прямым подключением и настоящими тестами HTTPS.</p>
 
 <p align="center">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20"><img alt="Release" src="https://img.shields.io/github/v/release/msVPNco/rovunet-app?sort=date&display_name=tag&filter=v*&label=release&color=0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk"><img alt="Release" src="https://img.shields.io/badge/Android-alpha22%20Full%20%C2%B7%20code50-0E7C86"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android%207%2B-14304D">
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -23,7 +23,7 @@ Alpha20 Full, код 43: обновление подписки прямо на �
 
 <p align="center"><a href="../../README.md">← Все приложения Rovunet</a></p>
 
-<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20">Скачать</a> · 📘 <a href="../guides/Rovunet-App-Guide-RU.pdf">Полное руководство (PDF)</a> · <a href="../USER_GUIDE.ru.md">Руководство</a> · <a href="https://github.com/msVPNco/rovunet-panel">Серверная панель</a></p>
+<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk">Скачать</a> · 📘 <a href="../guides/Rovunet-App-Guide-RU.pdf">Полное руководство (PDF)</a> · <a href="../USER_GUIDE.ru.md">Руководство</a> · <a href="https://github.com/msVPNco/rovunet-panel">Серверная панель</a></p>
 
 ---
 
@@ -33,17 +33,17 @@ Alpha20 Full, код 43: обновление подписки прямо на �
 
 ## Состояние выпуска
 
-Текущий выпуск — **0.3.0-alpha20 Full, код 43**. Сохранена [производственная подпись alpha14](../SIGNING-IDENTITY.md): устанавливайте поверх публичной alpha14 без удаления. У старой alpha11 и приватной Rovunet Test другие идентичности. [Скачать Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha20/Rovunet-v0.3.0-alpha20-Full.apk) · [Запись выпуска](../releases/alpha20.md) · [Состояние](../STATUS.md).
+Текущий выпуск — **0.3.0-alpha22-post49 Full, код 50**. Сохранена [производственная подпись alpha14](../SIGNING-IDENTITY.md): устанавливайте поверх публичной alpha14 без удаления. У старой alpha11 и приватной Rovunet Test другие идентичности. [Скачать Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) · [Запись выпуска](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) · [Состояние](../STATUS.md).
 
 **Подписки:** Update на карточке обновляет её без перехода; повторные нажатия блокируются, результат остаётся на главной. Для замены профилей VPN должен быть отключён. Имя необязательно: введённое/сохранённое, затем безопасный заголовок провайдера, затем hostname. `subscription-userinfo` из того же ответа содержит суммарный расход, лимит и срок; отсутствующие поля неизвестны. Показываются давность и происхождение данных; это не независимый учёт. Нового периодического скачивания всей подписки нет.
 
 **Импорт:** совместимые `cs`/`fm` VLESS/VMess/Trojan сохраняются при проверяемом TLS; неподдерживаемые настройки/скрипты отклоняются явно. Для Shadowsocks 2022 проверяется длина ключа; Hy2 поддерживает ограниченные `mport` и `hop-interval`. Поддержаны совместимые WireGuard URI и AmneziaWG `.conf`/параметры URI с одним peer. AWG использует отдельный аутентифицированный userspace-процесс; по одному адресу семейства IP, без скриптов, нескольких peer и диапазона keepalive. Произвольный YAML не выполняется.
 
-**Для публичных alpha14–alpha16 (до кода32) нужна прямая установка:** скачайте [Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha20/Rovunet-v0.3.0-alpha20-Full.apk) и установите поверх **без удаления приложения или данных**. Старый обновлятор содержит прежний адрес; веб-перенаправление не исправляет встроенную проверку. Пакет и производственная подпись сохранены.
+**Для публичных alpha14–alpha16 (до кода32) нужна прямая установка:** скачайте [Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) и установите поверх **без удаления приложения или данных**. Старый обновлятор содержит прежний адрес; веб-перенаправление не исправляет встроенную проверку. Пакет и производственная подпись сохранены.
 
 ## Быстрый старт
 
-1. **Скачайте** Full APK из [Releases](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) и установите. Публичные alpha14 и новее ставятся поверх без удаления.
+1. **Скачайте** Full APK из [Releases](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) и установите. Публичные alpha14 и новее ставятся поверх без удаления.
 2. **Откройте** Rovunet, выберите язык и тему и дайте Android разрешение VPN.
 3. **Импорт**: Подписки → вставьте HTTPS-ссылку подписки → **Импорт**, или **+ → Импорт** для ссылки, QR-кода или файла.
 4. **Подключение**: раскройте группу, коснитесь пути, чтобы выбрать, и ещё раз — чтобы подключиться.

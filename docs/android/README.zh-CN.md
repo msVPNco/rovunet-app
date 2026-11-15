@@ -1,4 +1,4 @@
-**Android alpha 正式发布：** [alpha21 Full / 代码46](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — 账户信任、独立缓存与 Room50→51。公开 alpha 发行，不设 Latest；保留 alpha20。[证据与升级限制](../releases/alpha21.md)。
+**Android 发布:** [alpha22 Full / 代码50](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) — 沿用原生产签名，修复真实 HTTPS 测试。TUIC 仍未解决；请查看发行限制。
 
 <p align="center"><img src="../../assets/rovunet-logo.png" alt="Rovunet" width="140"></p>
 
@@ -13,7 +13,7 @@ Alpha20 Full（版本代码 43）支持直接在集合卡片更新订阅、可�
 <p align="center"><b>一个安卓应用，多条通往你自己服务器的路径</b><br>DNS 隧道、SSH、HTTPS 代理和 Xray 配置归入命名配置组，支持直接连接和真实 HTTPS 测试。</p>
 
 <p align="center">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20"><img alt="Release" src="https://img.shields.io/github/v/release/msVPNco/rovunet-app?sort=date&display_name=tag&filter=v*&label=release&color=0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk"><img alt="Release" src="https://img.shields.io/badge/Android-alpha22%20Full%20%C2%B7%20code50-0E7C86"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android%207%2B-14304D">
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -23,7 +23,7 @@ Alpha20 Full（版本代码 43）支持直接在集合卡片更新订阅、可�
 
 <p align="center"><a href="../../README.md">← 所有 Rovunet 应用</a></p>
 
-<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20">下载</a> · 📘 <a href="../guides/Rovunet-App-Guide-ZH.pdf">完整指南（PDF）</a> · <a href="../USER_GUIDE.zh-CN.md">用户指南</a> · <a href="https://github.com/msVPNco/rovunet-panel">服务器面板</a></p>
+<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk">下载</a> · 📘 <a href="../guides/Rovunet-App-Guide-ZH.pdf">完整指南（PDF）</a> · <a href="../USER_GUIDE.zh-CN.md">用户指南</a> · <a href="https://github.com/msVPNco/rovunet-panel">服务器面板</a></p>
 
 ---
 
@@ -33,17 +33,17 @@ Alpha20 Full（版本代码 43）支持直接在集合卡片更新订阅、可�
 
 ## 发布状态
 
-当前版本为 **0.3.0-alpha20 Full，版本代码 43**，沿用 alpha14 的[生产签名](../SIGNING-IDENTITY.md)，可直接覆盖公开 alpha14，无需卸载。旧 alpha11 和私有 Rovunet Test 的身份不同。[下载 Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha20/Rovunet-v0.3.0-alpha20-Full.apk) · [发布记录](../releases/alpha20.md) · [状态](../STATUS.md)。
+当前版本为 **0.3.0-alpha22-post49 Full，版本代码 50**，沿用 alpha14 的[生产签名](../SIGNING-IDENTITY.md)，可直接覆盖公开 alpha14，无需卸载。旧 alpha11 和私有 Rovunet Test 的身份不同。[下载 Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) · [发布记录](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) · [状态](../STATUS.md)。
 
 **订阅：**在集合卡片选择更新即可原地更新；进度会阻止重复点击，结果留在首页。替换现有配置仍需断开 VPN。名称可留空：依次使用显式/已存名称、安全的提供方标题、主机名。同一响应的 `subscription-userinfo` 提供双向总流量、上限和到期时间；缺失字段保持未知，显示快照时间及来源，不是独立审计计量。没有新增定期下载整个订阅的任务。
 
 **导入：**保留经验证 TLS 的兼容 VLESS/VMess/Trojan `cs`/`fm`；不支持的掩码、脚本和设置会明确拒绝。检查 Shadowsocks 2022 密钥长度；Hy2 支持有界 `mport` 和 `hop-interval`。接受兼容 WireGuard URI 与单对端 AmneziaWG `.conf`/URI 参数。AWG 使用独立、经认证的用户空间进程；每个 IP 地址族一个地址，不支持脚本、多对端或范围 keepalive。不执行任意内核/Mihomo YAML。
 
-**公开 alpha14 至 alpha16（截至代码32）需要直接升级：**下载 [Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha20/Rovunet-v0.3.0-alpha20-Full.apk) 并覆盖安装，**不要卸载或清除数据**。旧更新器内置原仓库地址，网页重定向不能修复该检查。包名与生产签名不变。
+**公开 alpha14 至 alpha16（截至代码32）需要直接升级：**下载 [Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) 并覆盖安装，**不要卸载或清除数据**。旧更新器内置原仓库地址，网页重定向不能修复该检查。包名与生产签名不变。
 
 ## 快速开始
 
-1. **下载**：从 [Releases](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) 获取 Full APK 并安装。公开 alpha14 及以上版本可直接覆盖安装，无需卸载。
+1. **下载**：从 [Releases](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) 获取 Full APK 并安装。公开 alpha14 及以上版本可直接覆盖安装，无需卸载。
 2. **打开**：选择语言和主题，并在提示时授予安卓 VPN 权限。
 3. **导入**：订阅 → 粘贴 HTTPS 订阅链接 → **导入**；或使用 **+ → 导入** 导入链接、二维码或文件。
 4. **连接**：展开配置组，点击一次路径将其选中，再点击一次即可连接。

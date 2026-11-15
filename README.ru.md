@@ -6,7 +6,7 @@
 <p align="center"><b>Несколько путей к вашему серверу — на любом устройстве</b><br>DNS-туннели, SSH, HTTPS-прокси и профили Xray в именованных группах, с прямым подключением и настоящими тестами HTTPS.</p>
 
 <p align="center">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20"><img alt="Android release" src="https://img.shields.io/github/v/release/msVPNco/rovunet-app?sort=date&display_name=tag&filter=v*&label=android&color=0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk"><img alt="Android release" src="https://img.shields.io/badge/Android-alpha22%20Full%20%C2%B7%20code50-0E7C86"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Android%20%C2%B7%20Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-14304D">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -20,7 +20,7 @@
 
 **Rovunet — семейство VPN-клиентов для доступа к собственному серверу разными путями.** DNS-туннели, SSH, HTTPS-прокси и профили на базе Xray собраны в одном интерфейсе. Связанные пути остаются вместе в именованных группах: подключайте выбранный путь напрямую или отдельно измеряйте HTTPS через настоящий туннель. Все клиенты находятся в одном репозитории; серверная часть — [Rovunet Panel](https://github.com/msVPNco/rovunet-panel).
 
-**Публичный Android alpha:** [alpha21 Full / код46](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — доверие аккаунта, отдельные кеши и Room50→51. Не Latest; alpha20 остаётся доступной. [Проверки и ограничения обновления](docs/releases/alpha21.md).
+**Выпуск Android:** [alpha22 Full / код50](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) — Прежняя производственная подпись; исправлены реальные HTTPS-тесты. TUIC не исправлен; см. ограничения выпуска.
 
 **macOS Beta:** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · компактные результаты DNS и отдельные быстрые/HTTPS-тесты. Установка Apple Silicon и повседневный TUN подтверждены владельцем; **Intel на реальном оборудовании не проверен**. Локальная подпись ad hoc, без Apple Developer ID и нотариального заверения. [Руководство Mac](docs/macos/README.ru.md).
 
@@ -33,7 +33,7 @@
 
 | Платформа | Состояние | Загрузка и подробности |
 | --- | --- | --- |
-| **Android** | Публичный выпуск: **0.3.0-alpha20 Full, код 43** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) · [Страница Android](docs/android/README.ru.md) |
+| **Android** | **alpha22 Full / код50 · Release** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) · [Страница Android](docs/android/README.ru.md) |
 | **Windows** | **0.1.4 Beta · x64 · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.4-beta/Rovunet-Windows-0.1.4-Beta-x64-Setup.exe) · [Страница Windows](windows/README.md) |
 | **Linux** | Планируется | Выпусков пока нет |
 | **macOS** | **0.1.8-beta · Apple Silicon / Intel · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Страница Mac](docs/macos/README.ru.md) · Intel: **не проверено на физическом Intel Mac** |
@@ -55,7 +55,7 @@
 
 ## Быстрый старт на Android
 
-1. **Скачайте** Full APK со [страницы выпуска](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) и установите. Публичные alpha14 и новее обновляются поверх, без удаления.
+1. **Скачайте** Full APK со [страницы выпуска](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) и установите. Публичные alpha14 и новее обновляются поверх, без удаления.
 2. **Откройте** Rovunet, выберите язык и тему и дайте разрешение Android VPN.
 3. **Импорт**: Подписки → вставьте HTTPS-ссылку подписки → **Импорт**, либо **+ → Импорт** для ссылки, QR-кода или файла.
 4. **Подключение**: раскройте группу, нажмите путь для выбора и нажмите ещё раз для подключения.
