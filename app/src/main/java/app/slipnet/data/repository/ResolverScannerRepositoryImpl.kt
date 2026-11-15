@@ -1164,12 +1164,12 @@ class ResolverScannerRepositoryImpl @Inject constructor(
 
                 if (isSshVariant) {
                     onPhaseUpdate("SSH connect...")
-                    val bannerResult = verifySshConnection(dnsttPort, profile, remaining)
+                    val bannerResult = verifySshConnection(dnsttPort, profile, remaining, testUrl)
                     E2eTestResult(
                         tunnelSetupMs = tunnelSetupMs,
                         httpLatencyMs = bannerResult.latencyMs,
                         totalMs = SystemClock.elapsedRealtime() - totalStart,
-                        httpStatusCode = if (bannerResult.success) 200 else 0,
+                        httpStatusCode = bannerResult.httpStatusCode,
                         success = bannerResult.success,
                         errorMessage = bannerResult.errorMessage,
                         phase = E2eTestPhase.COMPLETED
@@ -1314,12 +1314,12 @@ class ResolverScannerRepositoryImpl @Inject constructor(
 
                 if (isSshVariant) {
                     onPhaseUpdate("SSH connect...")
-                    val bannerResult = verifySshConnection(vaydnsPort, profile, remaining)
+                    val bannerResult = verifySshConnection(vaydnsPort, profile, remaining, testUrl)
                     E2eTestResult(
                         tunnelSetupMs = tunnelSetupMs,
                         httpLatencyMs = bannerResult.latencyMs,
                         totalMs = SystemClock.elapsedRealtime() - totalStart,
-                        httpStatusCode = if (bannerResult.success) 200 else 0,
+                        httpStatusCode = bannerResult.httpStatusCode,
                         success = bannerResult.success,
                         errorMessage = bannerResult.errorMessage,
                         phase = E2eTestPhase.COMPLETED
@@ -1490,12 +1490,12 @@ class ResolverScannerRepositoryImpl @Inject constructor(
 
                 if (isSshVariant) {
                     onPhaseUpdate("SSH connect...")
-                    val bannerResult = verifySshConnection(vaydnsPort, profile, remaining)
+                    val bannerResult = verifySshConnection(vaydnsPort, profile, remaining, testUrl)
                     E2eTestResult(
                         tunnelSetupMs = tunnelSetupMs,
                         httpLatencyMs = bannerResult.latencyMs,
                         totalMs = SystemClock.elapsedRealtime() - totalStart,
-                        httpStatusCode = if (bannerResult.success) 200 else 0,
+                        httpStatusCode = bannerResult.httpStatusCode,
                         success = bannerResult.success,
                         errorMessage = bannerResult.errorMessage,
                         phase = E2eTestPhase.COMPLETED
@@ -1617,12 +1617,12 @@ class ResolverScannerRepositoryImpl @Inject constructor(
                 if (isSshVariant) {
                     onPhaseUpdate("SSH connect...")
                     val remaining = timeoutMs - tunnelSetupMs
-                    val bannerResult = verifySshConnection(actualPort, profile, remaining)
+                    val bannerResult = verifySshConnection(actualPort, profile, remaining, testUrl)
                     E2eTestResult(
                         tunnelSetupMs = tunnelSetupMs,
                         httpLatencyMs = bannerResult.latencyMs,
                         totalMs = SystemClock.elapsedRealtime() - totalStart,
-                        httpStatusCode = if (bannerResult.success) 200 else 0,
+                        httpStatusCode = bannerResult.httpStatusCode,
                         success = bannerResult.success,
                         errorMessage = bannerResult.errorMessage,
                         phase = E2eTestPhase.COMPLETED
@@ -1809,12 +1809,12 @@ class ResolverScannerRepositoryImpl @Inject constructor(
 
                 if (isSshVariant) {
                     onPhaseUpdate("SSH connect...")
-                    val bannerResult = verifySshConnection(dnsttPort, profile, remaining)
+                    val bannerResult = verifySshConnection(dnsttPort, profile, remaining, testUrl)
                     E2eTestResult(
                         tunnelSetupMs = tunnelSetupMs,
                         httpLatencyMs = bannerResult.latencyMs,
                         totalMs = SystemClock.elapsedRealtime() - totalStart,
-                        httpStatusCode = if (bannerResult.success) 200 else 0,
+                        httpStatusCode = bannerResult.httpStatusCode,
                         success = bannerResult.success,
                         errorMessage = bannerResult.errorMessage,
                         phase = E2eTestPhase.COMPLETED
@@ -1986,9 +1986,10 @@ class ResolverScannerRepositoryImpl @Inject constructor(
         }
     }
 
-    private data class SshBannerResult(
+    private data class SshHttpResult(
         val success: Boolean = false,
         val latencyMs: Long = 0,
+        val httpStatusCode: Int = 0,
         val errorMessage: String? = null
     )
 
@@ -2016,61 +2017,50 @@ class ResolverScannerRepositoryImpl @Inject constructor(
      * JSch connects directly to the local tunnel port (raw TCP), the tunnel
      * forwards to the remote SSH server, and JSch does the full SSH negotiation.
      */
-    private fun verifySshConnection(
+    private suspend fun verifySshConnection(
         localPort: Int,
         profile: ServerProfile,
-        timeoutMs: Long
-    ): SshBannerResult {
-        // Step 1: Wait for TCP listener (same as VPN service's waitForProxyReady)
-        if (!waitForPortListening(localPort)) {
-            return SshBannerResult(errorMessage = "Port $localPort not listening")
-        }
-
-        // Step 2: Real SSH handshake — same as SshTunnelBridge.startOverProxy()
-        var session: com.jcraft.jsch.Session? = null
+        timeoutMs: Long,
+        testUrl: String
+    ): SshHttpResult {
+        val startup = app.slipnet.tunnel.StartupCancellation()
+        val ssh = app.slipnet.tunnel.SshTunnelInstance("scanner-ssh", app.slipnet.tunnel.TransportTrust.scannerSshKeys)
+        ssh.startupCancellation = startup
+        ssh.trustIdentity = profile.sshTrustIdentity
+        val started = SystemClock.elapsedRealtime()
         return try {
-            val start = SystemClock.elapsedRealtime()
-            val jsch = JSch()
-            if (profile.sshAuthType == SshAuthType.KEY && profile.sshPrivateKey.isNotBlank()) {
-                jsch.addIdentity(
-                    "e2e-test-key",
-                    profile.sshPrivateKey.toByteArray(Charsets.UTF_8),
-                    null,
-                    if (profile.sshKeyPassphrase.isNotBlank())
-                        profile.sshKeyPassphrase.toByteArray(Charsets.UTF_8) else null
-                )
+            kotlinx.coroutines.withTimeout(timeoutMs) {
+                val port = findFreePort()
+                withContext(Dispatchers.IO) {
+                    suspendCancellableCoroutine<Unit> { continuation ->
+                        continuation.invokeOnCancellation { startup.requestCancel().invoke() }
+                        if (continuation.isActive) continuation.resumeWith(runCatching {
+                            ssh.startOverProxy(
+                                sshHost = profile.sshHost, sshPort = profile.sshPort,
+                                sshUsername = profile.sshUsername, sshPassword = profile.sshPassword,
+                                proxyHost = "127.0.0.1", proxyPort = localPort,
+                                listenPort = port, listenHost = "127.0.0.1", blockDirectDns = true,
+                                sshAuthType = profile.sshAuthType, sshPrivateKey = profile.sshPrivateKey,
+                                sshKeyPassphrase = profile.sshKeyPassphrase
+                            ).getOrThrow()
+                        })
+                    }
+                }
+                val remaining = timeoutMs - (SystemClock.elapsedRealtime() - started)
+                val result = app.slipnet.core.ScannerHttpProbe.measure(port, testUrl, remaining, null, null)
+                SshHttpResult(result.success, result.latencyMs, result.status)
             }
-            // Connect directly to the tunnel's local port — same as VPN service
-            val newSession = jsch.getSession(profile.sshUsername, "127.0.0.1", localPort)
-            if (profile.sshAuthType == SshAuthType.KEY) {
-                newSession.setConfig("PreferredAuthentications", "publickey")
-            } else {
-                newSession.setPassword(profile.sshPassword)
-            }
-            session = newSession
-            newSession.setHostKeyAlias(profile.sshTrustIdentity)
-            newSession.setHostKeyRepository(app.slipnet.tunnel.TransportTrust.scannerSshKeys)
-            newSession.setConfig("StrictHostKeyChecking", "yes")
-            newSession.connect(timeoutMs.toInt().coerceAtLeast(1))
-
-            val latencyMs = SystemClock.elapsedRealtime() - start
-            if (newSession.isConnected) {
-                SshBannerResult(success = true, latencyMs = latencyMs)
-            } else {
-                SshBannerResult(latencyMs = latencyMs, errorMessage = "SSH session not connected")
-            }
-        } catch (e: Exception) {
-            val reason = when {
-                e.message?.contains("changed", ignoreCase = true) == true -> "SSH server identity changed"
-                e.message?.contains("HostKey", ignoreCase = true) == true -> "SSH server identity needs manual approval"
-                else -> "SSH handshake or authentication failed"
-            }
-            SshBannerResult(errorMessage = reason)
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            SshHttpResult(errorMessage = "SSH authentication or forwarded HTTP/TLS probe failed")
         } finally {
-            try { session?.disconnect() } catch (_: Exception) {}
+            withContext(kotlinx.coroutines.NonCancellable + Dispatchers.IO) {
+                startup.requestCancel().invoke()
+                ssh.stop()
+            }
         }
     }
-
     private data class HttpThroughSocksResult(
         val success: Boolean = false,
         val statusCode: Int = 0,
@@ -2078,84 +2068,21 @@ class ResolverScannerRepositoryImpl @Inject constructor(
         val errorMessage: String? = null
     )
 
-    private fun performHttpThroughSocks(
+    private suspend fun performHttpThroughSocks(
         localPort: Int,
         profile: ServerProfile,
         testUrl: String,
         remainingTimeoutMs: Long
-    ): HttpThroughSocksResult {
-        val socketTimeout = remainingTimeoutMs.toInt()
-        if (socketTimeout <= 0) {
-            return HttpThroughSocksResult(errorMessage = "No time remaining for HTTP")
-        }
-
-        var socket: Socket? = null
-        return try {
-            val url = URL(testUrl)
-            val host = url.host
-            val port = if (url.port != -1) url.port else if (url.protocol == "https") 443 else 80
-            val path = if (url.path.isNullOrBlank()) "/" else url.path
-
-            socket = Socket()
-            socket.connect(java.net.InetSocketAddress("127.0.0.1", localPort), socketTimeout)
-            socket.soTimeout = socketTimeout
-
-            val input = socket.getInputStream()
-            val output = socket.getOutputStream()
-
-            // SOCKS5 auth with remote Dante server (through tunnel)
-            if (!performSocksAuth(input, output, profile.socksUsername, profile.socksPassword)) {
-                return HttpThroughSocksResult(errorMessage = "SOCKS5 auth failed")
-            }
-
-            // SOCKS5 CONNECT
-            val domainBytes = host.toByteArray()
-            val connectReq = ByteArray(7 + domainBytes.size)
-            connectReq[0] = 0x05 // version
-            connectReq[1] = 0x01 // CONNECT
-            connectReq[2] = 0x00 // reserved
-            connectReq[3] = 0x03 // domain
-            connectReq[4] = domainBytes.size.toByte()
-            System.arraycopy(domainBytes, 0, connectReq, 5, domainBytes.size)
-            connectReq[5 + domainBytes.size] = (port shr 8).toByte()
-            connectReq[6 + domainBytes.size] = (port and 0xFF).toByte()
-            output.write(connectReq)
-            output.flush()
-
-            if (!readSocksConnectResponse(input)) {
-                return HttpThroughSocksResult(errorMessage = "SOCKS5 CONNECT failed")
-            }
-
-            // HTTP HEAD request
-            val httpStart = SystemClock.elapsedRealtime()
-            val httpReq = "HEAD $path HTTP/1.1\r\nHost: $host\r\nConnection: close\r\n\r\n"
-            output.write(httpReq.toByteArray())
-            output.flush()
-
-            // Read status line
-            val responseBuilder = StringBuilder()
-            var b: Int
-            while (input.read().also { b = it } != -1) {
-                responseBuilder.append(b.toChar())
-                if (responseBuilder.endsWith("\r\n")) break
-            }
-            val latencyMs = SystemClock.elapsedRealtime() - httpStart
-
-            val statusLine = responseBuilder.toString().trim()
-            val statusCode = statusLine.split(" ").getOrNull(1)?.toIntOrNull() ?: 0
-
-            HttpThroughSocksResult(
-                success = statusCode in 200..399,
-                statusCode = statusCode,
-                latencyMs = latencyMs
-            )
-        } catch (e: Exception) {
-            HttpThroughSocksResult(errorMessage = "HTTP failed: ${e.message}")
-        } finally {
-            try { socket?.close() } catch (_: Exception) {}
-        }
+    ): HttpThroughSocksResult = try {
+        val result = app.slipnet.core.ScannerHttpProbe.measure(
+            localPort, testUrl, remainingTimeoutMs, profile.socksUsername, profile.socksPassword
+        )
+        HttpThroughSocksResult(success = result.success, statusCode = result.status, latencyMs = result.latencyMs)
+    } catch (e: CancellationException) {
+        throw e
+    } catch (_: Exception) {
+        HttpThroughSocksResult(errorMessage = "HTTP/TLS probe failed")
     }
-
     private fun performSocksAuth(
         input: InputStream,
         output: OutputStream,

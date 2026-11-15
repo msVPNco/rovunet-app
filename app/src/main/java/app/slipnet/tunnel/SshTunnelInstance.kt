@@ -33,7 +33,8 @@ import java.util.concurrent.locks.ReentrantLock
  * Traffic flow (SSH-only):
  * App -> hev-socks5-tunnel -> [SSH SOCKS5 :listenPort] -> SSH direct-tcpip -> Server
  */
-class SshTunnelInstance(val instanceId: String = "default") {
+class SshTunnelInstance(val instanceId: String = "default",
+    private val hostKeys: com.jcraft.jsch.HostKeyRepository = TransportTrust.sshKeys) {
     private val TAG = "SshTunnel[$instanceId]"
     var debugLogging = false
     var domainRouter: DomainRouter = DomainRouter.DISABLED
@@ -210,7 +211,9 @@ class SshTunnelInstance(val instanceId: String = "default") {
      */
     private fun applySessionConfig(session: Session, attempt: Startup) {
         if (attempt.identity.isNotBlank()) session.setHostKeyAlias(attempt.identity)
-        session.setHostKeyRepository(TransportTrust.sshKeys)
+        session.setHostKeyRepository(SshHostKeyTrace.wrap(hostKeys) { event ->
+            app.slipnet.util.ConnectionDiagnostics.record(event, attempt.diagnosticSessionId)
+        })
         session.setConfig("StrictHostKeyChecking", "yes")
         session.setServerAliveInterval(KEEPALIVE_INTERVAL_MS)
         session.setServerAliveCountMax(3)

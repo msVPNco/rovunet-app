@@ -1355,7 +1355,7 @@ class EditProfileViewModel @Inject constructor(
 
     private fun getSystemDnsServer(): String? {
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = connectivityManager.activeNetwork ?: return null
+        val network = app.slipnet.service.PhysicalNetworkRoute.current(connectivityManager) ?: return null
         val linkProperties = connectivityManager.getLinkProperties(network) ?: return null
         // Pick the first IPv4 DNS server — IPv6 resolvers are not supported
         return linkProperties.dnsServers
