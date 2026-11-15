@@ -1,5 +1,9 @@
 <p align="center"><img src="assets/rovunet-logo.png" alt="Rovunet" width="140"></p>
 
+<!-- android-code49-release -->
+**Android alpha22 / code49:** [Release & known limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22) · [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22/Rovunet-v0.3.0-alpha22-code49-Full.apk) · [Exact source](https://github.com/msVPNco/rovunet-app/tree/d5e16e2f6bef8f7a204830f6dfce4a380b03b3df)
+
+
 <h1 align="center">Rovunet</h1>
 
 <p align="center"><b>多条通往你自己服务器的路径，覆盖每一台设备</b><br>DNS 隧道、SSH、HTTPS 代理和 Xray 配置归入命名配置组，支持直接连接和真实 HTTPS 测试。</p>
