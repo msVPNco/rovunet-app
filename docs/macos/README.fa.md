@@ -1,52 +1,38 @@
 [English](README.md) · [فارسی](README.fa.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-[دانلود 0.1.7-beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [سورس منجمد](https://github.com/msVPNco/rovunet-app/tree/macos-v0.1.7-beta/macos) · [صفحهٔ اصلی](../../README.fa.md)
+# Rovunet macOS 0.1.8 Beta
 
-# رووُنت برای مک — 0.1.7-beta
+**Pre-release · internal build 0.1.7.20 · macOS 15+**
 
-**پیش‌انتشار آزمایشی محدود · بیلد داخلی 0.1.7.14 · macOS 15 و بالاتر**
-
-رابط و پراکسی محلی HTTP/SOCKS روی Apple Silicon شواهد مثبت دارند. **نسخهٔ اینتل روی مک اینتل واقعی تست نشده است.** TUN سراسری، kill switch و بازیابی هنوز آزمایشی‌اند. نسخهٔ عمومی پس از 0.1.6-beta به 0.1.7-beta رسیده؛ شمارهٔ بیلد داخلی 0.1.7.14 است.
-
-## دانلود
-
-| نوع مک | نصب‌کننده و هش | دامنهٔ آزمون |
+| نوع مک | نصب‌کننده و هش | وضعیت آزمون |
 | --- | --- | --- |
-| Apple Silicon · arm64 | [PKG](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-AppleSilicon-arm64.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/SHA256SUMS.txt) | رابط و پراکسی محلی روی مک سری M بررسی شده؛ پذیرش TUN سراسری باز است |
-| Intel · x64 | [PKG · NOT-TESTED](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-Intel-x64-NOT-TESTED.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/SHA256SUMS-Intel.txt) | **روی سخت‌افزار واقعی اینتل تست نشده** |
+| Apple Silicon · arm64 | [PKG](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/Rovunet-macOS-0.1.8-beta-AppleSilicon-arm64.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/SHA256SUMS.txt) | نصب و رابط تأیید شده؛ TUN روزمره با تأیید مالک |
+| Intel · x64 | [PKG · NOT-TESTED](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/Rovunet-macOS-0.1.8-beta-Intel-x64-NOT-TESTED.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/SHA256SUMS.txt) | **روی سخت‌افزار اینتل واقعی تست نشده** |
 
-برای مک‌های سری M بستهٔ arm64 و برای مک اینتل بستهٔ x64 را بگیرید. Air/Pro و اندازهٔ نمایشگر بستهٔ جدا نمی‌خواهند. این انتشار نصب‌کنندهٔ PKG دارد؛ فایل DMG در این نسخه عرضه نشده است.
+نسخهٔ آزمایشی macOS برای **macOS 15 و بالاتر**، با بسته‌های جداگانهٔ Apple Silicon و Intel. نسخهٔ عمومی **۰٫۱٫۸ بتا** و شمارهٔ ساخت داخلی **۰٫۱٫۷٫۲۰** است.
 
-app/helper امضای محلی **ad hoc** دارند. بسته‌ها **امضای Developer ID Installer و notarization اپل ندارند**. Gatekeeper را خاموش نکنید و تنظیمات امنیتی کلی مک را تضعیف نکنید.
+### تغییرات
 
-## قابلیت‌های این بیلد
+- نتایج DNS Scanner کوتاه‌تر شده‌اند؛ جزئیات فنی با فلش باز و بسته می‌شوند. وضعیت DNS، تونل، HTTPS و خطاها همچنان دیده می‌شوند؛ بازکردن جزئیات، resolver را انتخاب نمی‌کند.
+- تست سریع و تست دقیق HTTPS جدا هستند؛ برای پروتکل‌های UDP پشتیبانی‌شده، تست سریع از پاسخ معتبر خود پروتکل استفاده می‌کند. پینگ موفق به‌تنهایی به معنی عبور داده نیست.
+- این بسته اصلاحات قبلی رابط، تنظیمات اتصال و سازگاری اشتراک پنل را حفظ می‌کند. آخرین تغییر ساخت ۲۰ مربوط به چیدمان نتایج اسکنر است.
 
-- رابط جمع‌وجور مک، سه تم و چهار زبان؛ دکمه‌های مشخص ذخیره، اعمال و بازگشت در صفحات داخلی.
-- کنترل مجموعه‌ها با نمایش پیشرفت و نتیجه؛ اتصال دستی به پینگ یا اسکن DNS وابسته نیست.
-- نمایش تأخیر مسیر فعال و اجرای متن لغزان متناسب با محتوای قابل مشاهدهٔ برنامه.
-- اشتراک HTTPS و ورود کانفیگ؛ حجم و انقضای گزارش‌شدهٔ ارائه‌دهنده از آزمون مستقل عبور داده جدا هستند.
-- اعتماد اولیه به هویت SSH/Slipstream، پراکسی محلی/سیستم اختیاری و TUN آزمایشی با انتخاب کاربر.
+### وضعیت آزمون‌ها
 
-## نصب، ارتقا و بازگشت
+بستهٔ Apple Silicon روی مک نصب و باز شده و ۴۹۲ فایل نصب‌شده با بسته مطابقت داشته‌اند. **۲۱۳۹ بررسی رابط، بدون شکست**؛ ظاهر و استفادهٔ روزمره از TUN توسط مالک تأیید شده‌اند. تصاویر fixture و بررسی‌های خودکار رابط، جای آزمون واقعی همهٔ شبکه‌ها را نمی‌گیرند.
 
-۱. PKG مناسب پردازنده را بگیرید و با فایل هش همان معماری تطبیق بدهید.
+در دور قبلی ساخت ۱۹، ۱۸ از ۲۰ مسیر سریع و سپس هر ۸ مسیر DNS شامل مسیرهای SSH با TCP، بدنهٔ کامل HTTPS را عبور دادند. این نتیجه، تکرار کامل آزمون پروتکل‌ها روی ساخت ۲۰ نیست. مالک در کانادا با پنل ۲٫۰٫۲ موفقیت مسیرها به‌جز TUIC را گزارش کرده؛ TUIC طبق گزارش او در چند برنامه ناموفق بوده و نیازمند بررسی پنل/سرور است. نتیجهٔ قدیمی WireGuard روی سرور دیگر به این گزارش تعمیم داده نمی‌شود.
 
-۲. اتصال Rovunet را عادی قطع کنید، با Command-Q برنامه را ببندید، روی نصب قبلی نصب کنید و از Applications باز کنید. نصب، راه‌اندازی helper یا تغییر تنظیمات شبکه ممکن است مجوز مدیر مک بخواهد.
+### نصب و محدودیت‌ها
 
-۳. داده‌ها، اشتراک‌ها و Keychain را حذف نکنید. اگر برنامه قفل است، از دکمهٔ صریح بازکردن قفل استفاده کنید. نصب‌کنندهٔ قبلی را برای بازگشت نگه دارید؛ پیش از نصب دوباره، اتصال و برنامه را عادی ببندید و داده‌ها را پاک نکنید.
+اتصال را قطع و برنامه را با Command-Q ببندید؛ سپس PKG متناسب با پردازنده را نصب کنید. برای به‌روزرسانی، پروفایل‌ها و اقلام Keychain را حذف نکنید. بستهٔ برنامه امضای محلی ad hoc دارد؛ **Developer ID اپل و notarization ندارد**. ممکن است macOS هنگام نصب یا اجرا هشدار امنیتی نشان دهد؛ حفاظت سراسری Gatekeeper را خاموش نکنید.
 
-TUN اختیاری است. در صورت نیاز helper همراه dev.4 و همان معماری را به‌کار ببرید؛ وجود helper قدیمی dev.3 به‌تنهایی سازگاری یا پذیرش این بیلد را ثابت نمی‌کند. برای تست پراکسی محلی روشن‌کردن TUN لازم نیست.
+**Intel روی سخت‌افزار واقعی آزمایش نشده است.** آزمون قطع اجباری، بازیابی DNS/مسیر شبکه، خواب و بیداری، kill-switch و مصرف طولانی انرژی هنوز پذیرش کامل ندارند. Smart comparison مستقل هنگام TUN سراسری نیز محدودیت دارد. وضعیت اعتماد Slipstream روی پنل فعلی نیازمند تأیید مجدد است؛ خطای TLS یا تغییر pin نباید خودکار نادیده گرفته شود. موفقیت تشخیصی WG/TUIC داخل HY2، موفقیت اتصال مستقیم محسوب نمی‌شود.
 
-## آزمون‌ها و موارد باز
+## Source / منشأ / Исходники / 源码
 
-برای Apple Silicon، ۴۹۱ فایل نصب‌شده و ۲۱۶۳ بررسی هدفمند رابط، اشتراک، شبکه، دامنه، پروتکل و پراکسی ثبت شده است. آزمون ایجنت روی مک مالک شامل عبور بدنهٔ کامل HTTP/SOCKS با HY2 کانادا روی وای‌فای مستقیم و آزمون جداگانهٔ packet ایزوله برای DNS/HTTPS بود. این نتیجهٔ ایجنت است؛ تأیید تازهٔ مالک یا پذیرش TUN سراسری نیست.
+[ZIP سورس دقیق](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/Rovunet-macOS-0.1.8-beta-source.zip) · [Verification](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/VERIFICATION.json) · [Release notes](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Four-language record](releases/0.1.8-beta.md)
 
-اینتل از همان سورس منجمد ساخته شده است. معماری x86_64 در هر ۳۴ فایل Mach-O، امضای محلی/resourceها و تطبیق دقیق ۴۹۲ فایل پس از بازکردن بسته بررسی شد. **نصب، اجرا، رابط، اتصال شبکه و TUN روی مک اینتل واقعی تست نشده‌اند.** [جزئیات بررسی Intel](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/INTEL-VERIFICATION.json).
+Exact local source snapshot: `71adb8900c68fb3b97f97903877902db718f586a`. This snapshot is not an upstream-published application commit. The attached source ZIP corresponds to these binaries; GitHub's automatic source archive is not asserted to match it. All eleven native engines and the TUN helper are reused unchanged from internal 0.1.7.19. No fresh full native rebuild or exhaustive protocol acceptance is claimed. Use the macOS release channel rather than repository-wide Latest. PKG installers only; no DMG is provided.
 
-خرابی VLESS WS TLS که مالک گزارش کرده هنوز در دست بررسی است؛ اصلاح بعدی bootstrap **داخل این پیش‌انتشار نیست**. پروتکل‌های DNS به‌طور عمومی تأیید نشده‌اند؛ WireGuard معمولی، پذیرش بازیابی/kill switch در TUN سراسری، سازگاری private status v2 پنل و مصرف انرژی بلندمدت باز هستند. سند کامل/چنداتصالی Mieru، زنجیرهٔ دلخواه و خارج‌کردن اجباری هر اپ از تونل تضمین نشده‌اند.
-
-## سورس و سابقهٔ انتشار
-
-[ZIP سورس](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-source.zip) · [یادداشت انتشار و هش‌ها](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [پچ اختیاری از بیلد داخلی 0.1.7.13](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-from-local-0.1.7.13.patch)
-
-مرجع سورس برنامه: `ab577440f17193fd43cfbe761f63e2d2bffdacd8`. شمارهٔ عمومی beta از شمارهٔ بیلد داخلی جداست. Latest گیت‌هاب برای کل مخزن است؛ همیشه انتشار مخصوص macOS را انتخاب کنید. لینک کانفیگ و اطلاعات ورود خصوصی را در گزارش عمومی نگذارید.
+[Main project](../../README.fa.md) · [Previous macOS preview](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta)

@@ -23,6 +23,8 @@
 
 **انتشار آلفای اندروید:** [آلفا۲۱ Full / کد۴۶](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — اعتماد حساب، cache مستقل و Room50→51. Release عمومی آلفا؛ آلفا۲۰ عمومی محفوظ است. [شواهد و محدودیت ارتقا](docs/releases/alpha21.md).
 
+**نسخهٔ بتای مک:** [۰٫۱٫۸ بتا](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15 و بالاتر · نتایج جمع‌وجور DNS و تست سریع/HTTPS جدا. نصب Apple Silicon و استفادهٔ روزمرهٔ TUN تأیید شده؛ **اینتل روی سخت‌افزار واقعی تست نشده**. امضای محلی ad hoc، بدون Developer ID و notarization اپل. [راهنمای مک](docs/macos/README.fa.md).
+
 <a id="apps"></a>
 
 ## برنامه‌ها
@@ -32,7 +34,7 @@
 | **اندروید** | انتشار عمومی: **آلفا۲۰ Full با کد نسخهٔ ۴۳** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) · [صفحهٔ اندروید](docs/android/README.fa.md) |
 | **ویندوز** | **0.1.3 Beta · نسخهٔ x64 · پیش‌انتشار** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.3-beta/Rovunet-Windows-0.1.3-Beta-x64-Setup.exe) · [صفحهٔ ویندوز](windows/README.md) |
 | **لینوکس** | برنامه‌ریزی‌شده | هنوز انتشاری ندارد |
-| **مک** | **0.1.7-beta · Local Preview · Apple Silicon / Intel · پری‌ریلیز** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [صفحهٔ مک](docs/macos/README.fa.md) · Intel: **روی مک اینتل واقعی تست نشده** |
+| **مک** | **0.1.8-beta · Apple Silicon / Intel · پری‌ریلیز** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [صفحهٔ مک](docs/macos/README.fa.md) · Intel: **روی مک اینتل واقعی تست نشده** |
 
 هر پلتفرم برچسب، فایل، هش و امضای جداگانهٔ خودش را دارد. «آخرین انتشار» گیت‌هاب برای کل مخزن است و فید مخصوص هر پلتفرم نیست؛ پس همیشه از انتشاری دانلود کنید که نام پلتفرم شما را دارد. قاعدهٔ برچسب‌ها و به‌روزرسانی: [پلتفرم‌ها و کانال‌های انتشار](docs/PLATFORMS.md). تا وقتی یک انتشار صریحاً نگفته باشد، هیچ چیز در این جدول ادعای پشتیبانی پروتکل یا آزمون نصب روی دسکتاپ نیست.
 

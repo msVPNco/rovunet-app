@@ -1,0 +1,52 @@
+{
+  "publicVersion": "0.1.8-beta",
+  "internalBuild": "0.1.7.20",
+  "releaseUrl": "https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta",
+  "releaseId": 445964849,
+  "sourceSnapshotCommit": "71adb8900c68fb3b97f97903877902db718f586a",
+  "sourceSnapshotKind": "local root snapshot; not an upstream-published application commit",
+  "sourceArchiveSha256": "404b31bcaba635db0317a020ee1b6b0c423e02cc0c4492b1be8d4b96ee2f8335",
+  "uiChecks": 2139,
+  "uiFailures": 0,
+  "installedArmPayloadFiles": 492,
+  "ownerUiAccepted": true,
+  "ownerDailyTunAccepted": true,
+  "physicalIntelTested": false,
+  "developerIdSigned": false,
+  "notarized": false,
+  "nativeEnginesAndTunHelperReusedFromInternal019": true,
+  "historical019Evidence": {
+    "fastHttpsFullBody": "18/20",
+    "dnsTcpIncludingSshHttpsFullBody": "8/8"
+  },
+  "newProtocolSweepForPublication": false,
+  "assets": [
+    {
+      "name": "Rovunet-macOS-0.1.8-beta-AppleSilicon-arm64.pkg",
+      "size": 165307475,
+      "digest": "sha256:71fcf8d8db93a302061218a3be7bb871da6e78510a42095106d2345d503d90c6"
+    },
+    {
+      "name": "Rovunet-macOS-0.1.8-beta-Intel-x64-NOT-TESTED.pkg",
+      "size": 179811984,
+      "digest": "sha256:236a4fab5f856599adc823d093dd50d55c12006ee111c50df5ecd2a6a55428b2"
+    },
+    {
+      "name": "Rovunet-macOS-0.1.8-beta-source.zip",
+      "size": 4971645,
+      "digest": "sha256:404b31bcaba635db0317a020ee1b6b0c423e02cc0c4492b1be8d4b96ee2f8335"
+    },
+    {
+      "name": "SHA256SUMS.txt",
+      "size": 416,
+      "digest": "sha256:dc1909a036fd9a52621084c4cbd4f1d7202a3ca09fa6a1a468a1f764e9b4a6f5"
+    },
+    {
+      "name": "VERIFICATION.json",
+      "size": 1836,
+      "digest": "sha256:a45b101b6323b9b97c21b73137b1e80188a6e2b537d29370f2d6f467f9431d47"
+    }
+  ],
+  "publicationAuthorization": "Owner explicitly requested publication and home page update on 2026-11-15",
+  "publicationDocsBase": "fa49cefec9985d87285a8959bcb5bab699f6caea"
+}

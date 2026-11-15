@@ -21,6 +21,8 @@
 
 **Публичный Android alpha:** [alpha21 Full / код46](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — доверие аккаунта, отдельные кеши и Room50→51. Не Latest; alpha20 остаётся доступной. [Проверки и ограничения обновления](docs/releases/alpha21.md).
 
+**macOS Beta:** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · компактные результаты DNS и отдельные быстрые/HTTPS-тесты. Установка Apple Silicon и повседневный TUN подтверждены владельцем; **Intel на реальном оборудовании не проверен**. Локальная подпись ad hoc, без Apple Developer ID и нотариального заверения. [Руководство Mac](docs/macos/README.ru.md).
+
 <a id="apps"></a>
 
 ## Приложения
@@ -30,7 +32,7 @@
 | **Android** | Публичный выпуск: **0.3.0-alpha20 Full, код 43** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) · [Страница Android](docs/android/README.ru.md) |
 | **Windows** | **0.1.3 Beta · x64 · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.3-beta/Rovunet-Windows-0.1.3-Beta-x64-Setup.exe) · [Страница Windows](windows/README.md) |
 | **Linux** | Планируется | Выпусков пока нет |
-| **macOS** | **0.1.7-beta · Local Preview · Apple Silicon / Intel · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [Страница Mac](docs/macos/README.ru.md) · Intel: **не проверено на физическом Intel Mac** |
+| **macOS** | **0.1.8-beta · Apple Silicon / Intel · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Страница Mac](docs/macos/README.ru.md) · Intel: **не проверено на физическом Intel Mac** |
 
 У каждой платформы свои теги, файлы, контрольные суммы и подпись. «Latest» на GitHub относится ко всему репозиторию и не является каналом конкретной платформы, поэтому скачивайте из выпуска, в названии которого указана ваша платформа. Правила тегов и обновлений: [Платформы и каналы выпусков](docs/PLATFORMS.md). Пока выпуск прямо не сообщает об обратном, ничто в этой таблице не означает поддержку протоколов или проверенную установку на десктопе.
 

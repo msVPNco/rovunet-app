@@ -1,50 +1,26 @@
 [English](README.md) · [فارسی](README.fa.md) · [Русский](README.ru.md) · [简体中文](README.zh-CN.md)
 
-[Скачать 0.1.7-beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [Зафиксированные исходники](https://github.com/msVPNco/rovunet-app/tree/macos-v0.1.7-beta/macos) · [Главная страница](../../README.ru.md)
+# Rovunet macOS 0.1.8 Beta
 
-# Rovunet macOS 0.1.7-beta
+**Pre-release · internal build 0.1.7.20 · macOS 15+**
 
-**Ограниченный Local Preview · предварительный выпуск · сборка 0.1.7.14 · macOS 15+**
-
-Интерфейс и локальный HTTP/SOCKS-прокси имеют положительные результаты на Apple Silicon. **Intel НЕ ПРОВЕРЕН на физическом Intel Mac.** Глобальный TUN, kill switch и восстановление остаются экспериментальными. Публичная версия следует за 0.1.6-beta; внутренний номер сборки — 0.1.7.14.
-
-## Загрузка
-
-| Mac | Установщик и контрольная сумма | Область проверки |
+| Mac | Установщик и контрольная сумма | Проверки |
 | --- | --- | --- |
-| Apple Silicon · arm64 | [PKG](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-AppleSilicon-arm64.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/SHA256SUMS.txt) | Интерфейс и локальный прокси проверены на Apple Silicon; глобальный TUN ещё не принят |
-| Intel · x64 | [PKG · NOT-TESTED](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-Intel-x64-NOT-TESTED.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/SHA256SUMS-Intel.txt) | **Не проверено на физическом Intel Mac** |
+| Apple Silicon · arm64 | [PKG](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/Rovunet-macOS-0.1.8-beta-AppleSilicon-arm64.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/SHA256SUMS.txt) | Установка, интерфейс и повседневный TUN подтверждены |
+| Intel · x64 | [PKG · NOT-TESTED](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/Rovunet-macOS-0.1.8-beta-Intel-x64-NOT-TESTED.pkg) · [SHA-256](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/SHA256SUMS.txt) | **НЕ ПРОВЕРЕН на физическом Intel Mac** |
 
-Для M-серии выбирайте arm64, для Intel — x64. Модель Air/Pro и размер экрана не требуют отдельного установщика. В этом выпуске доступны PKG; DMG не предоставляется.
+Предварительная версия для **macOS 15+**; отдельные установщики Apple Silicon и Intel. Версия **0.1.8 Beta**, внутренняя сборка **0.1.7.20**.
 
-Приложение и helper имеют локальную подпись **ad hoc**. **Нет Developer ID Installer и нотариального заверения Apple.** Не отключайте Gatekeeper и общесистемные механизмы защиты.
+Результаты DNS Scanner стали компактнее, технические подробности раскрываются стрелкой. Статусы DNS, туннеля и HTTPS, ход проверки и ошибки остаются видимыми; раскрытие не выбирает DNS. Быстрая проверка отделена от точного HTTPS-теста. Для поддерживаемых UDP-протоколов используются аутентифицированные ответы протокола; один успешный пинг не доказывает передачу данных. Сохранены предыдущие исправления интерфейса, настроек и совместимости подписок панели.
 
-## Возможности сборки
+На Apple Silicon приложение установлено и запущено; **492 файла** совпали с пакетом. **2139 проверок интерфейса, без ошибок**. Владелец подтвердил внешний вид и повседневную работу TUN. В предыдущей сборке 19 полное тело HTTPS прошло через **18/20 быстрых путей** и затем **8/8 DNS-путей**, включая SSH, с TCP-резолверами. Это не полный повтор тестов сборки 20. По отзыву владельца, в Канаде с Panel 2.0.2 работает всё, кроме TUIC; его сбой в нескольких клиентах требует проверки панели/сервера. Старый результат WireGuard на другом сервере рассматривается отдельно.
 
-- Компактный интерфейс Mac, три темы, четыре языка и видимые действия сохранения, применения и возврата на внутренних страницах.
-- Управление группами с ходом операции и результатом. Ручное подключение не зависит от пинга или сканирования DNS.
-- Задержка активного пути и прокрутка длинного текста с учётом видимости содержимого.
-- HTTPS-подписки и импорт; расход/срок провайдера отделены от независимой проверки передачи данных.
-- Первичное доверие SSH/Slipstream, необязательный локальный/системный прокси и экспериментальный TUN по выбору пользователя.
+Перед установкой отключитесь и закройте приложение через Command-Q. Выберите PKG своего процессора; сохраните профили и Keychain. Подпись приложения локальная **ad hoc; Apple Developer ID и notarization отсутствуют**. Возможны предупреждения macOS; не отключайте Gatekeeper глобально. **Intel на реальном оборудовании не проверен.** Восстановление после принудительного завершения, DNS/маршрутов, сон/пробуждение, kill-switch и длительное энергопотребление ещё не прошли полную приёмку. Независимое Smart-сравнение при глобальном TUN ограничено. Доставку доверенного сертификата Slipstream на текущей панели нужно перепроверить; TLS/pin не обходятся. Проверка WG/TUIC внутри HY2 не равна прямому соединению.
 
-## Установка, обновление и возврат
+## Source / منشأ / Исходники / 源码
 
-1. Загрузите PKG для своего процессора и сверьте контрольную сумму.
-2. Штатно отключите Rovunet, выйдите через Command-Q, установите поверх и откройте из Applications. Установка/helper и изменения сетевых настроек могут требовать разрешения администратора.
-3. Сохраните данные, подписки и Keychain. При блокировке используйте явное действие Unlock. Сохраните прежний установщик для возврата; перед переустановкой штатно отключитесь и закройте приложение, не удаляя данные.
+[ZIP точных исходников](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/Rovunet-macOS-0.1.8-beta-source.zip) · [Verification](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.8-beta/VERIFICATION.json) · [Release notes](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Four-language record](releases/0.1.8-beta.md)
 
-TUN необязателен. При необходимости используйте комплектный helper dev.4 той же архитектуры; наличие старого dev.3 само по себе не доказывает совместимость или приёмку этой сборки. Локальный прокси не требует включения TUN.
+Exact local source snapshot: `71adb8900c68fb3b97f97903877902db718f586a`. This snapshot is not an upstream-published application commit. The attached source ZIP corresponds to these binaries; GitHub's automatic source archive is not asserted to match it. All eleven native engines and the TUN helper are reused unchanged from internal 0.1.7.19. No fresh full native rebuild or exhaustive protocol acceptance is claimed. Use the macOS release channel rather than repository-wide Latest. PKG installers only; no DMG is provided.
 
-## Проверки и открытые вопросы
-
-Для Apple Silicon записаны 491 проверенный установленный файл и 2 163 целевые проверки интерфейса, подписок, сети, домена, протоколов и прокси. Тесты агента на Mac владельца включали полное тело HTTP/SOCKS через Canada HY2 по прямому Wi-Fi и отдельную изолированную пакетную проверку DNS/HTTPS. Это результаты агента, а не новое подтверждение владельца или приёмка глобального TUN.
-
-Intel собран из тех же зафиксированных исходников. У всех 34 файлов Mach-O есть x86_64; проверены локальные подписи/ресурсы и точное извлечение 492 файлов пакета. **Установка, запуск, интерфейс, сеть и TUN на физическом Intel Mac не проверены.** [Проверки Intel](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/INTEL-VERIFICATION.json).
-
-Сообщённая ошибка VLESS WS TLS ещё исследуется; последующее исправление bootstrap **не входит** в этот preview. Универсальная работоспособность DNS-транспортов не заявляется. Обычный WireGuard, приёмка восстановления/kill switch глобального TUN, private status v2 панели и долговременная энергия остаются открытыми. Полные/многопривязочные документы Mieru, произвольные цепочки и принудительное исключение любого приложения из туннеля не обещаются.
-
-## Исходники и история
-
-[ZIP исходников](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-source.zip) · [Описание выпуска и хеши](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [Патч от внутренней 0.1.7.13](https://github.com/msVPNco/rovunet-app/releases/download/macos-v0.1.7-beta/Rovunet-macOS-0.1.7-beta-from-local-0.1.7.13.patch)
-
-Коммит исходников: `ab577440f17193fd43cfbe761f63e2d2bffdacd8`. Публичный номер beta отделён от номера сборки. GitHub Latest общий для репозитория; выбирайте выпуск macOS. Не публикуйте приватные ссылки конфигураций и учётные данные.
+[Main project](../../README.ru.md) · [Previous macOS preview](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta)

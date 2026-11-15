@@ -21,6 +21,8 @@
 
 **Android alpha 正式发布：** [alpha21 Full / 代码46](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — 账户信任、独立缓存与 Room50→51。公开 alpha 发行，不设 Latest；保留 alpha20。[证据与升级限制](docs/releases/alpha21.md)。
 
+**macOS Beta：** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · 紧凑 DNS 结果，快速与 HTTPS 测试分开。Apple Silicon 安装及日常 TUN 已获用户确认；**Intel 未经实体设备测试**。本地 ad hoc 签名，无 Apple Developer ID 或公证。[Mac 指南](docs/macos/README.zh-CN.md)。
+
 <a id="apps"></a>
 
 ## 应用
@@ -30,7 +32,7 @@
 | **Android** | 公开版本：**0.3.0-alpha20 Full，代码 43** | [下载](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) · [Android 页面](docs/android/README.zh-CN.md) |
 | **Windows** | **0.1.3 Beta · x64 · 预发布** | [下载](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.3-beta/Rovunet-Windows-0.1.3-Beta-x64-Setup.exe) · [Windows 页面](windows/README.md) |
 | **Linux** | 计划中 | 暂无发布 |
-| **macOS** | **0.1.7-beta · Local Preview · Apple Silicon / Intel · 预发布** | [下载](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [Mac 页面](docs/macos/README.zh-CN.md) · Intel：**未在真实 Intel Mac 上测试** |
+| **macOS** | **0.1.8-beta · Apple Silicon / Intel · 预发布** | [下载](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Mac 页面](docs/macos/README.zh-CN.md) · Intel：**未在真实 Intel Mac 上测试** |
 
 每个平台都有各自的标签、文件、校验和与签名。GitHub 的“Latest”针对整个仓库，并非各平台专属更新源，请从名称包含你所用平台的发布下载。标签与更新规则见[平台与发布渠道](docs/PLATFORMS.md)。在某个发布明确说明之前，此表中的任何内容都不代表桌面端的协议支持或安装测试结论。
 

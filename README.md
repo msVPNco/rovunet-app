@@ -21,6 +21,8 @@
 
 **Android alpha release:** [alpha21 Full / code46](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha21) — account trust, independent caches and Room50→51. Public alpha release; existing public alpha20 remains available. [Evidence and upgrade limits](docs/releases/alpha21.md).
 
+**macOS Beta:** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · compact DNS results and separate quick/HTTPS tests. Apple Silicon installation and owner daily TUN use accepted; **Intel hardware untested**. Local ad hoc signing; no Apple Developer ID or notarization. [Mac guide](docs/macos/README.md).
+
 <a id="apps"></a>
 
 ## Apps
@@ -30,7 +32,7 @@
 | **Android** | Public release: **0.3.0-alpha20 Full, code 43** | [Download](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha20) · [Android page](docs/android/README.md) |
 | **Windows** | **0.1.3 Beta · x64 · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.3-beta/Rovunet-Windows-0.1.3-Beta-x64-Setup.exe) · [Windows page](windows/README.md) |
 | **Linux** | Planned | No release yet |
-| **macOS** | **0.1.7-beta · Local Preview · Apple Silicon / Intel · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.7-beta) · [Mac page](docs/macos/README.md) · Intel: **not tested on physical Intel hardware** |
+| **macOS** | **0.1.8-beta · Apple Silicon / Intel · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Mac page](docs/macos/README.md) · Intel: **not tested on physical Intel hardware** |
 
 Each platform has its own tags, files, checksums and signing. The repository-wide “Latest” badge on GitHub is not a per-platform feed, so always download from the release that names your platform. Rules for tags and updates: [Platforms and release channels](docs/PLATFORMS.md). Nothing in this table is a claim of desktop protocol support or installer testing until a release says so.
 
