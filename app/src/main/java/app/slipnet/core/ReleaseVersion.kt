@@ -12,7 +12,7 @@ object ReleaseVersion {
         val revisions = if (m.groupValues[5].isEmpty()) listOf(0L) else
             m.groupValues[5].split('.').map { it.toLongOrNull() ?: return null }
         val buildCode = if (m.groupValues[6].isEmpty()) 0L else m.groupValues[6].toLongOrNull() ?: return null
-        return listOf(major, minor, patch, stage) + revisions + buildCode
+        return listOf(major, minor, patch, stage) + (0 until 8).map { revisions.getOrElse(it) { 0L } } + buildCode
     }
     fun supports(version: String): Boolean = parse(version) != null
     fun isNewer(remote: String, current: String): Boolean {
