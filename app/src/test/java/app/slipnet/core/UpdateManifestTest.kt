@@ -122,4 +122,23 @@ class UpdateManifestTest {
         assertEquals("v0.3.0-alpha16.1", next?.getString("tag_name"))
         assertEquals("v0.3.0-alpha16.1", UpdateManifest.newestPublished(feed(release("v3.0.0", listOf("Rovunet-Full.dmg"))), next)?.getString("tag_name"))
     }
+    @Test fun productionCode50IsSelectedAheadOfCode49AndAlpha21() {
+        val old = release("v0.3.0-alpha21")
+        val preview = release("v0.3.0-alpha22").put("prerelease", true)
+        val latest = release("v0.3.0-alpha22-code50")
+        assertEquals("v0.3.0-alpha22-code50", selected(feed(old, preview, latest), previews = false))
+        assertEquals("v0.3.0-alpha22-code50", selected(feed(old, preview, latest), previews = true))
+        assertEquals("0.3.0-alpha22-code50", UpdateManifest.parse(latest.toString(), "0.3.0-alpha21", false)?.version)
+        assertEquals("0.3.0-alpha22-code50", UpdateManifest.parse(latest.toString(), "0.3.0-alpha22", false)?.version)
+        assertNull(UpdateManifest.parse(latest.toString(), "0.3.0-alpha22-code50", false))
+    }
+
+    @Test fun buildCodesAreOrderedAfterSemanticVersionRevisions() {
+        assertTrue(ReleaseVersion.supports("v0.3.0-alpha22-code50"))
+        assertTrue(ReleaseVersion.isNewer("v0.3.0-alpha22-code50", "0.3.0-alpha22-code49"))
+        assertTrue(ReleaseVersion.isNewer("v0.3.0-alpha22.1", "0.3.0-alpha22-code50"))
+        assertFalse(ReleaseVersion.isNewer("v0.3.0-alpha22-code49", "0.3.0-alpha22-code50"))
+        assertFalse(ReleaseVersion.supports("v0.3.0-alpha22-codebad"))
+    }
+
 }
