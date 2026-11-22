@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="public_source_address_hidden">Встроенный или сохранённый публичный источник. Адрес подписки скрыт.</string>
+    <string name="rovunet_free">Rovunet Free</string>
+    <string name="rovunet_free_not_ready">Доступно после настройки ключа подписи официального каталога.</string>
 </resources>

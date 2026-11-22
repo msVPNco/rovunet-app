@@ -668,6 +668,7 @@
   "PUBLIC_SOURCE_MANAGED": "نشانی این منبع در داخل برنامه مدیریت می‌شود.",
   "PUBLIC_SOURCE_REMOVED": "این منبع از فهرست برنامه حذف شده است.",
   "SOURCE_MAHSA": "مهسا",
+  "SOURCE_ROVUNET": "اتصال رایگان روونت",
   "APP_UPDATE_TITLE": "به‌روزرسانی برنامه",
   "APP_UPDATE_CURRENT": "نسخهٔ نصب‌شده",
   "APP_UPDATE_VIA_TUNNEL": "بررسی نسخه و دانلود از تونل فعال",

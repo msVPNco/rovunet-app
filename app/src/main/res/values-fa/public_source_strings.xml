@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="public_source_address_hidden">منبع عمومی آماده یا ذخیره‌شده؛ نشانی اشتراک آن نمایش داده نمی‌شود.</string>
+    <string name="rovunet_free">اتصال رایگان روونت</string>
+    <string name="rovunet_free_not_ready">پس از فعال‌سازی کلید امضای فهرست رسمی در دسترس خواهد بود.</string>
 </resources>

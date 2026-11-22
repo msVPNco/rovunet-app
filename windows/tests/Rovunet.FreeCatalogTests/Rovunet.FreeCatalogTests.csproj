@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Rovunet.Core/Rovunet.Core.csproj" />
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.7.0" />
+    <Compile Include="../../src/Rovunet.Desktop/RovunetFreeCatalog.cs" Link="RovunetFreeCatalog.cs" />
+    <Compile Include="../../src/Rovunet.Desktop/PublicFeed.cs" Link="PublicFeed.cs" />
+    <Compile Include="../../src/Rovunet.Desktop/SubscriptionClient.cs" Link="SubscriptionClient.cs" />
+    <Compile Include="../../src/Rovunet.Desktop/MahsaFeed28.cs" Link="MahsaFeed28.cs" />
+    <!-- Public RFC 8032 fixture key, never a production trust root. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeEd25519PublicKey</_Parameter1>
+      <_Parameter2>11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo=</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+</Project>

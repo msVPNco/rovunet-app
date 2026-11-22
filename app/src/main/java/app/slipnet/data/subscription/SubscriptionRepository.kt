@@ -158,7 +158,7 @@ class SubscriptionRepository @Inject constructor(
         val existing = findSource(address)
         require(existing == null || (updateExisting && PublicProviders.hidesAddress(existing.id, sourceUrl(existing)))) { "SOURCE_EXISTS" }
         val document = PublicProviders.download(url(address).toString(), ::fetch)
-        val preview = prepareDocument(existing?.name ?: name, address, existing?.id, false, document, publicMode = true)
+        val preview = prepareDocument(existing?.name ?: name, address, existing?.id, PublicProviders.official(address), document, publicMode = true)
         require(preview.expectedSource == existing) { "SOURCE_CHANGED" }
         preview
     }
@@ -171,8 +171,14 @@ class SubscriptionRepository @Inject constructor(
         val public = publicMode || existing?.id?.startsWith("public:") == true || PublicProviders.provider(address) != null
         val id = existing?.id ?: (if (public) "public:" else "") + UUID.randomUUID().toString()
         val source = (existing ?: SubscriptionEntity(id, safeName, "")).copy(name = safeName,
-            sourceEnvelope = DeviceSecrets.seal(PublicProviders.canonical(url(address).toString()), "subscription:$id"), autoUpdate = auto && !public)
-        val publicResult = if (public) PublicFeed.parse(document, importer, connection.getDeviceId(), allowEmpty = true) else null
+            sourceEnvelope = DeviceSecrets.seal(PublicProviders.canonical(url(address).toString()), "subscription:$id"),
+            autoUpdate = auto && (!public || PublicProviders.official(address)))
+        val officialFree = PublicProviders.official(address)
+        val publicResult = if (public) PublicFeed.parse(document, importer, connection.getDeviceId(),
+            allowEmpty = true, allowBlank = officialFree) else null
+        // A signed source with unsupported or invalid rows must not retire
+        // an existing collection on a partial decode.
+        require(!officialFree || publicResult?.unsupported == 0) { "REVIEW_REQUIRED" }
         val importWarnings = linkedSetOf<String>()
         var unsupportedPanelItems = 0
         val legacyByCurrent = mutableMapOf<String, String>()
@@ -219,7 +225,10 @@ class SubscriptionRepository @Inject constructor(
     }
     /** Pure additions do not acquire the native lifecycle lock or change an active owner. */
     suspend fun apply(preview: SubscriptionPreview) = withContext(Dispatchers.IO) {
-        require(preview.profiles.isNotEmpty()) { "PUBLIC_FEED_EMPTY" }
+        require(preview.profiles.isNotEmpty() ||
+            (preview.expectedSource != null &&
+             PublicProviders.official(sourceUrl(preview.source)) &&
+             preview.unsupported == 0)) { "PUBLIC_FEED_EMPTY" }
         require(preview.unsupported == 0 || preview.reviewedUnsupported) { "REVIEW_REQUIRED" }
         mutex.withLock {
             if (preview.expectedSource == null) {
@@ -324,7 +333,7 @@ class SubscriptionRepository @Inject constructor(
         val row = db.subscriptionDao().get(id) ?: return
         try {
             val preview = prepare(row.name, sourceUrl(row), row.id, row.autoUpdate)
-            require(preview.removed == 0 && !row.id.startsWith("public:")) { "REVIEW_REQUIRED" }
+            require(PublicProviders.official(sourceUrl(row)) || (preview.removed == 0 && !row.id.startsWith("public:"))) { "REVIEW_REQUIRED" }
             apply(preview)
         }
         catch (e: CancellationException) { throw e }
@@ -334,9 +343,18 @@ class SubscriptionRepository @Inject constructor(
             throw IllegalStateException(code)
         }
     }
+    suspend fun refreshOfficialFree() {
+        if (!connection.connectionState.value.isDisconnected) return
+        db.subscriptionDao().all().filter { it.autoUpdate && PublicProviders.official(sourceUrl(it)) }.forEach { row ->
+            try { refresh(row.id) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { /* Keep last verified profiles on failure. */ }
+        }
+    }
+
     suspend fun detach(id: String) = mutex.withLock { db.subscriptionDao().delete(id) }
     suspend fun setAutomatic(id: String, enabled: Boolean) = mutex.withLock {
-        db.subscriptionDao().get(id)?.let { db.subscriptionDao().put(it.copy(autoUpdate = enabled && !PublicProviders.hidesAddress(id, sourceUrl(it)))) }
+        db.subscriptionDao().get(id)?.let { db.subscriptionDao().put(it.copy(autoUpdate = enabled && (!PublicProviders.hidesAddress(id, sourceUrl(it)) || PublicProviders.official(sourceUrl(it))))) }
     }
     suspend fun refreshAutomatic() {
         if (!connection.connectionState.value.isDisconnected) return

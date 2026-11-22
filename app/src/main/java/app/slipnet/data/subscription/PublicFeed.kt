@@ -38,7 +38,7 @@ object PublicFeed {
         require(expanded.toByteArray(Charsets.UTF_8).size <= MAX_BYTES) { "PUBLIC_FEED_LIMIT" }
         return expanded
     }
-    suspend fun parse(document: String, importer: ConfigImporter, deviceId: String, allowEmpty: Boolean = false): Result {
+    suspend fun parse(document: String, importer: ConfigImporter, deviceId: String, allowEmpty: Boolean = false, allowBlank: Boolean = false): Result {
         val expanded = expand(document)
         val seen = HashSet<ServerProfile>()
         val profiles = ArrayList<ServerProfile>()
@@ -65,7 +65,7 @@ object PublicFeed {
             } else if (!seen.add(ProfileDuplicates.key(p).copy(collectionId = ""))) duplicates++
             else { profiles += p; acceptedBy[protocol] = (acceptedBy[protocol] ?: 0) + 1 }
         }
-        require(profiles.isNotEmpty() || (allowEmpty && entries > 0)) { "PUBLIC_FEED_EMPTY" }
+        require(profiles.isNotEmpty() || (allowEmpty && (entries > 0 || (allowBlank && expanded.isEmpty())))) { "PUBLIC_FEED_EMPTY" }
         return Result(profiles, unsupported, duplicates, (acceptedBy.keys + rejectedBy.keys).distinct().map { Stat(it, acceptedBy[it] ?: 0, rejectedBy[it] ?: 0, reasons[it].orEmpty()) })
     }
 }

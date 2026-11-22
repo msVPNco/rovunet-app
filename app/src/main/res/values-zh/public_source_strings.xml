@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="public_source_address_hidden">内置或已保存的公共来源。订阅地址已隐藏。</string>
+    <string name="rovunet_free">Rovunet 免费连接</string>
+    <string name="rovunet_free_not_ready">配置官方目录签名公钥后可用。</string>
 </resources>
