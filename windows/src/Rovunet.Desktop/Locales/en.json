@@ -668,6 +668,7 @@
   "PUBLIC_SOURCE_MANAGED": "The source address is managed inside the app.",
   "PUBLIC_SOURCE_REMOVED": "This source has been removed from the app.",
   "SOURCE_MAHSA": "Mahsa",
+  "SOURCE_ROVUNET": "Rovunet Free",
   "APP_UPDATE_TITLE": "Application updates",
   "APP_UPDATE_CURRENT": "Installed version",
   "APP_UPDATE_VIA_TUNNEL": "Check and download through the active tunnel",
