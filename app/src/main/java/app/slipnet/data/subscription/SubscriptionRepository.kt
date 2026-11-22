@@ -173,8 +173,12 @@ class SubscriptionRepository @Inject constructor(
         val source = (existing ?: SubscriptionEntity(id, safeName, "")).copy(name = safeName,
             sourceEnvelope = DeviceSecrets.seal(PublicProviders.canonical(url(address).toString()), "subscription:$id"),
             autoUpdate = auto && (!public || PublicProviders.official(address)))
+        val officialFree = PublicProviders.official(address)
         val publicResult = if (public) PublicFeed.parse(document, importer, connection.getDeviceId(),
-            allowEmpty = true, allowBlank = PublicProviders.official(address)) else null
+            allowEmpty = true, allowBlank = officialFree) else null
+        // A signed source with unsupported or invalid rows must not retire
+        // an existing collection on a partial decode.
+        require(!officialFree || publicResult?.unsupported == 0) { "REVIEW_REQUIRED" }
         val importWarnings = linkedSetOf<String>()
         var unsupportedPanelItems = 0
         val legacyByCurrent = mutableMapOf<String, String>()
@@ -221,7 +225,10 @@ class SubscriptionRepository @Inject constructor(
     }
     /** Pure additions do not acquire the native lifecycle lock or change an active owner. */
     suspend fun apply(preview: SubscriptionPreview) = withContext(Dispatchers.IO) {
-        require(preview.profiles.isNotEmpty()) { "PUBLIC_FEED_EMPTY" }
+        require(preview.profiles.isNotEmpty() ||
+            (preview.expectedSource != null &&
+             PublicProviders.official(sourceUrl(preview.source)) &&
+             preview.unsupported == 0)) { "PUBLIC_FEED_EMPTY" }
         require(preview.unsupported == 0 || preview.reviewedUnsupported) { "REVIEW_REQUIRED" }
         mutex.withLock {
             if (preview.expectedSource == null) {
