@@ -2,7 +2,7 @@ package app.slipnet.core
 
 /** Comparison for published numeric versions and alpha/beta/rc tags, not lexical ordering. */
 object ReleaseVersion {
-    private val format = Regex("^v?(\\d+)\\.(\\d+)(?:\\.(\\d+))?(?:-(alpha|beta|rc)(?:[.-]?(\\d+(?:\\.\\d+)*))?)?(?:-lite)?$")
+    private val format = Regex("^v?(\\d+)\\.(\\d+)(?:\\.(\\d+))?(?:-(alpha|beta|rc)(?:[.-]?(\\d+(?:\\.\\d+)*))?)?(?:-code(\\d+))?(?:-lite)?$")
     private fun parse(value: String): List<Long>? {
         val m = format.matchEntire(value) ?: return null
         val major = m.groupValues[1].toLongOrNull() ?: return null
@@ -11,7 +11,8 @@ object ReleaseVersion {
         val stage = when (m.groupValues[4]) { "alpha" -> 0L; "beta" -> 1L; "rc" -> 2L; else -> 3L }
         val revisions = if (m.groupValues[5].isEmpty()) listOf(0L) else
             m.groupValues[5].split('.').map { it.toLongOrNull() ?: return null }
-        return listOf(major, minor, patch, stage) + revisions
+        val buildCode = if (m.groupValues[6].isEmpty()) 0L else m.groupValues[6].toLongOrNull() ?: return null
+        return listOf(major, minor, patch, stage) + (0 until 8).map { revisions.getOrElse(it) { 0L } } + buildCode
     }
     fun supports(version: String): Boolean = parse(version) != null
     fun isNewer(remote: String, current: String): Boolean {
