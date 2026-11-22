@@ -66,6 +66,7 @@ public sealed partial class MainWindow : Window
             try { tray = new TrayIcon(ShowExisting, ToggleTrayConnection, () => _ = ExitApplication()); }
             catch { data.CloseToTray = false; lastError = "TRAY_UNAVAILABLE"; }
             await Run(async () => await AgentClient.Recover());usageRefresh20.Tick+=async(_,_)=>await RefreshAllUsage20();usageRefresh20.Start();_ =RefreshAllUsage20();
+            officialFreeRefresh.Tick+=async(_,_)=>await RefreshOfficialFree();officialFreeRefresh.Start();_ =RefreshOfficialFree();
         };
         Closing += (_, e) =>
         {
@@ -75,7 +76,7 @@ public sealed partial class MainWindow : Window
             if (data.CloseToTray && tray != null && !closing) { SaveWindowSize(); Hide(); tray.HiddenNotice(); }
             else _ = ExitApplication();
         };
-        Closed += (_, _) => { usageRefresh20.Stop();usageLifetime20.Cancel();statusExpiry.Stop(); durationTimer.Stop();CancelRouting28(true); CancelSleepTimer(); tray?.Dispose(); SystemEvents.PowerModeChanged -= OnPower;SystemEvents.UserPreferenceChanged-=OnPreferenceChanged; };
+        Closed += (_, _) => { usageRefresh20.Stop();officialFreeRefresh.Stop();usageLifetime20.Cancel();statusExpiry.Stop(); durationTimer.Stop();CancelRouting28(true); CancelSleepTimer(); tray?.Dispose(); SystemEvents.PowerModeChanged -= OnPower;SystemEvents.UserPreferenceChanged-=OnPreferenceChanged; };
         if (!uiSmoke) {SystemEvents.PowerModeChanged += OnPower; SystemEvents.UserPreferenceChanged+=OnPreferenceChanged;}
         statusExpiry.Tick += (_, _) => { statusExpiry.Stop(); RefreshCards(); };
         sleepTicker.Tick += (_, _) => TickSleepTimer();
