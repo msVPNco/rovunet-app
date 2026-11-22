@@ -55,6 +55,13 @@ if (localPropertiesFile.exists()) {
 }
 val configEncryptionKey = localProperties.getProperty("CONFIG_ENCRYPTION_KEY", "")
 
+// A separate Ed25519 catalog trust root must be approved before Rovunet Free
+// can be activated. Missing or malformed keys fail closed in app code.
+val freePublicKey = providers.gradleProperty("rovunetFreePublicKeyBase64").orNull.orEmpty()
+require(freePublicKey.isEmpty() || freePublicKey.matches(Regex("[A-Za-z0-9+/]{43}="))) {
+    "Rovunet Free Ed25519 public key must be 32 raw bytes in Base64"
+}
+
 // OpenSSL configuration
 val opensslVersion = "3.0.15"
 val opensslBaseDir = file("${System.getProperty("user.home")}/android-openssl/android-ssl")
@@ -97,6 +104,7 @@ android {
         applicationId = if (deviceCandidate) "app.veyra.client.candidate" else "app.veyra.client"
         manifestPlaceholders["launcherName"] = if (deviceCandidate) "Rovunet Test" else "@string/app_name"
         buildConfigField("boolean", "PRIVATE_CANDIDATE", deviceCandidate.toString())
+        buildConfigField("String", "FREE_ED25519_PUBLIC_KEY", "\"$freePublicKey\"")
         minSdk = minSdkVersion
         targetSdk = 35
         versionCode = appVersionCode
@@ -223,6 +231,10 @@ kotlin {
 
 val cargoHome = System.getenv("CARGO_HOME") ?: "${System.getProperty("user.home")}/.cargo"
 val cargoBin = "$cargoHome/bin"
+
+dependencies {
+    implementation("org.bouncycastle:bcprov-jdk15to18:1.80")
+}
 
 // Task to setup OpenSSL for Android
 tasks.register("setupOpenSsl") {
