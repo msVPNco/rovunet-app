@@ -1,2 +1,6 @@
 package app.slipnet
-object BuildConfig { const val INCLUDE_TOR = true; const val INCLUDE_NAIVE = true }
+object BuildConfig {
+ const val INCLUDE_TOR = true
+ const val INCLUDE_NAIVE = true
+ const val FREE_ED25519_PUBLIC_KEY = ""
+}
