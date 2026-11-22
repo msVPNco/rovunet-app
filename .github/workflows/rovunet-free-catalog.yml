@@ -1,0 +1,65 @@
+name: Rovunet Free signed catalog
+
+on:
+  pull_request:
+    paths:
+      - 'free/**'
+      - '.github/workflows/rovunet-free-catalog.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'free/donations/**'
+      - 'free/tools/**'
+  schedule:
+    - cron: '17 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: rovunet-free-catalog
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Check Python tests and source candidates
+        run: |
+          python3 -m unittest discover -s free/tools -p 'test_*.py' -v
+          python3 free/tools/publish.py --check
+
+  publish:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: true
+      - name: Sign active donations; prune expired candidates
+        env:
+          ROVUNET_FREE_SIGNING_KEY_PEM_B64: ${{ secrets.ROVUNET_FREE_SIGNING_KEY_PEM_B64 }}
+        run: |
+          test -n "$ROVUNET_FREE_SIGNING_KEY_PEM_B64" || {
+            echo "::error::Publisher Ed25519 secret not configured; refusing unsigned catalog."
+            exit 1
+          }
+          python3 free/tools/publish.py
+      - name: Commit both signed files and retirement changes together
+        run: |
+          git config user.name "rovunet-free-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A free/donations free/catalog.json free/catalog.sig
+          if git diff --staged --quiet; then
+            echo "No catalog changes"
+          else
+            git commit -m "chore(free): rotate signed catalog and expire donations"
+            git push origin HEAD:main
+          fi
