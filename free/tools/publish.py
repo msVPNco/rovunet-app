@@ -121,7 +121,7 @@ def build_catalog(donations_dir: pathlib.Path, now: dt.datetime) -> tuple[bytes,
     entries.sort(key=lambda e: e["donation_id"])
     catalog = {"version": 1, "generated_at": canonical_timestamp(now), "donations": entries}
     data = (json.dumps(catalog, ensure_ascii=False, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8")
-    if len(data) > 8 * 1024 * 1024:
+    if len(data) > 2 * 1024 * 1024:
         raise ValueError("catalog exceeds client download budget")
     return data, expired
 
