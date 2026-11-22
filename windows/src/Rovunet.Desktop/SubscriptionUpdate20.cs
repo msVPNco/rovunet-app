@@ -8,8 +8,23 @@ public sealed partial class MainWindow
     readonly HashSet<string> ownAccountSources20=[];
     readonly HashSet<string> updatingSubscriptions20=[];
     readonly System.Windows.Threading.DispatcherTimer usageRefresh20=new(){Interval=TimeSpan.FromMinutes(10)};
+    readonly System.Windows.Threading.DispatcherTimer officialFreeRefresh=new(){Interval=TimeSpan.FromHours(12)};
     readonly CancellationTokenSource usageLifetime20=new();
-    bool refreshingUsage20;
+    bool refreshingUsage20, refreshingOfficialFree;
+    // The official catalog is an opt-in source. Unlike third-party public
+    // feeds it has a separately pinned Ed25519 key and can auto-refresh.
+    async Task RefreshOfficialFree()
+    {
+        if(refreshingOfficialFree||fixtureMode||closing||busy||state.State!="disconnected"||!RovunetFreeCatalog.Enabled)return;
+        refreshingOfficialFree=true;
+        try{
+            foreach(var sub in data.Subscriptions.ToArray()){
+                if(usageLifetime20.IsCancellationRequested)return;
+                if(ManagedSource28(sub)?.Key!="rovunet")continue;
+                await UpdateCollection20(sub.Id);
+            }
+        }finally{refreshingOfficialFree=false;}
+    }
     async Task RefreshAllUsage20()
     {
         if(refreshingUsage20||fixtureMode||closing)return;refreshingUsage20=true;
@@ -71,6 +86,27 @@ public sealed partial class MainWindow
         try{Save();}catch{(data.Profiles,data.Subscriptions,data.LocalOverrideSources,data.LocalOverrideNames,data.SelectedId,data.Status2Authorities)=previous;if(timestamp==default)data.SubscriptionUpdated.Remove(source);else data.SubscriptionUpdated[source]=timestamp;throw;}
         BuildCards();
     }
+    // A signed and valid empty official catalog must retire expired members
+    // without deleting the source itself or touching any private collection.
+    // An unsigned, third-party or failed download never enters this path.
+    void CommitEmptyOfficialFree20(Subscription sub)
+    {
+        if(ManagedSource28(sub)?.Key!="rovunet")throw new SafeError("INVALID_IMPORT");
+        var oldProfiles=data.Profiles;
+        var oldSelected=data.SelectedId;
+        var oldUpdated=data.SubscriptionUpdated.GetValueOrDefault(sub.Id);
+        data.Profiles=data.Profiles.Where(p=>p.SourceId!=sub.Id).ToList();
+        if(oldSelected.Length>0&&!data.Profiles.Any(p=>p.Id==oldSelected))data.SelectedId="";
+        data.SubscriptionUpdated[sub.Id]=DateTimeOffset.UtcNow;
+        try{Save();}
+        catch{
+            data.Profiles=oldProfiles;data.SelectedId=oldSelected;
+            if(oldUpdated==default)data.SubscriptionUpdated.Remove(sub.Id);
+            else data.SubscriptionUpdated[sub.Id]=oldUpdated;
+            throw;
+        }
+        BuildCards();
+    }
     async Task UpdateCollection20(string source)
     {
         var sub=data.Subscriptions.FirstOrDefault(s=>s.Id==source);if(sub==null||!updatingSubscriptions20.Add(source))return;
@@ -85,7 +121,13 @@ public sealed partial class MainWindow
             var batch=publicFeed?PublicFeed.Preview(payload.Body,data.IncludeExperimental):Importer.ReadCompatible(SubscriptionUsage20.ConfigBody(payload.Body),data.IncludeExperimental);
             validationSummary=ImportSummary(batch);
             stop.ThrowIfCancellationRequested();
-            if(publicFeed&&PublicFeed.IsPartial(batch)){
+            if(publicFeed && PublicFeed.Resolve(uri.AbsoluteUri)?.Key=="rovunet" && batch.Profiles.Count==0 && batch.Total==0)
+            {
+                CommitEmptyOfficialFree20(sub);
+                subscriptionOutcomes30[source]=new("SUBSCRIPTION_UPDATED",DateTimeOffset.UtcNow);
+                Notify(L.Text("SUBSCRIPTION_UPDATED"));
+            }
+            else if(publicFeed&&PublicFeed.IsPartial(batch)){
                 int added=CommitPublicBatch28(uri,batch,sub.Name,sub.Id);
                 subscriptionOutcomes30[source]=new("PUBLIC_PARTIAL_ADDED",DateTimeOffset.UtcNow,added,batch.Skipped.Values.Sum());
                 Notify(string.Format(L.Text("PUBLIC_PARTIAL_ADDED"),added,batch.Skipped.Values.Sum())+" · "+ImportSummary(batch),Amber);
