@@ -118,7 +118,7 @@ public sealed partial class MainWindow
             if(!publicFeed)RequireV2StatusReady21(uri,source);
             var payload=publicFeed?await FetchPublic28(uri.AbsoluteUri,stop,port):subscriptionFetchFixture28!=null?await subscriptionFetchFixture28(uri,stop,port):await SubscriptionClient.Fetch(uri,port,cancellation:stop);
             if(!publicFeed)CaptureUsage20(source,payload);
-            var batch=publicFeed?PublicFeed.Preview(payload.Body,data.IncludeExperimental):Importer.ReadCompatible(SubscriptionUsage20.ConfigBody(payload.Body),data.IncludeExperimental);
+            var batch=publicFeed?PublicFeed.PreviewUpdate(uri.AbsoluteUri,payload.Body,data.IncludeExperimental):Importer.ReadCompatible(SubscriptionUsage20.ConfigBody(payload.Body),data.IncludeExperimental);
             validationSummary=ImportSummary(batch);
             stop.ThrowIfCancellationRequested();
             if(publicFeed && PublicFeed.Resolve(uri.AbsoluteUri)?.Key=="rovunet" && batch.Profiles.Count==0 && batch.Total==0)

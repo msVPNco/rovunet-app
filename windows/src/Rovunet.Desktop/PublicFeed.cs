@@ -74,6 +74,17 @@ public static class PublicFeed
         catch(SafeError error)when(error.Code=="CANCELLED"&&budget.IsCancellationRequested&&!cancellation.IsCancellationRequested){throw new SafeError("FETCH_FAILED");}
     }
 
+    // The caller must fetch through PublicFeed.Fetch first. Only that verified
+    // official response can deliberately retire every member of a collection.
+    internal static CompatibleImport PreviewUpdate(string url,string body,bool experimental)
+    {
+        bool official=Resolve(url)?.Key=="rovunet";
+        if(official&&body.Length==0)return new CompatibleImport();
+        var batch=Preview(body,experimental);
+        if(official&&IsPartial(batch))throw new SafeError("INVALID_IMPORT");
+        return batch;
+    }
+
     public static CompatibleImport Preview(string body,bool experimental)
     {
         if(Encoding.UTF8.GetByteCount(body)>Importer.MaxBytes)throw new SafeError("IMPORT_TOO_LARGE");
