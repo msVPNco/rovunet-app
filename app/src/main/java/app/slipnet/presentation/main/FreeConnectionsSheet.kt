@@ -17,6 +17,7 @@ import app.slipnet.R
 import app.slipnet.data.subscription.SubscriptionPreview
 import app.slipnet.data.subscription.SubscriptionRepository
 import app.slipnet.data.subscription.PublicProviders
+import app.slipnet.data.subscription.RovunetFreeCatalog
 import kotlinx.coroutines.*
 
 /** This catalog neither downloads nor connects until an explicit user action. */
@@ -33,6 +34,11 @@ internal fun FreeConnectionsSheet(repository: SubscriptionRepository, onTor: () 
             HorizontalDivider()
             Text(stringResource(R.string.alpha17_public_title), style = MaterialTheme.typography.titleMedium)
             Text(stringResource(R.string.alpha17_public_consent), style = MaterialTheme.typography.bodySmall)
+            OutlinedButton(onClick = { provider = PublicProviders.Provider.ROVUNET; showPublic = true },
+                enabled = RovunetFreeCatalog.enabled(), modifier = Modifier.fillMaxWidth().testTag("free-rovunet")) {
+                Text(stringResource(R.string.rovunet_free))
+            }
+            if (!RovunetFreeCatalog.enabled()) Text(stringResource(R.string.rovunet_free_not_ready), style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = { provider = PublicProviders.Provider.ANONYMOUS; showPublic = true }, modifier = Modifier.fillMaxWidth().testTag("free-anonymous")) { Text(stringResource(R.string.review02_anonymous)) }
             OutlinedButton(onClick = { provider = PublicProviders.Provider.MAHSA; showPublic = true }, modifier = Modifier.fillMaxWidth().testTag("free-mahsa")) { Text(stringResource(R.string.review02_mahsa)) }
             Button(onClick = { provider = null; showPublic = true }, modifier = Modifier.fillMaxWidth().testTag("public-source")) { Text(stringResource(R.string.alpha17_free_other)) }
@@ -48,6 +54,7 @@ internal fun PublicSourceDialog(repository: SubscriptionRepository, provider: Pu
     onDismiss: () -> Unit, onImported: () -> Unit) {
     val presetName = stringResource(when (provider) {
         PublicProviders.Provider.MAHSA -> R.string.review02_mahsa
+        PublicProviders.Provider.ROVUNET -> R.string.rovunet_free
         else -> R.string.review02_anonymous
     })
     var name by remember(provider) { mutableStateOf(if (provider == null) "" else presetName) }
