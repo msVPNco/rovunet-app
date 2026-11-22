@@ -24,6 +24,24 @@ class SubscriptionWorker(context: Context, parameters: WorkerParameters) : Corou
                 .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.UNMETERED).setRequiresBatteryNotLow(true).build())
                 .setInitialDelay(12, TimeUnit.HOURS).build()
             WorkManager.getInstance(context).enqueueUniquePeriodicWork("rovunet-subscriptions", ExistingPeriodicWorkPolicy.KEEP, request)
+            // Only the user-opted-in, signature-pinned Rovunet Free source may
+            // refresh on a metered connection; private and third-party public
+            // sources keep their previous scheduling policy.
+            val official = PeriodicWorkRequestBuilder<RovunetFreeWorker>(12, TimeUnit.HOURS)
+                .setConstraints(Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresBatteryNotLow(true).build())
+                .setInitialDelay(12, TimeUnit.HOURS).build()
+            WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+                "rovunet-official-free", ExistingPeriodicWorkPolicy.KEEP, official)
         }
+    }
+}
+
+/** Separate official catalog sync; no downloads happen unless the user added Rovunet Free. */
+class RovunetFreeWorker(context: Context, parameters: WorkerParameters) : CoroutineWorker(context, parameters) {
+    override suspend fun doWork(): Result {
+        EntryPointAccessors.fromApplication(applicationContext, SubscriptionWorkerEntryPoint::class.java)
+            .subscriptions().refreshOfficialFree()
+        return Result.success()
     }
 }
