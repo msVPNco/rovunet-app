@@ -336,13 +336,22 @@ class SubscriptionRepository @Inject constructor(
             throw IllegalStateException(code)
         }
     }
+    suspend fun refreshOfficialFree() {
+        if (!connection.connectionState.value.isDisconnected) return
+        db.subscriptionDao().all().filter { it.autoUpdate && PublicProviders.official(sourceUrl(it)) }.forEach { row ->
+            try { refresh(row.id) }
+            catch (e: CancellationException) { throw e }
+            catch (_: Exception) { /* Keep last verified profiles on failure. */ }
+        }
+    }
+
     suspend fun detach(id: String) = mutex.withLock { db.subscriptionDao().delete(id) }
     suspend fun setAutomatic(id: String, enabled: Boolean) = mutex.withLock {
         db.subscriptionDao().get(id)?.let { db.subscriptionDao().put(it.copy(autoUpdate = enabled && (!PublicProviders.hidesAddress(id, sourceUrl(it)) || PublicProviders.official(sourceUrl(it))))) }
     }
     suspend fun refreshAutomatic() {
         if (!connection.connectionState.value.isDisconnected) return
-        db.subscriptionDao().all().filter { it.autoUpdate && (!it.id.startsWith("public:") || PublicProviders.official(sourceUrl(it))) }.forEach { row ->
+        db.subscriptionDao().all().filter { it.autoUpdate && !it.id.startsWith("public:") }.forEach { row ->
         try { refresh(row.id) } catch (e: CancellationException) { throw e } catch (_: Exception) { /* Per-source safe code persisted. */ }
     } }
 }
