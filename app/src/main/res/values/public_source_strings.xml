@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="public_source_address_hidden">Built-in or saved public source. Its subscription address is hidden.</string>
+    <string name="rovunet_free">Rovunet Free</string>
+    <string name="rovunet_free_not_ready">Available when the official signed catalog key is configured.</string>
 </resources>
