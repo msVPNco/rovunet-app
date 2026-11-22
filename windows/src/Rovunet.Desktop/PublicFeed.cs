@@ -10,17 +10,23 @@ public static class PublicFeed
 {
     public sealed record Preset(string Key, string Name, string Url, bool Expand)
     {
-        public string DisplayName=>L.Text(Key=="mahsa"?"SOURCE_MAHSA":"SOURCE_ANONYMOUS");
+        public string DisplayName=>L.Text(Key=="mahsa"?"SOURCE_MAHSA":Key=="rovunet"?"SOURCE_ROVUNET":"SOURCE_ANONYMOUS");
         public override string ToString()=>Name;
     }
     public const string MahsaUrl="https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/main/app/sub.txt";
     internal const string MahsaApi32="https://api.github.com/repos/mahsanet/MahsaFreeConfig/contents/app/sub.txt?ref=main";
 
     public static readonly Preset[] Presets =
-    [
-        new("mahsa", "Mahsa", MahsaUrl, false),
-        new("anonymous", "Anonymous", "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/refs/heads/main/configs/proxy_configs.txt", false),
-    ];
+        RovunetFreeCatalog.Enabled
+        ? new Preset[] {
+            new("mahsa", "Mahsa", MahsaUrl, false),
+            new("anonymous", "Anonymous", "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/refs/heads/main/configs/proxy_configs.txt", false),
+            new("rovunet", "Rovunet Free", RovunetFreeCatalog.Url, false),
+        }
+        : new Preset[] {
+            new("mahsa", "Mahsa", MahsaUrl, false),
+            new("anonymous", "Anonymous", "https://raw.githubusercontent.com/4n0nymou3/multi-proxy-config-fetcher/refs/heads/main/configs/proxy_configs.txt", false),
+        };
 
     static readonly string[] MahsaAliases=[MahsaUrl,
         "https://raw.githubusercontent.com/mahsanet/MahsaFreeConfig/refs/heads/main/app/sub.txt",
@@ -50,6 +56,7 @@ public static class PublicFeed
     internal static async Task<SubscriptionClient.Payload> FetchUsing28(string url,Func<Uri,CancellationToken,int,Task<SubscriptionClient.Payload>> fetch,CancellationToken cancellation=default,int proxyPort=0)
     {
         string canonical=CanonicalUrl(url);
+        if(Resolve(canonical)?.Key=="rovunet")return await RovunetFreeCatalog.Fetch(fetch,cancellation,proxyPort);
         if(Resolve(canonical)?.Key!="mahsa")return await fetch(SubscriptionUrls.Validate(canonical),cancellation,proxyPort);
         using var budget=CancellationTokenSource.CreateLinkedTokenSource(cancellation);budget.CancelAfter(TimeSpan.FromSeconds(25));
         try{
