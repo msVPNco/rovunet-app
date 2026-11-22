@@ -668,6 +668,7 @@
   "PUBLIC_SOURCE_MANAGED": "此来源的地址由应用管理。",
   "PUBLIC_SOURCE_REMOVED": "此来源已从应用中移除。",
   "SOURCE_MAHSA": "Mahsa",
+  "SOURCE_ROVUNET": "Rovunet 免费连接",
   "APP_UPDATE_TITLE": "应用更新",
   "APP_UPDATE_CURRENT": "已安装版本",
   "APP_UPDATE_VIA_TUNNEL": "通过当前隧道检查和下载",
