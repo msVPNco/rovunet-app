@@ -232,10 +232,6 @@ kotlin {
 val cargoHome = System.getenv("CARGO_HOME") ?: "${System.getProperty("user.home")}/.cargo"
 val cargoBin = "$cargoHome/bin"
 
-dependencies {
-    implementation("org.bouncycastle:bcprov-jdk15to18:1.80")
-}
-
 // Task to setup OpenSSL for Android
 tasks.register("setupOpenSsl") {
     group = "build setup"
