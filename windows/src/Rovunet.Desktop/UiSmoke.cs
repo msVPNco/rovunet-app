@@ -30,7 +30,7 @@ public sealed partial class MainWindow
             foreach (string theme in new[] { "light", "dark" })
             {
                 data.Theme = theme; ApplyTheme(); Build(); SetState(new() { State = "connected", HttpPort = 21001, SocksPort = 21002 }); UpdateLayout();
-                Check("theme_" + theme, Tone("Bg") is SolidColorBrush brush && brush.Color == (Color)ColorConverter.ConvertFromString(theme == "dark" ? "#16263C" : "#F0F1FB"));
+                Check("theme_" + theme, Tone("Bg") is SolidColorBrush brush && brush.Color == (Color)ColorConverter.ConvertFromString(theme == "dark" ? "#172437" : "#F1F1FA"));
                 Check("opaque_background_" + theme, Content is System.Windows.Controls.Grid root && root.Background is GradientBrush background && background.Opacity==1 && background.GradientStops.All(stop=>stop.Color.A==255));
                 IEnumerable<DependencyObject> Descendants(DependencyObject parent)
                 {
@@ -42,7 +42,7 @@ public sealed partial class MainWindow
                 }
                 var powerPath=connect.Content as System.Windows.Shapes.Path;
                 double Lum(Color color){double Part(byte b){double v=b/255d;return v<=0.04045?v/12.92:Math.Pow((v+0.055)/1.055,2.4);}return .2126*Part(color.R)+.7152*Part(color.G)+.0722*Part(color.B);}
-                bool contrast=false;if(powerPath?.Stroke is SolidColorBrush foreground && connect.Background is SolidColorBrush surface){double a=Lum(foreground.Color),b=Lum(surface.Color);contrast=(Math.Max(a,b)+.05)/(Math.Min(a,b)+.05)>=3;}
+                bool contrast=false;if(powerPath?.Stroke is SolidColorBrush foreground && connect.Background is Brush face){double a=Lum(foreground.Color);IEnumerable<Color> stops=face is GradientBrush g?g.GradientStops.Select(s=>s.Color):face is SolidColorBrush s?new[]{s.Color}:[];contrast=stops.Any()&&stops.All(c=>{double b=Lum(c);return (Math.Max(a,b)+.05)/(Math.Min(a,b)+.05)>=3;});}
                 Check("power_icon_contrast_"+theme,contrast);
                 Check("floating_icons_contrast_"+theme,Descendants((DependencyObject)Content).OfType<System.Windows.Controls.Button>().Where(b=>b.Width==58 && b.IsVisible).All(b=>{if(b.Content is not System.Windows.Shapes.Path icon || icon.Stroke is not SolidColorBrush ink || b.Background is not SolidColorBrush fill)return false;double a=Lum(ink.Color),c=Lum(fill.Color);return (Math.Max(a,c)+.05)/(Math.Min(a,c)+.05)>=3;}));
                 Check("touch_home_buttons_" + theme, Descendants((DependencyObject)Content).OfType<System.Windows.Controls.Button>().Where(b => b.IsVisible).All(b => b.ActualHeight >= 44 && b.ActualWidth >= 44));
@@ -51,7 +51,8 @@ public sealed partial class MainWindow
                     var scroll = new System.Windows.Controls.ScrollViewer { Content = panel, VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto, PanningMode = System.Windows.Controls.PanningMode.VerticalOnly };
                     var frame = new System.Windows.Controls.Border { Background = Tone("Bg"), Child = scroll, Width = 660, Height = 680, FlowDirection = L.Direction, Style = null };
                     frame.Measure(new Size(660, 680)); frame.Arrange(new Rect(0, 0, 660, 680)); frame.UpdateLayout();
-                    Check(name + "_sections_" + theme, panel.Children.OfType<System.Windows.Controls.Border>().Count() == 6);
+                    // Settings keeps six titled sections; the general menu now starts with Language.
+                    Check(name + "_sections_" + theme, panel.Children.OfType<System.Windows.Controls.Border>().Count() == (name == "settings" ? 6 : 7));
                     Check(name + "_touch_buttons_" + theme, Descendants(frame).OfType<System.Windows.Controls.Button>().Where(b => b.IsVisible).All(b => b.ActualHeight >= 44 && b.ActualWidth >= 44));
                     if(name=="settings")Check(name+"_scrolls_"+theme,scroll.ExtentHeight>scroll.ViewportHeight);
                     else{scroll.ScrollToBottom();frame.UpdateLayout();var last=Descendants(frame).OfType<System.Windows.Controls.Button>().Last();Check(name+"_all_actions_reachable_"+theme,last.TranslatePoint(new Point(0,last.ActualHeight),scroll).Y<=scroll.ActualHeight+1);}
@@ -87,7 +88,7 @@ public sealed partial class MainWindow
                 Check("named_radio_" + language, rows.All(r => !string.IsNullOrEmpty(System.Windows.Automation.AutomationProperties.GetName(r.Select))));
             }
         }
-        catch { checks["ui_fixture_unexpected_error"] = false; }
+        catch (Exception e) { checks["ui_fixture_unexpected_error: " + e.GetType().Name + " @ " + e.StackTrace?.Split('\n').FirstOrDefault()?.Trim() + " :: " + e.Message] = false; }
         bool passed = checks.Count > 0 && checks.Values.All(x => x);
         try
         {
