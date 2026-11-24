@@ -24,6 +24,10 @@ Subscription refresh/reimport, direct-first DNS fallback, moving labels, manual 
 
 Apple Silicon's dev.6 functional base was tested and accepted by the owner on a real Mac. **Intel: limited testing**, with host and package validation only. Both require macOS 15+. This Beta changes version and packaging metadata, retaining the functional base. [Mac guide](macos/README.md). [Pre-release](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.6-beta).
 
+## Windows 0.1.7 Beta
+
+Windows x64 [pre-release](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.1.7-beta): [installer, source and notes](../windows/docs/LIVE41-0.1.7.md). Rebuilds the Windows view on Android's Material roles — the same backgrounds, surfaces, pills and radii as the Android app — and fixes accent colours in AMOLED, where the theme block used to re-declare the colour variables over the chosen accent. All eight Android accents now apply in light, dark and AMOLED; high contrast still wins. 0.1.6 before it fixed the chain's second layer and the HTML accent path. 529 portable/protocol/Amnezia/Free-contract tests and the 119-check UI fixture passed. No trusted Authenticode signature; no new live-peer/hardware/native-service acceptance and no device-wide TUN enabled. The debug Free v2 key is absent from the public package and the feature stays debug-only.
+
 ## Historical alpha18.1 status
 
 ## Windows 0.1.3 Beta

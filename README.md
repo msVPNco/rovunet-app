@@ -34,7 +34,7 @@
 | Platform | Status | Download and details |
 | --- | --- | --- |
 | **Android** | **alpha23.1 Full / code58 · Release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [Android page](docs/android/README.md) |
-| **Windows** | **0.1.6 Beta · x64 · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.6-beta/Rovunet-Windows-0.1.6-beta-x64-Setup.exe) · [Windows page](windows/README.md) |
+| **Windows** | **0.1.7 Beta · x64 · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.7-beta/Rovunet-Windows-0.1.7-beta-x64-Setup.exe) · [Windows page](windows/README.md) |
 | **Linux** | Planned | No release yet |
 | **macOS** | **0.1.8-beta · Apple Silicon / Intel · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Mac page](docs/macos/README.md) · Intel: **not tested on physical Intel hardware** |
 

@@ -24,5 +24,10 @@
       <_Parameter1>RovunetFreeCatalogAddress</_Parameter1>
       <_Parameter2>https://raw.githubusercontent.com/msVPNco/rovunet-app/fixture/free/v2/catalog.json</_Parameter2>
     </AssemblyAttribute>
+    <!-- The debug opt-in that a public package never sets; the fixture needs it. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeDebug</_Parameter1>
+      <_Parameter2>1</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

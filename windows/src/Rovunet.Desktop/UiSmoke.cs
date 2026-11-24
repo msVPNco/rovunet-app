@@ -27,10 +27,11 @@ public sealed partial class MainWindow
             SetState(new() { State = "connecting" }); Check("connecting_has_cancel_and_progress", System.Windows.Automation.AutomationProperties.GetName(connect) == L.Text("CANCEL") && connectingProgress.Visibility == Visibility.Visible);
             busy=true;SetState(new(){State="connecting"});Check("collection_cancel_available_while_busy",groups.Single(g=>g.Members.Any(p=>p.Id==data.SelectedId)).Connect.IsEnabled);busy=false;
             SetState(new() { State = "connected", HttpPort = 21001, SocksPort = 21002 }); Check("ports_separate_and_copy_enabled", httpAddress.Text == "127.0.0.1:21001" && socksAddress.Text == "127.0.0.1:21002" && copyHttp.IsEnabled && copySocks.IsEnabled);
-            foreach (string theme in new[] { "light", "dark" })
+            foreach (string theme in new[] { "light", "dark", "amoled" })
             {
                 data.Theme = theme; ApplyTheme(); Build(); SetState(new() { State = "connected", HttpPort = 21001, SocksPort = 21002 }); UpdateLayout();
-                Check("theme_" + theme, Tone("Bg") is SolidColorBrush brush && brush.Color == (Color)ColorConverter.ConvertFromString(theme == "dark" ? "#172437" : "#F1F1FA"));
+                var expectedBg = theme switch { "light" => "#F5F5F7", "amoled" => "#000000", _ => "#15171D" };
+                Check("theme_" + theme, Tone("Bg") is SolidColorBrush brush && brush.Color == (Color)ColorConverter.ConvertFromString(expectedBg));
                 Check("opaque_background_" + theme, Content is System.Windows.Controls.Grid root && root.Background is GradientBrush background && background.Opacity==1 && background.GradientStops.All(stop=>stop.Color.A==255));
                 IEnumerable<DependencyObject> Descendants(DependencyObject parent)
                 {
@@ -71,10 +72,13 @@ public sealed partial class MainWindow
                 PanelImage("settings", BuildSettingsPanel(() => { }));
                 PanelImage("menu", BuildAppMenu(() => { }));
                 // The accent picker has to reach both the WPF resources and the HTML
-                // model; a theme switch alone used to leave the shell on its default.
+                // model; a theme switch alone used to leave the shell on its default,
+                // and AMOLED re-declared its own variables over the chosen colour.
+                bool accentDark=theme!="light";
+                string accentHex=accentDark?"#7FD1BE":"#2F7A6B";
                 data.AccentColor="teal"; ApplyTheme(); Build(); UpdateLayout();
-                Check("accent_applies_"+theme, Tone("Accent") is SolidColorBrush accentBrush && accentBrush.Color==(Color)ColorConverter.ConvertFromString(theme=="dark"?"#7FE0E8":"#0E7C86"));
-                Check("accent_reaches_html_"+theme, System.Text.Json.JsonSerializer.Serialize(HtmlModel29()).Contains(theme=="dark"?"\"dark\":\"#7FE0E8\"":"\"light\":\"#0E7C86\"", StringComparison.Ordinal));
+                Check("accent_applies_"+theme, Tone("Accent") is SolidColorBrush accentBrush && accentBrush.Color==(Color)ColorConverter.ConvertFromString(accentHex));
+                Check("accent_reaches_html_"+theme, System.Text.Json.JsonSerializer.Serialize(HtmlModel29()).Contains(accentDark?"\"dark\":\"#7FD1BE\"":"\"light\":\"#2F7A6B\"", StringComparison.Ordinal));
                 data.AccentColor="default"; ApplyTheme(); Build(); UpdateLayout();
                 var visual = (FrameworkElement)Content; var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(Math.Max(1, (int)visual.ActualWidth), Math.Max(1, (int)visual.ActualHeight), 96, 96, PixelFormats.Pbgra32); bitmap.Render(visual);
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder(); encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap)); using var file = new FileStream(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(report))!, "ui-fixture-" + theme + ".png"), FileMode.CreateNew); encoder.Save(file);

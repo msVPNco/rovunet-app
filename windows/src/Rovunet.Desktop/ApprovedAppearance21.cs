@@ -15,27 +15,29 @@ public sealed partial class MainWindow
 
     void ApplyApprovedPalette21()
     {
+        // Roles follow the Android Material scheme: background, surface, containers
+        // and outline, so the native fallback and the HTML shell read as one app.
         var palette = !darkTheme ? new Dictionary<string, string>
         {
-            ["Bg"]="#F1F1FA", ["BgTop"]="#E9EDF8", ["Card"]="#E5E9F3", ["Soft"]="#FFFFFF",
-            ["Sidebar"]="#F1F1FA", ["Ink"]="#1A2A3D", ["Muted"]="#4F6175", ["Accent"]="#6345AC",
-            ["Outline"]="#ADB7CB", ["Selected"]="#DED8EB", ["Green"]="#126445", ["Red"]="#AE243F", ["Amber"]="#885706",
-            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#D2C4ED", ["AddInk"]="#302445",
-            ["Collection"]="#DED8EB", ["StatusSurface"]="#E5E9F3", ["Hero"]="#FBFCFF", ["HeroEnd"]="#F1F1FA", ["ScanCyan"]="#146A78"
+            ["Bg"]="#F5F5F7", ["BgTop"]="#FAFAFB", ["Card"]="#EDF1F6", ["Soft"]="#E8EDF3",
+            ["Sidebar"]="#F5F5F7", ["Ink"]="#282B35", ["Muted"]="#505966", ["Accent"]="#74678B",
+            ["Outline"]="#C1CAD6", ["Selected"]="#E8E6EF", ["Green"]="#08613B", ["Red"]="#B3261E", ["Amber"]="#8A5A00",
+            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#E8E6EF", ["AddInk"]="#2D2C36",
+            ["Collection"]="#E8E6EF", ["StatusSurface"]="#EDF1F6", ["Hero"]="#E5EBF2", ["HeroEnd"]="#F5F5F7", ["ScanCyan"]="#146A78"
         } : IsAmoled ? new Dictionary<string, string>
         {
-            ["Bg"]="#030506", ["BgTop"]="#0C1016", ["Card"]="#10151D", ["Soft"]="#171D25",
-            ["Sidebar"]="#030506", ["Ink"]="#F1F4FB", ["Muted"]="#C1CCDA", ["Accent"]="#D2C4ED",
-            ["Outline"]="#565766", ["Selected"]="#393447", ["Green"]="#A5E5C8", ["Red"]="#FFB5BE", ["Amber"]="#F3CF7D",
-            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#D2C4ED", ["AddInk"]="#302445",
-            ["Collection"]="#393447", ["StatusSurface"]="#10151D", ["Hero"]="#06080C", ["HeroEnd"]="#030506", ["ScanCyan"]="#83D4DD"
+            ["Bg"]="#000000", ["BgTop"]="#101319", ["Card"]="#171D27", ["Soft"]="#202938",
+            ["Sidebar"]="#000000", ["Ink"]="#F1F2F5", ["Muted"]="#C6CBD4", ["Accent"]="#C6BDDB",
+            ["Outline"]="#465165", ["Selected"]="#222229", ["Green"]="#9CF0C4", ["Red"]="#FFB8BE", ["Amber"]="#E8C15A",
+            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#222229", ["AddInk"]="#EEEEF3",
+            ["Collection"]="#222229", ["StatusSurface"]="#171D27", ["Hero"]="#283445", ["HeroEnd"]="#000000", ["ScanCyan"]="#83D4DD"
         } : new Dictionary<string, string>
         {
-            ["Bg"]="#172437", ["BgTop"]="#263850", ["Card"]="#22354B", ["Soft"]="#2A4057",
-            ["Sidebar"]="#172437", ["Ink"]="#F1F4FB", ["Muted"]="#C1CCDA", ["Accent"]="#D2C4ED",
-            ["Outline"]="#64758C", ["Selected"]="#655A7E", ["Green"]="#A5E5C8", ["Red"]="#FFB5BE", ["Amber"]="#F3CF7D",
-            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#D2C4ED", ["AddInk"]="#302445",
-            ["Collection"]="#655A7E", ["StatusSurface"]="#22354B", ["Hero"]="#101B2A", ["HeroEnd"]="#172437", ["ScanCyan"]="#83D4DD"
+            ["Bg"]="#15171D", ["BgTop"]="#1E2129", ["Card"]="#252F3E", ["Soft"]="#2C3747",
+            ["Sidebar"]="#15171D", ["Ink"]="#F1F2F5", ["Muted"]="#C6CBD4", ["Accent"]="#C6BDDB",
+            ["Outline"]="#526074", ["Selected"]="#30313B", ["Green"]="#9CF0C4", ["Red"]="#FFB8BE", ["Amber"]="#E8C15A",
+            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#30313B", ["AddInk"]="#EEEEF3",
+            ["Collection"]="#30313B", ["StatusSurface"]="#252F3E", ["Hero"]="#344357", ["HeroEnd"]="#15171D", ["ScanCyan"]="#83D4DD"
         };
         foreach (var (key, color) in palette)
         {

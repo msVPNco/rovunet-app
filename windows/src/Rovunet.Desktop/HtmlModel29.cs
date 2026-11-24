@@ -51,7 +51,26 @@ public sealed partial class MainWindow
     object HtmlAccent27()
     {
         var accent=Accent27(data.AccentColor);
-        return new{value=accent.Value,light=accent.Light,dark=accent.Dark,selectedLight=accent.SelectedLight,selectedDark=accent.SelectedDark};
+        // Tones derive from the single accent colour so every theme gets the same
+        // family: a soft container for chips/rows and a ring for the power button.
+        return new{
+            value=accent.Value,
+            light=accent.Light,
+            dark=accent.Dark,
+            groupLight=Mix27(accent.Light,"#EDF1F6",0.30),
+            groupDark=Mix27(accent.Dark,"#252F3E",0.32),
+            softLight=Mix27(accent.Light,"#F5F5F7",0.14),
+            softDark=Mix27(accent.Dark,"#15171D",0.18),
+            ringLight=Mix27(accent.Light,"#FFFFFF",0.45),
+            ringDark=Mix27(accent.Dark,"#000000",0.30)
+        };
+    }
+    static string Mix27(string accent,string baseColor,double share)
+    {
+        var a=(Color)ColorConverter.ConvertFromString(accent);
+        var b=(Color)ColorConverter.ConvertFromString(baseColor);
+        byte Mix(byte x,byte y)=> (byte)Math.Round(x*share+y*(1-share));
+        return $"#{Mix(a.R,b.R):x2}{Mix(a.G,b.G):x2}{Mix(a.B,b.B):x2}";
     }
     // A swatch button shows the colour it would apply, so the picker is usable
     // without reading eight colour names.

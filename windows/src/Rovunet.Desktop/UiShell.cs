@@ -94,18 +94,18 @@ public sealed partial class MainWindow
     {
         string old=data.Theme;data.Theme=mode;try{Save();}catch{data.Theme=old;throw;}ApplyTheme();Build();
     }
-    // Android offers eight accent colours; the Windows build keeps the same set so
-    // the two clients feel like one product. "default" is the original purple.
+    // Exactly the Android accent enum: the same eight colours, the same light/dark
+    // tones. Selected* are the soft chip tones those surfaces use.
     static readonly (string Value,string Key,string Light,string Dark,string SelectedLight,string SelectedDark)[] Accents27 =
     [
-        ("default","ACCENT_DEFAULT","#6345AC","#D2C4ED","#DED8EB","#655A7E"),
-        ("teal","ACCENT_TEAL","#0E7C86","#7FE0E8","#CFE8F0","#1E5A63"),
-        ("blue","ACCENT_BLUE","#2563C9","#A8C8FF","#D6E4FB","#24466F"),
-        ("violet","ACCENT_VIOLET","#7B3FBF","#D7B8FF","#E6DAF6","#54376F"),
-        ("rose","ACCENT_ROSE","#B52A6B","#FFBBD4","#F6DCE6","#6E2C46"),
-        ("amber","ACCENT_AMBER","#9A6400","#F3CF7D","#F4E6CB","#5F4A22"),
-        ("green","ACCENT_GREEN","#1E7A46","#A5E5C8","#D5EBDD","#2C5344"),
-        ("slate","ACCENT_SLATE","#4A5A70","#C6D2E2","#E0E6EF","#3C4657")
+        ("default","ACCENT_DEFAULT","#74678B","#C6BDDB","#E8E6EF","#3A3742"),
+        ("teal","ACCENT_TEAL","#2F7A6B","#7FD1BE","#DCEFEA","#2B4740"),
+        ("blue","ACCENT_BLUE","#3A6EA5","#8FB8E8","#DEE9F5","#293B4F"),
+        ("violet","ACCENT_VIOLET","#6B4FA0","#C4AEE8","#E7E0F3","#392F49"),
+        ("rose","ACCENT_ROSE","#A6466A","#F0A6BE","#F5DFE6","#452630"),
+        ("amber","ACCENT_AMBER","#9A6B12","#E8C15A","#F6EBD3","#453820"),
+        ("green","ACCENT_GREEN","#2E7D45","#8ED5A4","#DDEEDF","#27452F"),
+        ("slate","ACCENT_SLATE","#4B586B","#B6C3D6","#E3E7EE","#2E3743")
     ];
     static (string Value,string Key,string Light,string Dark,string SelectedLight,string SelectedDark) Accent27(string value) =>
         Accents27.FirstOrDefault(a=>a.Value==value, Accents27[0]);

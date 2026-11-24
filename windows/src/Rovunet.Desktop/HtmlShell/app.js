@@ -17,14 +17,19 @@
   const pressedPointers=new Set();let deferredModel=null;
   const send = (command, id = '', value = '') => window.chrome?.webview?.postMessage({command, id:String(id), value:String(value)});
   // Accent colours come with the model, because every visual token is a CSS
-  // variable. High contrast keeps the system Highlight colour instead.
+  // variable. They are written on <body> — the element the theme blocks target —
+  // so no theme (amoled included) can shadow them. High contrast keeps the
+  // system Highlight colour instead.
   function accent(data){
-    const root=document.documentElement.style,palette=data&&data.accent;
+    const body=document.body.style,palette=data&&data.accent;
     if(!palette){return;}
-    if(data.theme==='contrast'){root.removeProperty('--accent');root.removeProperty('--group');return;}
+    for(const name of ['--accent','--group','--accent-soft','--accent-ring'])body.removeProperty(name);
+    if(data.theme==='contrast'){return;}
     const dark=data.theme==='dark'||data.theme==='amoled';
-    root.setProperty('--accent',dark?palette.dark:palette.light);
-    root.setProperty('--group',dark?palette.selectedDark:palette.selectedLight);
+    body.setProperty('--accent',dark?palette.dark:palette.light);
+    body.setProperty('--group',dark?palette.groupDark:palette.groupLight);
+    body.setProperty('--accent-soft',dark?palette.softDark:palette.softLight);
+    body.setProperty('--accent-ring',dark?palette.ringDark:palette.ringLight);
   }
   // Live counters must not remove the button between pointer-down and click.
   document.addEventListener('pointerdown',event=>pressedPointers.add(event.pointerId),true);
