@@ -60,18 +60,21 @@ public sealed partial class MainWindow
             string local=html29.CoreWebView2.Source;html29.CoreWebView2.Navigate("https://blocked.example.invalid/");await Task.Delay(100);checks["external_navigation_is_blocked"]=html29.CoreWebView2.Source==local;
             // Exercise both preferences inside this owned WebView; never change the OS setting.
             await html29.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmulatedMedia","{\"features\":[{\"name\":\"prefers-reduced-motion\",\"value\":\"reduce\"}]}");
-            checks["reduced_motion_preference_stops_animation"]=await Wait("getComputedStyle(document.querySelector('.profile .roll span')).animationName==='none'");
+            checks["explicit_motion_on_overrides_reduced_preference"]=await Wait("getComputedStyle(document.querySelector('.profile .roll-track')).animationName!=='none'");
+            data.MarqueeMotion="off";QueueHtml29();checks["explicit_motion_off_stops_animation"]=await Wait("getComputedStyle(document.querySelector('.profile .roll-track')).animationName==='none'");
+            data.MarqueeMotion="on";QueueHtml29();
             await html29.CoreWebView2.CallDevToolsProtocolMethodAsync("Emulation.setEmulatedMedia","{\"features\":[{\"name\":\"prefers-reduced-motion\",\"value\":\"no-preference\"}]}");
-            Activate();html29.Focus();QueueHtml29();checks["html_active_window_can_animate"]=await Wait("document.body.classList.contains('active')&&document.querySelector('.profile .roll').dataset.overflow==='true'&&getComputedStyle(document.querySelector('.profile .roll span')).animationPlayState==='running'&&getComputedStyle(document.querySelector('.profile .roll span')).animationName!=='none'");
+            Activate();html29.Focus();QueueHtml29();checks["html_active_window_can_animate"]=await Wait("document.body.classList.contains('active')&&document.querySelector('.profile .roll').dataset.overflow==='true'&&getComputedStyle(document.querySelector('.profile .roll-track')).animationPlayState==='running'&&getComputedStyle(document.querySelector('.profile .roll-track')).animationName!=='none'");
             await Task.Delay(2300);
             // Clock readings are from the actual renderer, not wall-clock estimates.
-            string before=await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .roll span').getAnimations()[0]?.currentTime??-1");
-            htmlLastModel29="";QueueHtml29();await Task.Delay(120);string after=await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .roll span').getAnimations()[0]?.currentTime??-1");
+            string before=await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .roll-track').getAnimations()[0]?.currentTime??-1");
+            htmlLastModel29="";QueueHtml29();await Task.Delay(120);string after=await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .roll-track').getAnimations()[0]?.currentTime??-1");
             checks["telemetry_render_keeps_marquee_progress"]=double.TryParse(before,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out double first)&&double.TryParse(after,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out double second)&&first>=2000&&second>=first&&second-first<700;
             var other=new Window{Owner=this,Width=200,Height=120,ShowInTaskbar=false,Title="Rovunet focus fixture"};other.Show();other.Activate();
-            checks["html_inactive_marquee_pauses"]=await Wait("!document.body.classList.contains('active')&&getComputedStyle(document.querySelector('.profile .roll span')).animationPlayState==='paused'&&document.querySelector('.profile .roll span').getAnimations().every(a=>a.playState==='paused'&&!a.pending)");
-            string frozen=await html29.CoreWebView2.ExecuteScriptAsync("getComputedStyle(document.querySelector('.profile .roll span')).transform");await Task.Delay(180);string held=await html29.CoreWebView2.ExecuteScriptAsync("getComputedStyle(document.querySelector('.profile .roll span')).transform");checks["inactive_transform_stays_fixed"]=frozen==held;
-            if(!checks["inactive_transform_stays_fixed"])File.WriteAllText(Path.Combine(folder,"motion-debug.json"),await html29.CoreWebView2.ExecuteScriptAsync("JSON.stringify({active:document.body.className,focus:document.hasFocus(),rows:[...document.querySelectorAll('.profile .roll span')].map(n=>({text:n.textContent,time:n.getAnimations()[0]?.currentTime,state:n.getAnimations()[0]?.playState,pending:n.getAnimations()[0]?.pending,transform:getComputedStyle(n).transform}))})")+"\n"+frozen+"\n"+held);
+            checks["explicit_motion_on_survives_blur"]=await Wait("!document.body.classList.contains('active')&&getComputedStyle(document.querySelector('.profile .roll-track')).animationPlayState==='running'");
+            string frozen=await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .roll-track').getAnimations()[0]?.currentTime??-1");await Task.Delay(180);string held=await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .roll-track').getAnimations()[0]?.currentTime??-1");
+            checks["inactive_marquee_clock_advances"]=double.TryParse(frozen,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out double blurStart)&&double.TryParse(held,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out double blurEnd)&&blurEnd>blurStart;
+
             other.Close();Activate();html29.Focus();QueueHtml29();
             foreach(string stateName in new[]{"connecting","connected","disconnecting","disconnected"}){activeProfile=data.Profiles[0];SetState(new(){State=stateName});QueueHtml29();checks[stateName+"_html_title_updates_without_language_change"]=await Wait("document.querySelector('.hero-title')?.textContent==="+JsonSerializer.Serialize(L.Text(stateName.ToUpperInvariant())));checks[stateName+"_power_color_matches_state"]=await Wait("document.querySelector('.power').classList.contains('connected')==="+(stateName=="connected"?"true":"false"));}
             await html29.CoreWebView2.ExecuteScriptAsync("(()=>{const spacer=document.createElement('div');spacer.style.height='1800px';document.querySelector('.home-scroll').append(spacer);document.querySelector('.home-scroll').scrollTop=300;})()");
@@ -83,4 +86,110 @@ public sealed partial class MainWindow
         bool passed=checks.Count>0&&checks.Values.All(value=>value);File.WriteAllText(report,JsonSerializer.Serialize(new{passed,checks,realWebView2=true,ownerStoreTouched=false,liveRemoteNetwork=false,startUtc=start,endUtc=DateTimeOffset.UtcNow,pid=Environment.ProcessId},new JsonSerializerOptions{WriteIndented=true}));return passed;
     }
     void SettingsDialogFixture29()=>Dispatcher.BeginInvoke(()=>SettingsDialog());
+
+    // Uses the actual window SizeChanged and WebView bridge, not Build() as a
+    // substitute for resizing. Only synthetic data and an isolated WebView folder.
+    internal async Task<bool> RunHtmlResize41(string report)
+    {
+        var checks=new Dictionary<string,bool>();var samples=new List<object>();
+        string folder=Path.GetDirectoryName(report)!;Directory.CreateDirectory(folder);
+        var heartbeat=new System.Windows.Threading.DispatcherTimer(System.Windows.Threading.DispatcherPriority.Normal){Interval=TimeSpan.FromMilliseconds(16)};
+        var clock=System.Diagnostics.Stopwatch.StartNew();double lastBeat=0,maxGap=0;
+        heartbeat.Tick+=(_,_)=>{double now=clock.Elapsed.TotalMilliseconds;if(lastBeat>0)maxGap=Math.Max(maxGap,now-lastBeat);lastBeat=now;};
+        async Task<bool> Wait(string expression,int timeout=15000){var until=DateTime.UtcNow.AddMilliseconds(timeout);while(DateTime.UtcNow<until){if(htmlReady29&&html29?.CoreWebView2!=null&&await html29.CoreWebView2.ExecuteScriptAsync("Boolean("+expression+")")=="true")return true;await Task.Delay(25);}return false;}
+        string Quote(string value)=>JsonSerializer.Serialize(value);
+        async Task Shot(string name){using var image=File.Create(Path.Combine(folder,name+".png"));await html29!.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,image);}
+        try{
+            storeSaveFixture28=()=>{};HtmlFixture29=true;htmlFixtureFolder29=folder;
+            foreach(int count in new[]{200,500}){
+                data.Profiles=Enumerable.Range(0,count).Select(i=>{var p=Importer.Single("socks5://127.0.0.1:"+(19000+i)+"#"+Uri.EscapeDataString("Synthetic path "+i+" · نام طولانی مسیر آزمایشی"));p.CollectionId="resize41-"+(i%6);p.CollectionName=i%6==5?"مجموعهٔ آزمایشی با نام بسیار طولانی فارسی برای سنجش حرکت متن":"Synthetic collection "+(i%6);return p;}).ToList();
+                data.SelectedId=data.Profiles[0].Id;data.OpenCollectionId="resize41-0";data.CollectionExpansionRevision=1;data.MarqueeMotion="on";
+                L.Language=data.Language="en";data.Theme="dark";Width=480;Height=900;ApplyTheme();Build();await StartHtml29();Activate();html29!.Focus();QueueHtml29();
+                // Wait for this profile set's own render, not the previous one's
+                // DOM, or the first timed resize measures that pending render.
+                checks[count+"_loaded"]=await Wait("document.querySelectorAll('.collection').length===6&&document.querySelectorAll('.profile').length==="+((count+5)/6));
+                await Task.Delay(200);
+                var core=html29.CoreWebView2;
+                // Timed real resizes; the 240ms settle is excluded from inputMs,
+                // but included in the end-to-end settleMs and heartbeat window.
+                heartbeat.Start();
+                foreach(int width in new[]{1120,480,1120,480}){
+                    var nativeRow=rows[0].Tile;await core.ExecuteScriptAsync("window.resizeNode41=document.querySelector('.home-scroll');window.resizeFocus41=document.querySelector('.profile');window.resizeFocus41.focus();window.resizeNode41.scrollTop=30");
+                    maxGap=0;lastBeat=clock.Elapsed.TotalMilliseconds;var watch=System.Diagnostics.Stopwatch.StartNew();Width=width;double inputMs=watch.Elapsed.TotalMilliseconds;
+                    await Task.Delay(240);bool compact=width<ContextThreshold;
+                    bool settled=await Wait("document.querySelector('.workspace').classList.contains('compact')==="+(compact?"true":"false"));
+                    double settleMs=watch.Elapsed.TotalMilliseconds;
+                    bool nativeSame=ReferenceEquals(nativeRow,rows[0].Tile);
+                    bool domSame=await core.ExecuteScriptAsync("window.resizeNode41===document.querySelector('.home-scroll')")=="true";
+                    bool focusSame=await core.ExecuteScriptAsync("window.resizeFocus41===document.activeElement")=="true";
+                    bool scrollSame=await core.ExecuteScriptAsync("Math.abs(document.querySelector('.home-scroll').scrollTop-30)<1")=="true";
+                    samples.Add(new{count,width,inputMs,settleMs,maxDispatcherGapMs=maxGap,nativeCardsPreserved=nativeSame,domPreserved=domSame,focusPreserved=focusSame,scrollPreserved=scrollSame});
+                    checks[count+"_"+samples.Count+"_resize_preserves_native_cards"]=nativeSame;
+                    checks[count+"_"+samples.Count+"_resize_preserves_dom_focus"]=domSame&&focusSame&&scrollSame;
+                    checks[count+"_"+samples.Count+"_resize_settles"]=settled;
+                    checks[count+"_"+samples.Count+"_resize_no_second_stall"]=inputMs<500&&maxGap<750;
+                }
+                foreach(var next in new[]{WindowState.Maximized,WindowState.Normal}){
+                    var nativeRow=rows[0].Tile;maxGap=0;lastBeat=clock.Elapsed.TotalMilliseconds;var watch=System.Diagnostics.Stopwatch.StartNew();WindowState=next;double inputMs=watch.Elapsed.TotalMilliseconds;await Task.Delay(300);
+                    samples.Add(new{count,windowState=next.ToString(),inputMs,settleMs=watch.Elapsed.TotalMilliseconds,maxDispatcherGapMs=maxGap,nativeCardsPreserved=ReferenceEquals(nativeRow,rows[0].Tile)});
+                    checks[count+"_"+next+"_preserves_native_cards"]=ReferenceEquals(nativeRow,rows[0].Tile);
+                    checks[count+"_"+next+"_no_second_stall"]=inputMs<500&&maxGap<750;
+                }
+                heartbeat.Stop();
+                // Select via the real HTML click handler, then close its group.
+                string selectedBefore=data.SelectedId;
+                await core.ExecuteScriptAsync("document.querySelectorAll('.profile')[1].click()");
+                checks[count+"_click_selects_disconnected"]=await Wait("document.querySelectorAll('.profile')[1]?.classList.contains('selected')&&document.querySelectorAll('.profile.selected').length===1")&&state.State=="disconnected"&&data.SelectedId!=selectedBefore;
+                // An overflowing Latin line must leave the box to the left and keep
+                // going; it used to be pushed right and bounce back.
+                checks[count+"_latin_overflow_scrolls_outward"]=await Wait("(()=>{const n=[...document.querySelectorAll('.profile-name')].find(n=>n.dataset.overflow==='true');if(!n)return false;const t=parseFloat(getComputedStyle(n).getPropertyValue('--travel'));const a=n.firstElementChild.getAnimations()[0];return t<0&&Math.abs(t)>2&&a&&a.playState==='running'})()");
+                checks[count+"_persian_overflow_scrolls_outward"]=await Wait("(()=>{const n=[...document.querySelectorAll('.collection-name')].find(n=>n.dataset.overflow==='true');if(!n)return false;if(getComputedStyle(n).direction!=='rtl')return false;const t=parseFloat(getComputedStyle(n).getPropertyValue('--travel'));return t>2})()");
+                string selectedGroup=CollectionKey(Selected!);string groupSelector="[data-group="+Quote(selectedGroup)+"] .collection-head";
+                await core.ExecuteScriptAsync("document.querySelector("+Quote(groupSelector+" .actions button:first-child")+").click()");
+                checks[count+"_closed_selected_group_visible"]=await Wait("document.querySelectorAll('.profile').length===0&&document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");
+                // Opening a different group must not move the selection indicator.
+                string other=groups.First(g=>g.Key!=selectedGroup).Key;
+                await core.ExecuteScriptAsync("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-head .actions button:first-child")+").click()");
+                checks[count+"_other_group_keeps_selection"]=await Wait("document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')&&document.querySelectorAll('.profile').length>0");
+                foreach(string language in new[]{"fa","en"})foreach(string theme in new[]{"dark","light","amoled"}){
+                    L.Language=data.Language=language;data.Theme=theme;ApplyTheme();Build();QueueHtml29();
+                    checks[count+"_selected_"+language+"_"+theme]=await Wait("document.documentElement.lang==="+Quote(language)+"&&document.body.dataset.theme==="+Quote(theme)+"&&(()=>{const n=document.querySelector("+Quote(groupSelector)+");if(!n?.classList.contains('selected'))return false;const s=getComputedStyle(n);return s.boxShadow.includes('inset')&&s.borderTopColor!==getComputedStyle(document.querySelector('.collection-head:not(.selected)')).borderTopColor})()");
+                    if(count==500&&language=="fa")await Shot("selected-collapsed-"+theme);
+                }
+                var focusWindow=new Window{Owner=this,Width=200,Height=120,ShowInTaskbar=false,Title="Synthetic focus fixture"};focusWindow.Show();focusWindow.Activate();
+                checks[count+"_selection_survives_blur"]=await Wait("document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");focusWindow.Close();Activate();
+            }
+            // Choosing an accent must keep Settings open instead of dropping the
+            // user back on Home.
+            _ = Dispatcher.BeginInvoke(()=>SettingsDialog());
+            checks["settings_page_open_for_accent"]=await Wait("document.querySelector('.native-page')!==null");
+            string accentBefore=data.AccentColor;
+            await html29!.CoreWebView2.ExecuteScriptAsync("(()=>{const b=document.querySelectorAll('.native-page .n-button.swatch')[1];if(b)b.click()})()");
+            // The click travels through the WebView bridge, so wait for the state
+            // itself instead of assuming the DOM check implies the command ran.
+            async Task<bool> State(Func<bool> ready){var until=DateTime.UtcNow.AddSeconds(15);while(DateTime.UtcNow<until){if(ready())return true;await Task.Delay(25);}return false;}
+            checks["accent_click_keeps_settings_open"]=await State(()=>data.AccentColor!=accentBefore)
+                &&await Wait("document.querySelector('.native-page')!==null")&&NavigationDepth>0;
+            string themeBefore=data.Theme;
+            await html29!.CoreWebView2.ExecuteScriptAsync("(()=>{const b=[...document.querySelectorAll('.native-page .n-button')].find(n=>n.getAttribute('aria-label')==="+Quote(L.Text("LIGHT_THEME"))+");if(b)b.click()})()");
+            checks["theme_click_keeps_settings_open"]=await State(()=>data.Theme=="light")
+                &&await Wait("document.querySelector('.native-page')!==null")&&NavigationDepth>0;
+            if(themeBefore!="light"){data.Theme=themeBefore;ApplyTheme();QueueHtml29();}
+            await CloseNavigation();QueueHtml29();await Wait("document.querySelector('.hero')!==null");
+            _ = Dispatcher.BeginInvoke(()=>PublicSourcesPage());
+            checks["public_sources_open"]=await Wait("document.querySelector('.native-page')!==null");
+            // A key-carrying build must offer the real Free button; a public build
+            // must explain itself and offer no action at all.
+            checks["free_card_matches_build"]=await Wait(RovunetFreeCatalog.Enabled
+                ?"[...document.querySelectorAll('.native-page .n-surface')].some(n=>n.textContent.includes("+Quote(L.Text("SOURCE_ROVUNET"))+")&&n.querySelectorAll('button').length===1&&!n.querySelector('input,a'))"
+                :"[...document.querySelectorAll('.native-page .n-surface')].some(n=>n.textContent.includes("+Quote(L.Text("SOURCE_ROVUNET"))+")&&n.textContent.includes("+Quote(L.Text("ROVUNET_FREE_UNAVAILABLE"))+")&&!n.querySelector('button,input,a'))");
+            await Shot("free-unavailable");await CloseNavigation();QueueHtml29();await Wait("document.querySelector('.hero')!==null");
+            // Native fallback must catch up to a width change skipped by HTML.
+            Width=1120;await Task.Delay(240);HtmlFailed29();
+            checks["native_fallback_current_layout"]=!htmlReady29&&navigationShell?.Opacity==1&&navigationShell.IsHitTestVisible&&compactLayout==(ActualWidth<ContextThreshold);
+        }catch(Exception error){checks["exception"]=false;File.WriteAllText(report+".error",error.ToString());}
+        finally{heartbeat.Stop();durationTimer.Stop();htmlPageTimer29.Stop();htmlResize29.Stop();storeSaveFixture28=null;}
+        bool passed=checks.Count>0&&checks.Values.All(value=>value);
+        File.WriteAllText(report,JsonSerializer.Serialize(new{passed,checks,samples,realWebView2=true,ownerStoreTouched=false,liveRemoteNetwork=false,storageLatencyMeasured=false,version=Version},new JsonSerializerOptions{WriteIndented=true}));return passed;
+    }
 }

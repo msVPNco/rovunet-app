@@ -13,7 +13,7 @@
     settings:'M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M10 15v6'
   };
   let model = null, currentPage = '', lastBody = '', lastPopup = '', fieldTimers = new Map();
-  let lastBase = '', popupNode = null, popupSignature = '';
+  let lastBase = '', lastHeader = '', lastNavigation = '', popupNode = null, popupSignature = '';
   let hostFocused = false, motion = true;
   const pressedPointers=new Set();let deferredModel=null;
   const send = (command, id = '', value = '') => window.chrome?.webview?.postMessage({command, id:String(id), value:String(value)});
@@ -54,26 +54,53 @@
     if(image)node.append(icon(image));return node;
   }
   function roll(text, className='', dir='auto') {
-    const node=el('div','roll '+className);node.dir=dir;node.append(el('span','',text));return node;
+    const node=el('div','roll '+className);node.dir=dir;
+    // One line, duplicated only as decorative ink for a seamless loop. The
+    // accessible name stays the single real text, so nothing is read twice.
+    const track=el('div','roll-track');track.append(el('span','',text));track.setAttribute('aria-hidden','true');
+    node.setAttribute('aria-label',String(text??''));
+    node.append(track);return node;
   }
   function measureRolls() {
     // Read every width first, then write: one layout pass instead of one per
     // label. A collection with many rows used to stall while it opened.
     const nodes=[...app.querySelectorAll('.roll')];
-    const measured=nodes.map(node=>{const text=node.firstElementChild;if(!text)return null;return [Math.max(0,text.scrollWidth-node.clientWidth),node.dir==='rtl'];});
+    const measured=nodes.map(node=>{
+      const track=node.firstElementChild,span=track?.firstElementChild;if(!span)return null;
+      // Measure the visible line only; the repeat is inert duplicated ink.
+      const range=document.createRange();range.selectNodeContents(span);
+      const content=Math.max(0,Math.round(range.getBoundingClientRect().width)||span.scrollWidth);
+      return [content,Math.max(0,content-node.clientWidth),getComputedStyle(node).direction==='rtl'];
+    });
+    // Every layout read happens above this point; only writes follow it.
+    const header=app.querySelector('.topbar'),first=header?.querySelector('.top-slot'),last=header?.querySelector('.top-slot.end'),flags=header?.querySelector('.flags');
+    const split=first&&last&&flags?header.clientWidth<2*Math.max(first.scrollWidth,last.scrollWidth)+flags.scrollWidth+25:null;
+    const footer=app.querySelector('.footer'),content=app.querySelector('.content'),footerHeight=footer?footer.offsetHeight+'px':null;
     nodes.forEach((node,index)=>{
       const value=measured[index];if(!value)return;
-      const [excess,rtl]=value;
-      node.dataset.overflow=String(excess>2);
-      node.style.setProperty('--travel',(rtl?-excess:excess)+'px');
+      const [width,excess,rtl]=value,overflow=String(excess>2);
+      // The line leaves the box toward its reading origin and keeps going: Latin
+      // slides left, Persian slides right. The repeat copy lands exactly where
+      // the first copy started, so the loop is seamless instead of bouncing back.
+      const travel=(rtl?width+32:-(width+32))+'px';
+      const duration=Math.max(3,(width+32)/24).toFixed(2)+'s';
+      if(node.dataset.overflow!==overflow)node.dataset.overflow=overflow;
+      const track=node.firstElementChild;
+      if(overflow==='true'){
+        const repeat=track.firstElementChild.textContent??'';
+        if(track.dataset.repeat!==repeat)track.dataset.repeat=repeat;
+      }else if(track.dataset.repeat)delete track.dataset.repeat;
+      if(node.style.getPropertyValue('--travel')!==travel){node.style.setProperty('--travel',travel);track.style.setProperty('--travel',travel);}
+      if(node.style.getPropertyValue('--duration')!==duration){node.style.setProperty('--duration',duration);track.style.setProperty('--duration',duration);}
     });
-    const header=app.querySelector('.topbar');
-    if(header){const first=header.querySelector('.top-slot'),last=header.querySelector('.top-slot.end'),flags=header.querySelector('.flags');if(first&&last&&flags)header.classList.toggle('split',header.clientWidth<2*Math.max(first.scrollWidth,last.scrollWidth)+flags.scrollWidth+25);}
-    const footer=app.querySelector('.footer'),content=app.querySelector('.content');if(footer&&content)content.style.setProperty('--footer-height',footer.offsetHeight+'px');
+    if(split!==null)header.classList.toggle('split',split);
+    if(content&&footerHeight&&content.style.getPropertyValue('--footer-height')!==footerHeight)content.style.setProperty('--footer-height',footerHeight);
   }
   function activity() {document.body.classList.toggle('active',hostFocused&&motion&&!document.hidden&&document.hasFocus());document.body.classList.toggle('motion-off',!motion);}
   window.addEventListener('focus',activity);window.addEventListener('blur',activity);document.addEventListener('visibilitychange',activity);
-  const sizeObserver=new ResizeObserver(()=>requestAnimationFrame(measureRolls));sizeObserver.observe(app);
+  let measureTimer=0;
+  function scheduleMeasure(){clearTimeout(measureTimer);measureTimer=setTimeout(()=>requestAnimationFrame(measureRolls),100);}
+  const sizeObserver=new ResizeObserver(scheduleMeasure);sizeObserver.observe(app);
   function fieldSend(id,value,immediate=false) {
     id=String(id);
     clearTimeout(fieldTimers.get(id)?.timer);if(immediate){fieldTimers.delete(id);send('native',id,value);return;}
@@ -96,7 +123,7 @@
         result=el('section','n-stack');const bar=el('div','n-tabs');bar.setAttribute('role','tablist');(node.options||[]).forEach((label,index)=>{const tab=button(label,()=>send('native',node.id,index),'','n-button');tab.disabled=node.enabled===false;tab.textContent=label;tab.setAttribute('role','tab');tab.setAttribute('aria-selected',String(index===node.value));bar.append(tab);});result.append(bar);(node.children||[]).forEach(child=>result.append(native(child)));break;
       }
       case 'text':result=node.nowrap?roll(node.text,'n-text',node.direction||'auto'):el('span','n-text',node.text);if(node.size)result.style.fontSize=node.size+'px';if(node.weight)result.style.fontWeight=node.weight;break;
-      case 'marquee':result=el('div','roll');{const span=el('span');(node.children||[]).forEach(child=>span.append(native(child)));result.append(span);}break;
+      case 'marquee':result=el('div','roll');{const track=el('div','roll-track'),span=el('span');(node.children||[]).forEach(child=>span.append(native(child)));track.append(span);track.setAttribute('aria-hidden','true');result.setAttribute('aria-label',span.textContent??'');result.append(track);}break;
       case 'icon':result=icon('',node.path,node.filled,node.viewbox);result.classList.add('n-icon');break;
       case 'image':result=el('img','n-image');result.src=node.image;result.alt='';if(node.width)result.style.width=node.width+'px';break;
       case 'input':case 'password':{
@@ -148,7 +175,7 @@
     const actions=el('div','actions');const edit=button(data.strings.EDIT,()=>send('edit',item.id),'edit');edit.disabled=!item.edit;const more=button(data.strings.MORE,()=>send('profile-menu',item.id),'more');const remove=button(data.strings.DELETE,()=>send('delete',item.id),'trash');remove.disabled=!item.delete;actions.append(edit,more,remove);row.append(actions);return row;
   }
   function collection(group,data) {
-    const section=el('section','collection');section.dataset.group=group.id;const head=el('div','collection-head'+(group.active?' active':''));
+    const section=el('section','collection');section.dataset.group=group.id;if(group.selected)section.setAttribute('aria-current','true');const head=el('div','collection-head'+(group.selected?' selected':'')+(group.active?' active':''));
     const top=el('div','collection-top'),label=el('div','collection-label');label.append(icon('layers'));const identity=el('div','collection-identity');identity.append(roll(group.name,'collection-name'),roll(group.meta,'muted'));label.append(identity);label.addEventListener('click',()=>send('toggle',group.id));top.append(label);
     const actions=el('div','actions');const toggle=button(group.open?data.strings.HIDE_PATHS:data.strings.SHOW_PATHS,()=>send('toggle',group.id),group.open?'up':'down');toggle.setAttribute('aria-expanded',String(group.open));const test=button(group.running?data.strings.STOP_TEST:data.strings.QUICK_PING,()=>send(group.running?'stop':'ping',group.id),group.running?'stop':'check','test-button');test.dataset.test='quick-ping';test.dataset.state=group.running?'stop':'ping';test.disabled=group.stopping||(!group.running&&!group.testEnabled);test.setAttribute('aria-busy',String(group.running));const power=button(group.powerLabel||data.strings.CONNECT,()=>send('group-power',group.id),'power','group-power'+(group.active?' connected':''));power.disabled=group.powerEnabled===false;const more=button(data.strings.MORE,()=>send('group-menu',group.id),'more');actions.append(toggle,test,power,more);top.append(actions);head.append(top);
     if(group.activity){const activity=roll(group.activity.text,'collection-activity');activity.setAttribute('role','status');activity.setAttribute('aria-live','polite');activity.dataset.busy=String(group.activity.running);activity.style.color=group.activity.color;head.append(activity);}else if(group.status)head.append(roll(group.status,'collection-status'));
@@ -179,11 +206,21 @@
     if (data.popup) { popupNode = popup(data.popup, data); document.body.append(popupNode); }
   }
   function render(data) {
-    // Menus change the popup only. When nothing else moved, redraw just that
-    // layer instead of replacing every card and re-measuring the page.
-    const base = JSON.stringify(data, (key, value) => key === 'popup' ? undefined : value);
-    if (base === lastBase) { model = data; syncPopup(data); return; }
-    lastBase = base;
+    // Width, host focus and popup updates do not change home/page content.
+    // Preserve the live cards, scroll nodes, inputs and animation clocks.
+    const {popup:ignoredPopup,compact,focused,header:headerModel,navigation,...body}=data;
+    const base=JSON.stringify(body),headerKey=JSON.stringify(headerModel),navKey=JSON.stringify(navigation);
+    model=data;hostFocused=!!focused;motion=!!data.motion;activity();
+    if(base===lastBase){
+      const focus=document.activeElement,nativeId=focus?.dataset?.native;
+      app.querySelector('.workspace')?.classList.toggle('compact',!!compact);
+      if(headerKey!==lastHeader)app.querySelector('.topbar')?.replaceWith(header(data));
+      if(navKey!==lastNavigation)app.querySelector('.sidebar')?.replaceWith(sidebar(data));
+      lastHeader=headerKey;lastNavigation=navKey;syncPopup(data);
+      if(nativeId&&!focus.isConnected&&hostFocused)app.querySelector('[data-native="'+CSS.escape(nativeId)+'"]')?.focus({preventScroll:true});
+      scheduleMeasure();return;
+    }
+    lastBase=base;lastHeader=headerKey;lastNavigation=navKey;
     const animations=new Map();
     const rollKey=node=>(node.closest('[data-profile]')?.dataset.profile||node.closest('[data-group]')?.dataset.group||node.closest('.hero')&&'hero'||node.closest('.footer')&&'footer'||'page')+':'+node.textContent;
     app.querySelectorAll('.roll').forEach(node=>{const animation=node.firstElementChild?.getAnimations()[0];if(animation)animations.set(rollKey(node),animation.currentTime);});

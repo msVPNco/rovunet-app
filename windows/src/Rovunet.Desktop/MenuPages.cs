@@ -130,6 +130,10 @@ public sealed partial class MainWindow
     {
         var page=Dialog("PUBLIC_SOURCES");var panel=new StackPanel{Margin=new(20)};panel.Children.Add(Text(L.Text("PUBLIC_CONSENT"),14,Muted));
         foreach(var preset in PublicFeed.Presets){var body=new StackPanel();body.Children.Add(Text(preset.DisplayName,19));body.Children.Add(Text(L.Text("PUBLIC_PREVIEW_HINT"),12,Muted));body.Children.Add(Button("REVIEW_IMPORT",()=>SubscriptionDialog(null,preset.Url),true));panel.Children.Add(Card(body));}
+        var free=new StackPanel();free.Children.Add(Text(L.Text("SOURCE_ROVUNET"),19));
+        if(RovunetFreeCatalog.Enabled){free.Children.Add(Text(L.Text("ROVUNET_FREE_HINT"),12,Muted));free.Children.Add(Button("ROVUNET_FREE_GET",()=>SubscriptionDialog(null,RovunetFreeCatalog.Url),true));}
+        else free.Children.Add(Text(L.Text("ROVUNET_FREE_UNAVAILABLE"),12,Muted));
+        panel.Children.Add(Card(free));
         page.Content=panel;page.ShowDialog();
     }
     void ShareQr(List<Profile> profiles)

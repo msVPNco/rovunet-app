@@ -55,8 +55,17 @@ public sealed partial class MainWindow : Window
             else if(sub.Usage!=null){try{statuses[sub.Id]=sub.Usage.Snapshot(sub.Id);}catch{}}
         }
         ApplyTheme();Build();WireAdaptiveBounds21();
-        SizeChanged += (_, args) => { if(args.WidthChanged&&!closing){if(NavigationDepth>0)ResizeInnerPage(args.NewSize.Width);else if((args.NewSize.Width<ContextThreshold)!=compactLayout)RebuildForResize();} };
-        SizeChanged += (_, args) => { if(args.HeightChanged&&!closing&&heroCard19!=null)RefreshHeroCollapse19(); };
+        SizeChanged += (_, args) => {
+            if (!args.WidthChanged || closing) return;
+            if (htmlReady29) ResizeHtml41(args.NewSize.Width);
+            else if (NavigationDepth > 0) ResizeInnerPage(args.NewSize.Width);
+            else if ((args.NewSize.Width < ContextThreshold) != compactLayout) RebuildForResize();
+        };
+        SizeChanged += (_, args) => {
+            if (!args.HeightChanged || closing || heroCard19 == null) return;
+            if (htmlReady29) nativeLayoutDeferred41 = true;
+            else RefreshHeroCollapse19();
+        };
         foreach (var (id, m) in data.Measurements) measurements[id] = new() { Verified = m.Verified, ElapsedMs = m.ElapsedMs, Error = m.Error, ProbeStage=m.Stage,ProbeFallbackUsed=m.ProbeFallbackUsed };
         RefreshCards();
         Loaded += async (_, _) =>

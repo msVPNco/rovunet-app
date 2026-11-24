@@ -21,7 +21,12 @@ public sealed partial class MainWindow
     {
         contextPage = page;
         var dialog = Dialog(page == "settings" ? "SETTINGS" : "MORE", 500, 800); dialog.UsePageChrome();
-        dialog.Content = page == "settings" ? BuildSettingsPanel(() => dialog.Close()) : BuildAppMenu(() => dialog.Close());
+        // Choosing a theme or accent repaints the app behind the dialog; the page
+        // must stay open and show the new choice instead of returning Home.
+        void Fill() { dialog.Content = page == "settings"
+            ? BuildSettingsPanel(() => dialog.Close(), Fill)
+            : BuildAppMenu(() => dialog.Close()); if(NavigationDepth>0)QueueHtml29(); }
+        Fill();
         dialog.ShowDialog();
     }
     void PopulateContext()

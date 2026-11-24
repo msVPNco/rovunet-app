@@ -27,6 +27,43 @@ AMOLED هیچ رنگی جز پیش‌فرض اثر نداشت. حالا رنگ �
 به‌روز می‌شود. حجم و زمان باقی‌مانده روی کارت بسته هم دیده می‌شود و متن‌های
 بلندتر از کادر وقتی حرکت متن در تنظیمات روشن باشد می‌روند.
 
+**تنظیمات دیگر با یک کلیک بسته نمی‌شود.** انتخاب پوسته یا رنگ لهجه صفحهٔ
+تنظیمات را می‌بست و کاربر را به خانه برمی‌گرداند. حالا همان صفحه باز می‌ماند،
+انتخاب تازه را نشان می‌دهد و فقط با خواست خود کاربر (دکمهٔ بازگشت یا Esc) بسته
+می‌شود.
+
+**بزرگ و کوچک کردن نما دیگر مکث یک‌دو ثانیه‌ای ندارد.** تا پیش از این هر تغییر
+عرض، نمای پنهانِ WPF و همهٔ کارت‌ها را از نو می‌ساخت و همان کار رشتهٔ رابط را
+متوقف می‌کرد. حالا وقتی پوستهٔ HTML در حال نمایش است، تغییر عرض فقط چیدمان و
+سربرگ سبک را به‌روز می‌کند و کارت‌ها، فوکوس و موقعیت اسکرول دست‌نخورده می‌مانند.
+اندازه‌گیری با ۲۰۰ و ۵۰۰ پروفایل ساختگی، روی همان پنجرهٔ واقعی: پیش از اصلاح هر
+تغییر عرض ۸۱۰ تا ۱۱۳۸ میلی‌ثانیه طول می‌کشید، پس از اصلاح ۳ تا ۷ میلی‌ثانیه،
+بدون بازسازی کارت‌ها.
+
+**کارت انتخاب‌شده در حالت قطع هم مشخص است.** نشان انتخاب فقط روی ردیفِ داخل
+مجموعهٔ باز کشیده می‌شد؛ اگر مجموعه بسته بود یا مجموعهٔ دیگری باز می‌شد، هیچ
+نشانی دیده نمی‌شد. حالا سربرگ مجموعهٔ انتخاب‌شده هم حلقهٔ لهجه و پس‌زمینهٔ
+متمایز دارد و این نشان به اتصال، فوکوس پنجره یا باز بودن مجموعه وابسته نیست؛
+حالت سبز اتصال همچنان جدا می‌ماند.
+
+**متن بلند از کادر بیرون می‌رود، نه اینکه به راست برگردد.** جهت حرکت با جهت
+خواندن هماهنگ شد: متن لاتین به چپ و متن فارسی به راست از کادر خارج می‌شود و
+حرکت پیوسته ادامه دارد، بدون جهش برگشتی. اندازه‌گیری متن هم پس از آرام شدن
+تغییر اندازه یک‌بار انجام می‌شود، نه در هر فریم.
+
+**Rovunet Free با یک دکمه.** در صفحهٔ منابع عمومی، کارت «اتصال رایگان روونت»
+دکمهٔ «دریافت اتصال رایگان» دارد و همان مسیر آزمودهٔ پیش‌نمایش و افزودن را باز
+می‌کند که امضای Ed25519 کاتالوگ و پاکت AES-256-GCM را پیش از هر اتصال بررسی
+می‌کند؛ دقیقاً همان قرارداد `free/v2` که در اندروید پیاده شده است. اگر بیلد
+مقادیر کلید و آدرس را نداشته باشد، همان کارت به‌جای دکمه توضیح می‌دهد که این
+قابلیت در این نسخه در دسترس نیست و هیچ اکشنی نشان نمی‌دهد.
+
+برای ساخت نسخه‌ای که واقعاً کانفیگ رایگان بدهد، سه مقدار کلید عمومی، کلید AES و
+آدرس کاتالوگ (همان‌هایی که در `local.properties` اندروید دارید) در فایل محلی
+`windows/free-v2.local.props` قرار می‌گیرد. آن فایل در `.gitignore` است، در
+آرشیو منبع نمی‌رود و اسکریپت بسته‌بندی تا وقتی موجود است از ساخت بستهٔ عمومی
+امتناع می‌کند؛ یعنی هیچ بستهٔ عمومی‌ای ناخواسته کلید را حمل نمی‌کند.
+
 **زنجیره با هر پروفایل ذخیره‌شده کار می‌کند.** یک شرط اضافی که در اندروید
 وجود ندارد، پروفایل‌هایی را که اشتراک‌گذاری دستگاه‌شان خاموش است از لایه‌های
 زنجیره حذف می‌کرد؛ نتیجه این بود که فهرست لایهٔ دوم خالی می‌ماند. آن شرط
@@ -56,9 +93,19 @@ dark and AMOLED.
 `teal`, `blue`, `green`, `amber`, `orange`, `pink`, `purple`), shown in Settings
 with a translated name and a colour dot; high contrast still wins.
 
-**The public package still has no Free source.** The Rovunet Free v2 client stays
-debug-only, and 0.1.7 is built without the debug key; the packaging script
-refuses to produce a public package while `free-v2.local.props` is in the tree.
+**Rovunet Free in one click.** The public sources page now shows a Rovunet Free
+card with a "Get free connection" button that opens the same reviewed preview and
+import flow, which verifies the catalog's Ed25519 signature and every AES-256-GCM
+envelope before any profile is used — the same `free/v2` contract Android
+implements. When the build carries no catalog values, the card explains that the
+feature is unavailable in this build instead of offering an action.
+
+To build a Windows release that really hands out free configs, put the three
+values you already keep in Android's `local.properties` (public key, AES key,
+catalog address) into the local `windows/free-v2.local.props` file. That file is
+gitignored, never enters the source archive, and while it exists the packaging
+script refuses to produce a public package — so no public build ships the key by
+accident.
 
 **The side menu no longer stutters.** Opening or closing it used to rebuild the
 whole view; the menu is now its own layer and only that layer is redrawn. Usage

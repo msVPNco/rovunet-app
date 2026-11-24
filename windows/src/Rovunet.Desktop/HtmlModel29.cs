@@ -17,6 +17,10 @@ public sealed partial class MainWindow
     }).ToArray();
     object HtmlModel29()
     {
+        // Reference lookups preserve visual ordering and FirstOrDefault semantics
+        // without scanning every native row again for each visible card.
+        var groupByCard = groups.ToLookup(g => g.Card, ReferenceEqualityComparer.Instance);
+        var rowByTile = rows.ToLookup(r => r.Tile, ReferenceEqualityComparer.Instance);
         var strings=new[]{"CONNECTED","DISCONNECTED","CONNECT","DISCONNECT","CONNECTING","CANCEL","STOP_TEST","HOME","QUICK_PING","DETAILED_HTTPS","SEARCH","MORE","EDIT","DELETE","ADD","SETTINGS","RESULT_STALE","PING_SCOPE","HIDE_PATHS","SHOW_PATHS"}.ToDictionary(key=>key,L.Text);
         return new{
             version=1,theme=SystemParameters.HighContrast?"contrast":darkTheme?IsAmoled?"amoled":"dark":"light",language=L.Language,rtl=L.Direction==FlowDirection.RightToLeft,
@@ -31,7 +35,7 @@ public sealed partial class MainWindow
             navigation=sidebarRows20.Select(entry=>new{key=entry.Key,label=L.Text(entry.Key),id=HtmlId29(entry.Value),selected=sidebarRoute20==entry.Key,path=MenuIcon(entry.Key)}),
             hero=new{state=state.State,title=heroTitle.Text,name=heroName21.Text,detail=heroDetail.Text,ping=heroPing.Text,color=HtmlBrush29(heroTitle.Foreground),detailColor=HtmlBrush29(heroDetail.Foreground),enabled=connect.IsEnabled},
             query=search.Text,searchOpen=search.Visibility==Visibility.Visible,searchAction=AutomationProperties.GetItemStatus(homeSearchAction30),
-            groups=cards.Children.Cast<UIElement>().Select(tile=>groups.FirstOrDefault(group=>ReferenceEquals(group.Card,tile))).Where(group=>group!=null&&group.Card.Visibility==Visibility.Visible).Select(g=>new{
+            groups=cards.Children.Cast<UIElement>().Select(tile=>groupByCard[tile].FirstOrDefault()).Where(group=>group!=null&&group.Card.Visibility==Visibility.Visible).Select(g=>new{
                 id=g!.Key,name=g.Members[0].CollectionName.Length>0?g.Members[0].CollectionName:g.Members[0].Name,
                 meta=L.Text(g.Members[0].SourceId.Length>0?"COLLECTION_SUBSCRIPTION":"COLLECTION_MANUAL")+" · "+string.Format(L.Text("PATH_COUNT"),g.Members.Count),
                 open=data.OpenCollectionId==g.Key,active=state.State=="connected"&&g.Members.Any(p=>p.Id==activeProfile?.Id),selected=g.Members.Any(p=>p.Id==data.SelectedId),powerEnabled=g.Connect.IsEnabled,powerLabel=AutomationProperties.GetName(g.Connect),
@@ -39,7 +43,7 @@ public sealed partial class MainWindow
                 activity=CardActivity30(g) is {} work?new{text=work.Text,running=work.Running,color=HtmlBrush29(work.Ink)}:null,
                 quota=g.Quota?.Root.Visibility==Visibility.Visible?new{used=g.Quota.Used.Text,remaining=g.Quota.Remaining.Text,time=g.Quota.Time.Text,note=g.Quota.Note.Visibility==Visibility.Visible?g.Quota.Note.Text:"",percent=g.Quota.Percent.Text}:null,
                 running=collectionRuns.GetValueOrDefault(g.Key)?.Running==true,stopping=testStop?.IsCancellationRequested==true,progress=g.Progress.Value,total=g.Progress.Maximum,testEnabled=g.Test.IsEnabled,
-                rows=data.OpenCollectionId==g.Key?g.Paths.Children.OfType<Border>().Select(tile=>rows.FirstOrDefault(r=>ReferenceEquals(r.Tile,tile))).Where(r=>r!=null&&r.Tile.Visibility==Visibility.Visible).Select(r=>new{
+                rows=data.OpenCollectionId==g.Key?g.Paths.Children.OfType<Border>().Select(tile=>rowByTile[tile].FirstOrDefault()).Where(r=>r!=null&&r.Tile.Visibility==Visibility.Visible).Select(r=>new{
                     id=r!.Profile.Id,name=r.Profile.Name,host=ProfileHost(r.Profile),protocol=r.Protocol.Text,result=r.Result.Visibility==Visibility.Visible?r.Result.Text:"",resultColor=HtmlBrush29(r.Result.Foreground),ping=r.Timing.Visibility==Visibility.Visible?r.Timing.Text:"",pingColor=HtmlBrush29(r.Timing.Foreground),selected=r.Profile.Id==data.SelectedId,active=state.State=="connected"&&r.Profile.Id==activeProfile?.Id,edit=r.Edit.IsEnabled,delete=r.Delete.IsEnabled,speed=SpeedTier27.Color(r.Profile)
                 }).Cast<object>().ToArray():[]
             }),

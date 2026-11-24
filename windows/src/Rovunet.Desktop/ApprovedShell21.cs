@@ -10,10 +10,29 @@ public sealed partial class MainWindow
 {
     CenteredHeader21 header21 = null!;
     double HomeInset21 => compactLayout ? 15 : 19;
+    StackPanel headerActions41 = null!;
+    bool nativeLayoutDeferred41;
+
+    CenteredHeader21 CreateHomeHeader41(StackPanel actions)
+    {
+        FrameworkElement leading, trailing;
+        if (compactLayout) { leading = BrandMark(); trailing = actions; }
+        else
+        {
+            var title = Text(L.Text("HOME"), 21); title.Margin = new(0); title.VerticalAlignment = VerticalAlignment.Center;
+            var titleWithSidebar = new StackPanel { Orientation = Orientation.Horizontal, FlowDirection = FlowDirection.LeftToRight };
+            if (L.Direction == FlowDirection.LeftToRight) { titleWithSidebar.Children.Add(new Border { Width = 222 }); titleWithSidebar.Children.Add(title); leading = titleWithSidebar; trailing = actions; }
+            else { titleWithSidebar.Children.Add(title); titleWithSidebar.Children.Add(new Border { Width = 222 }); leading = actions; trailing = titleWithSidebar; }
+        }
+        var header = new CenteredHeader21 { Leading = leading, Trailing = trailing, Flags = new Border { Width = 0, Height = 0 } };
+        header.Initialize();
+        return header;
+    }
 
     void BuildApprovedShell21()
     {
-        CloseAddHub(); compactLayout = (ActualWidth > 0 ? ActualWidth : Width) < ContextThreshold;
+        CloseAddHub(); nativeLayoutDeferred41 = false;
+        compactLayout = (ActualWidth > 0 ? ActualWidth : Width) < ContextThreshold;
         FontFamily = Typography.Family(L.Language); TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         FlowDirection = FlowDirection.LeftToRight; Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Language);
         cardsSignature = ""; rows.Clear(); groups.Clear();
@@ -31,18 +50,9 @@ public sealed partial class MainWindow
         homeSearchAction30=Action("SEARCH", MenuIcon("SEARCH"), ()=>{}); Action("SETTINGS", MenuIcon("SETTINGS"), SettingsDialog);
         var headerMore=Action("SECTION_GENERAL", "M12,3 L12,5 M12,11 L12,13 M12,19 L12,21", GeneralPage);
         headerMore.Content=FilledMoreIcon28();headerMore.Tag="HEADER_MORE";
-        FrameworkElement leading, trailing;
-        if (compactLayout) { leading = BrandMark(); trailing = actions; }
-        else
-        {
-            var title = Text(L.Text("HOME"), 21); title.Margin = new(0); title.VerticalAlignment = VerticalAlignment.Center;
-            var titleWithSidebar = new StackPanel { Orientation = Orientation.Horizontal, FlowDirection = FlowDirection.LeftToRight };
-            if (L.Direction == FlowDirection.LeftToRight) { titleWithSidebar.Children.Add(new Border { Width = 222 }); titleWithSidebar.Children.Add(title); leading = titleWithSidebar; trailing = actions; }
-            else { titleWithSidebar.Children.Add(title); titleWithSidebar.Children.Add(new Border { Width = 222 }); leading = actions; trailing = titleWithSidebar; }
-        }
-        // The language flags were removed from the header; languages now live in the
-        // three-dot menu. A zero-size placeholder keeps the header's centring rule.
-        header21 = new() { Leading = leading, Trailing = trailing, Flags = new Border { Width = 0, Height = 0 } }; header21.Initialize();
+        headerActions41 = actions;
+        // Preserve the same action controls (and search binding) across resize.
+        header21 = CreateHomeHeader41(actions);
         Grid.SetColumnSpan(header21, 2); Panel.SetZIndex(header21, 4); root.Children.Add(header21);
 
         search = new TextBox { Visibility = Visibility.Collapsed, Margin = new(HomeInset21, 0, HomeInset21, 8), MinHeight = 44, VerticalContentAlignment = VerticalAlignment.Center, ToolTip = L.Text("SEARCH") };

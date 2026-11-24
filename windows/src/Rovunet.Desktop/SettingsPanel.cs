@@ -12,7 +12,7 @@ public sealed partial class MainWindow
     }
 
     // Same section order as Android SettingsScreen; only working Windows options are exposed.
-    StackPanel BuildSettingsPanel(Action close)
+    StackPanel BuildSettingsPanel(Action close, Action? rebuild = null)
     {
         var panel = new StackPanel { Margin = new(18,8,18,20) };
 
@@ -129,12 +129,12 @@ public sealed partial class MainWindow
         var appearance = Section("SECTION_APPEARANCE");
         var themes = new WrapPanel();
         foreach (var (value, label) in new[] { ("system", "SYSTEM_THEME"), ("light", "LIGHT_THEME"), ("dark", "DARK_THEME"), ("amoled", "AMOLED_THEME") })
-            themes.Children.Add(Button(label, () => { SetTheme(value); close(); }, data.Theme == value));
+            themes.Children.Add(Button(label, () => { SetTheme(value); if(rebuild!=null)rebuild(); else close(); }, data.Theme == value));
         appearance.Children.Add(themes);
         appearance.Children.Add(Text(L.Text("ACCENT_COLOR"),14));
         var accents=new WrapPanel{Tag="ACCENT_CHOICES"};
         foreach(var accent in Accents27){
-            var swatch=Button(L.Text(accent.Key),()=>{SetAccent(accent.Value);close();},data.AccentColor==accent.Value);
+            var swatch=Button(L.Text(accent.Key),()=>{SetAccent(accent.Value);if(rebuild!=null)rebuild();else close();},data.AccentColor==accent.Value);
             swatch.Tag="accent:"+accent.Value;
             swatch.BorderBrush=new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(accent.Dark));
             swatch.Background=new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(darkTheme?accent.Dark:accent.Light));

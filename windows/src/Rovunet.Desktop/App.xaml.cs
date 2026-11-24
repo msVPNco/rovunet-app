@@ -68,6 +68,10 @@ public partial class App : Application
             if(!Path.IsPathFullyQualified(navigationReport)||File.Exists(navigationReport)){Shutdown(12);return;}
             var navigation=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=navigation;navigation.htmlFixtureFolder29=Path.GetDirectoryName(navigationReport);navigation.Show();bool passed=await navigation.RunHtmlNavigation30(navigationReport);navigation.Close();Shutdown(passed?0:1);return;
         }
+        if(e.Args is ["--ui-html-resize41",var resizeReport]) {
+            if(!Path.IsPathFullyQualified(resizeReport)||File.Exists(resizeReport)){Shutdown(12);return;}
+            var resizeWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=resizeWindow;resizeWindow.htmlFixtureFolder29=Path.GetDirectoryName(resizeReport);resizeWindow.Show();bool passed=await resizeWindow.RunHtmlResize41(resizeReport);resizeWindow.Close();Shutdown(passed?0:1);return;
+        }
         if(e.Args is ["--ui-html29",var htmlReport]) {
             if(!Path.IsPathFullyQualified(htmlReport)||File.Exists(htmlReport)){Shutdown(12);return;}
             var htmlWindow=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true){HtmlFixture29=true};MainWindow=htmlWindow;htmlWindow.htmlFixtureFolder29=Path.GetDirectoryName(htmlReport);htmlWindow.Show();bool passed=await htmlWindow.RunHtml29(htmlReport);htmlWindow.Close();Shutdown(passed?0:1);return;

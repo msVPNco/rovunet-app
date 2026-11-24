@@ -47,7 +47,7 @@ public sealed partial class MainWindow
             core.AddWebResourceRequestedFilter("*",CoreWebView2WebResourceContext.All);
             core.WebResourceRequested+=(_,e)=>{if(!Uri.TryCreate(e.Request.Uri,UriKind.Absolute,out var uri)||uri.Scheme!="https"||uri.Host!="rovunet.local")e.Response=environment.CreateWebResourceResponse(null,403,"Forbidden","");};
             core.WebMessageReceived+=HtmlMessage29;
-            core.NavigationCompleted+=(_,e)=>{if(e.IsSuccess){htmlReady29=true;native.Opacity=0;native.IsHitTestVisible=false;MarqueeLine.RefreshAll(native);QueueHtml29();}else if(e.WebErrorStatus!=CoreWebView2WebErrorStatus.OperationCanceled)HtmlFailed29();};
+            core.NavigationCompleted+=(_,e)=>{if(e.IsSuccess){htmlReady29=true;native.Opacity=0;native.IsHitTestVisible=false;native.Visibility=Visibility.Collapsed;MarqueeLine.RefreshAll(native);QueueHtml29();}else if(e.WebErrorStatus!=CoreWebView2WebErrorStatus.OperationCanceled)HtmlFailed29();};
             core.Navigate(HtmlOrigin29+"/index.html");
             Activated+=(_,_)=>{htmlInactiveSent29=false;htmlPageTimer29.Start();QueueHtml29();};Deactivated+=(_,_)=>{htmlPageTimer29.Stop();QueueHtml29();};
             // Maximising or restoring fires a burst of StateChanged events; one
@@ -60,7 +60,12 @@ public sealed partial class MainWindow
     }
     void HtmlFailed29()
     {
-        htmlReady29=false;if(navigationShell!=null){navigationShell.Opacity=1;navigationShell.IsHitTestVisible=true;}
+        htmlReady29=false;
+        if(navigationShell!=null){navigationShell.Visibility=Visibility.Visible;navigationShell.Opacity=1;navigationShell.IsHitTestVisible=true;}
+        // Reveal the native tree before rebuilding it: a collapsed element
+        // reports no width, and the rebuild reads one to pick compact or wide.
+        if(nativeLayoutDeferred41) RebuildForResize();
+        RefreshHeroCollapse19();
         if(html29!=null)html29.Visibility=Visibility.Collapsed;
         Notify(L.Text("HTML_RUNTIME_REQUIRED"),Amber);
     }

@@ -18,6 +18,24 @@ public sealed partial class MainWindow
         }
     }
 
+    // HTML owns visible layout. Keep its lightweight header/navigation model in
+    // sync, but defer the native home layout/card rebuild until native fallback.
+    void ResizeHtml41(double width)
+    {
+        nativeLayoutDeferred41 = true;
+        bool compact = width < ContextThreshold;
+        if (compact == compactLayout || navigationShell == null) return;
+        compactLayout = compact;
+        navigationShell.Children.Remove(header21);
+        header21.Children.Clear(); // release the unchanged action controls
+        header21 = CreateHomeHeader41(headerActions41);
+        navigationHeader21 = header21;
+        Grid.SetColumnSpan(header21, 2);
+        navigationShell.Children.Add(header21);
+        if (!compact && sidebarRows20.Count == 0) PopulateContext();
+        QueueHtml29();
+    }
+
     void RebuildForResize()
     {
         string query = search.Text;
