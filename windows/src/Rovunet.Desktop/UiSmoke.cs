@@ -70,6 +70,12 @@ public sealed partial class MainWindow
                 }
                 PanelImage("settings", BuildSettingsPanel(() => { }));
                 PanelImage("menu", BuildAppMenu(() => { }));
+                // The accent picker has to reach both the WPF resources and the HTML
+                // model; a theme switch alone used to leave the shell on its default.
+                data.AccentColor="teal"; ApplyTheme(); Build(); UpdateLayout();
+                Check("accent_applies_"+theme, Tone("Accent") is SolidColorBrush accentBrush && accentBrush.Color==(Color)ColorConverter.ConvertFromString(theme=="dark"?"#7FE0E8":"#0E7C86"));
+                Check("accent_reaches_html_"+theme, System.Text.Json.JsonSerializer.Serialize(HtmlModel29()).Contains(theme=="dark"?"\"dark\":\"#7FE0E8\"":"\"light\":\"#0E7C86\"", StringComparison.Ordinal));
+                data.AccentColor="default"; ApplyTheme(); Build(); UpdateLayout();
                 var visual = (FrameworkElement)Content; var bitmap = new System.Windows.Media.Imaging.RenderTargetBitmap(Math.Max(1, (int)visual.ActualWidth), Math.Max(1, (int)visual.ActualHeight), 96, 96, PixelFormats.Pbgra32); bitmap.Render(visual);
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder(); encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap)); using var file = new FileStream(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(report))!, "ui-fixture-" + theme + ".png"), FileMode.CreateNew); encoder.Save(file);
             }

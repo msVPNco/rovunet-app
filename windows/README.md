@@ -2,9 +2,9 @@
 
 # Rovunet · Windows
 
-**0.1.5 Beta · Windows x64 · prerelease**
+**0.1.6 Beta · Windows x64 · prerelease**
 
-[Download / دریافت](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.1.5-beta)
+[Download / دریافت](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.1.6-beta)
 
 [فارسی](#فارسی) · [English](#english) · [简体中文](#简体中文) · [Русский](#русский)
 

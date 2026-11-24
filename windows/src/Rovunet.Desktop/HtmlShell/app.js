@@ -16,6 +16,16 @@
   let hostFocused = false, motion = true;
   const pressedPointers=new Set();let deferredModel=null;
   const send = (command, id = '', value = '') => window.chrome?.webview?.postMessage({command, id:String(id), value:String(value)});
+  // Accent colours come with the model, because every visual token is a CSS
+  // variable. High contrast keeps the system Highlight colour instead.
+  function accent(data){
+    const root=document.documentElement.style,palette=data&&data.accent;
+    if(!palette){return;}
+    if(data.theme==='contrast'){root.removeProperty('--accent');root.removeProperty('--group');return;}
+    const dark=data.theme==='dark'||data.theme==='amoled';
+    root.setProperty('--accent',dark?palette.dark:palette.light);
+    root.setProperty('--group',dark?palette.selectedDark:palette.selectedLight);
+  }
   // Live counters must not remove the button between pointer-down and click.
   document.addEventListener('pointerdown',event=>pressedPointers.add(event.pointerId),true);
   function releasePointer(event){pressedPointers.delete(event.pointerId);setTimeout(()=>{if(!pressedPointers.size&&deferredModel){const next=deferredModel;deferredModel=null;render(next);}},0);}
@@ -92,7 +102,7 @@
       case 'check':case 'radio':{
         result=el('label','n-'+node.kind);const input=el('input');input.type=node.kind==='radio'?'radio':'checkbox';input.dataset.field=String(node.id);input.checked=!!node.checked;input.disabled=node.enabled===false;input.addEventListener('change',()=>send('native',node.id,input.checked));result.append(input);(node.children||[]).forEach(child=>result.append(native(child)));break;
       }
-      case 'button':result=button(node.label||'',()=>send('native',node.id),'','n-button'+(node.danger?' danger':''));result.disabled=node.enabled===false;result.dataset.native=String(node.id);if(node.icon)result.append(icon('',node.icon));(node.children||[]).forEach(child=>result.append(native(child)));break;
+      case 'button':result=button(node.label||'',()=>send('native',node.id),'','n-button'+(node.danger?' danger':'')+(node.swatch?' swatch':''));result.disabled=node.enabled===false;result.dataset.native=String(node.id);if(node.swatch)result.style.setProperty('--swatch',node.swatch);if(node.swatch&&node.selected)result.setAttribute('aria-selected','true');if(node.icon)result.append(icon('',node.icon));(node.children||[]).forEach(child=>result.append(native(child)));break;
       case 'field':result=el('label','n-field');result.append(el('span','',node.label));(node.children||[]).forEach(child=>result.append(native(child)));break;
       case 'progress':result=el('progress','n-progress');result.max=node.max;result.value=node.value;result.setAttribute('aria-label',model?.strings?.MORE||'Progress');break;
       case 'slider':result=el('input');result.type='range';result.dataset.field=String(node.id);result.disabled=node.enabled===false;result.min=node.min;result.max=node.max;result.value=node.value;result.addEventListener('change',()=>send('native',node.id,result.value));break;
@@ -151,7 +161,7 @@
     const animations=new Map();
     const rollKey=node=>(node.closest('[data-profile]')?.dataset.profile||node.closest('[data-group]')?.dataset.group||node.closest('.hero')&&'hero'||node.closest('.footer')&&'footer'||'page')+':'+node.textContent;
     app.querySelectorAll('.roll').forEach(node=>{const animation=node.firstElementChild?.getAnimations()[0];if(animation)animations.set(rollKey(node),animation.currentTime);});
-    model=data;hostFocused=!!data.focused;motion=!!data.motion;document.documentElement.lang=data.language;document.documentElement.dir=data.rtl?'rtl':'ltr';document.body.dataset.theme=data.theme;activity();
+    model=data;hostFocused=!!data.focused;motion=!!data.motion;document.documentElement.lang=data.language;document.documentElement.dir=data.rtl?'rtl':'ltr';document.body.dataset.theme=data.theme;accent(data);activity();
     const focus=document.activeElement,field=focus?.dataset?.field,nativeId=focus?.dataset?.native,start=focus?.selectionStart,end=focus?.selectionEnd,pendingValue=field&&fieldTimers.has(field)?focus.value:null;
     const oldScroll=app.querySelector('.home-scroll'),homeOffset=oldScroll?.scrollTop||0,pageOffset=app.querySelector('.page-scroll')?.scrollTop||0;
     const shell=el('div','shell');shell.append(header(data));const work=el('div','workspace'+(data.compact?' compact':''));work.append(sidebar(data));const content=el('main','content');

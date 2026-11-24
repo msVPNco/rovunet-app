@@ -20,6 +20,9 @@ public sealed partial class MainWindow
         var strings=new[]{"CONNECTED","DISCONNECTED","CONNECT","DISCONNECT","CONNECTING","CANCEL","STOP_TEST","HOME","QUICK_PING","DETAILED_HTTPS","SEARCH","MORE","EDIT","DELETE","ADD","SETTINGS","RESULT_STALE","PING_SCOPE","HIDE_PATHS","SHOW_PATHS"}.ToDictionary(key=>key,L.Text);
         return new{
             version=1,theme=SystemParameters.HighContrast?"contrast":darkTheme?IsAmoled?"amoled":"dark":"light",language=L.Language,rtl=L.Direction==FlowDirection.RightToLeft,
+            // The HTML shell paints itself from CSS variables, so the chosen accent has
+            // to travel with the model; theme changes alone would leave it at the default.
+            accent=HtmlAccent27(),
             focused=IsActive&&WindowState!=WindowState.Minimized,motion=data.MarqueeMotion!="off"&&(data.MarqueeMotion=="on"||SystemParameters.ClientAreaAnimation)&&!SystemParameters.HighContrast,
             compact=compactLayout,busy,strings,depth=NavigationDepth,pageKey=NavigationDepth==0?"home":HtmlId29(pageStack[^1].PageVisual).ToString(),
             header=new{leading=HtmlNode29(header21.Leading),trailing=HtmlNode29(header21.Trailing)},
@@ -44,6 +47,18 @@ public sealed partial class MainWindow
             footer=new{title=connectionText.Text,detail=detail.Text,color=HtmlBrush29(connectionText.Foreground),up=trafficUp.Text,down=trafficDown.Text,total=trafficTotal.Text,notice=notice.Visibility==Visibility.Visible?notice.Text:"",noticeColor=HtmlBrush29(notice.Foreground),error=errorText.Visibility==Visibility.Visible?errorText.Text:""},
             popup=htmlPopup29==null?null:HtmlMenuItems29(htmlPopup29),emptyTitle=L.Text("EMPTY_TITLE"),emptyHint=L.Text("ADD_HUB_HINT")
         };
+    }
+    object HtmlAccent27()
+    {
+        var accent=Accent27(data.AccentColor);
+        return new{value=accent.Value,light=accent.Light,dark=accent.Dark,selectedLight=accent.SelectedLight,selectedDark=accent.SelectedDark};
+    }
+    // A swatch button shows the colour it would apply, so the picker is usable
+    // without reading eight colour names.
+    static string AccentSwatch29(string value,bool dark)
+    {
+        var accent=Accent27(value);
+        return dark?accent.Dark:accent.Light;
     }
     static string HtmlBrush29(Brush? brush)=>brush switch{
         SolidColorBrush solid=>$"#{solid.Color.R:x2}{solid.Color.G:x2}{solid.Color.B:x2}",
@@ -87,7 +102,7 @@ public sealed partial class MainWindow
                 node["rows"]=list.Items.OfType<ScanEntry>().Skip(offset).Take(150).Select(entry=>new{address=entry.Address,transport=entry.TransportLabel,ping=entry.DnsPing,checks=entry.ChecksLabel,description=entry.Description,color=HtmlBrush29(entry.ResultBrush),pingColor=HtmlBrush29(entry.DnsBrush),enabled=entry.Selectable&&!entry.Stale,selected=list.SelectedItems.Contains(entry)}).ToArray();break;
             case CheckBox check:node["kind"]="check";node["id"]=HtmlId29(check);node["enabled"]=check.IsEnabled;node["checked"]=check.IsChecked==true;node["children"]=new[]{Child(check.Content)};break;
             case RadioButton radio:node["kind"]="radio";node["id"]=HtmlId29(radio);node["enabled"]=radio.IsEnabled;node["checked"]=radio.IsChecked==true;node["children"]=new[]{Child(radio.Content)};break;
-            case Button button:node["kind"]="button";node["id"]=HtmlId29(button);node["enabled"]=button.IsEnabled;node["danger"]=button.Uid is "STOP_TEST" or "SCAN_STOP_TUNNEL";node["label"]=AutomationProperties.GetName(button) is {Length:>0} name?name:button.ToolTip?.ToString()??button.Content as string??"";node["children"]=new[]{Child(button.Content)};if(button.Tag is Geometry glyph)node["icon"]=glyph.ToString(System.Globalization.CultureInfo.InvariantCulture);break;
+            case Button button:node["kind"]="button";node["id"]=HtmlId29(button);node["enabled"]=button.IsEnabled;node["danger"]=button.Uid is "STOP_TEST" or "SCAN_STOP_TUNNEL";node["label"]=AutomationProperties.GetName(button) is {Length:>0} name?name:button.ToolTip?.ToString()??button.Content as string??"";node["swatch"]=button.Tag is string accentTag&&accentTag.StartsWith("accent:",StringComparison.Ordinal)?AccentSwatch29(accentTag[7..],darkTheme):null;node["selected"]=button.Tag is string currentTag&&currentTag.StartsWith("accent:",StringComparison.Ordinal)&&currentTag[7..]==data.AccentColor;node["children"]=new[]{Child(button.Content)};if(button.Tag is Geometry glyph)node["icon"]=glyph.ToString(System.Globalization.CultureInfo.InvariantCulture);break;
             case Expander expander:node["kind"]="expander";node["id"]=HtmlId29(expander);node["enabled"]=expander.IsEnabled;node["label"]=expander.Header?.ToString()??"";node["checked"]=expander.IsExpanded;node["children"]=expander.IsExpanded?new[]{Child(expander.Content)}:[];break;
             case Slider slider:node["kind"]="slider";node["id"]=HtmlId29(slider);node["enabled"]=slider.IsEnabled;node["min"]=slider.Minimum;node["max"]=slider.Maximum;node["value"]=slider.Value;break;
             case ProgressBar progress:node["kind"]="progress";node["max"]=Math.Max(1,progress.Maximum);node["value"]=progress.Value;break;

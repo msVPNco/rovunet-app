@@ -21,7 +21,23 @@ public static class ChainProfiles
 {
     public const string Prefix="rovunet-chain://1.";
     public static bool IsChain(string raw)=>raw.StartsWith("rovunet-chain://",StringComparison.OrdinalIgnoreCase);
-    public static string Kind(Profile p)=>ProfileEditing.IsNative(p.Raw)?Importer.Fields(p.Raw)[1]:p.Protocol=="SOCKS5"?"socks5":"xray";
+    // Native tokens are finer-grained than chain kinds: a VLESS path is Xray on the
+    // wire (Android's TunnelType.XRAY), and `X_ssh` combo profiles are complete
+    // two-stage paths that can only open a chain, never sit inside one.
+    public static string Kind(Profile p)
+    {
+        if(ProfileEditing.IsNative(p.Raw)){
+            string token=Importer.Fields(p.Raw)[1];
+            return token switch{
+                "vless" or "xray"=>"xray",
+                "ss" or "slipstream"=>"slipstream",
+                "sayedns"=>"dnstt",
+                _ when token.EndsWith("_ssh",StringComparison.Ordinal)=>"combo",
+                _=>token
+            };
+        }
+        return p.Protocol=="SOCKS5"?"socks5":"xray";
+    }
     // Android ChainValidation: 2–4 layers; only a directly reachable Xray
     // transport followed by SSH; Slipstream is outermost only; singleton
     // bridge groups cannot repeat (SSH and SOCKS5 can repeat).
@@ -35,12 +51,15 @@ public static class ChainProfiles
         if(complete&&layers.Count<2)return "CHAIN_LAYER_COUNT";
         if(layers.Any(p=>IsChain(p.Raw)||!p.CanConnect))return "CHAIN_UNSUPPORTED";
         string[] kinds=layers.Select(Kind).ToArray();
-        string[] allowed=["dnstt","sayedns","vaydns","soar","ss","slipstream","ssh","naive","snowflake","doh","socks5","xray"];
+        string[] allowed=["dnstt","sayedns","vaydns","soar","slipstream","ssh","naive","snowflake","doh","socks5","xray","combo"];
         if(kinds.Any(k=>!allowed.Contains(k)))return "CHAIN_SINGLE_LAYER_ONLY";
+        // A combo profile already contains its own two stages; it can only be the
+        // first layer, where it comes out as SOCKS5 for whatever follows.
+        if(kinds.Contains("combo")&&(kinds[0]!="combo"||kinds.Length<2||(complete&&kinds.Length<2)))return "CHAIN_COMBO_FIRST_ONLY";
         if(kinds.Contains("xray")&&(kinds.Length>2||kinds[0]!="xray"||(kinds.Length>=2&&kinds[1]!="ssh")||(complete&&kinds.Length!=2)))return "XRAY_CHAIN_REQUIRES_OUTER_SSH";
         var groups=new HashSet<string>();
         for(int i=0;i<kinds.Length;i++){
-            string kind=kinds[i];if(i>0&&kind is "ss" or "slipstream")return "CHAIN_SLIP_OUTERMOST";
+            string kind=kinds[i];if(i>0&&kind is "slipstream")return "CHAIN_SLIP_OUTERMOST";
             string group=kind switch{"sayedns"=>"dnstt","ss"=>"slipstream",_=>kind};
             if(kind is not("ssh" or "socks5")&&!groups.Add(group))return "CHAIN_DUPLICATE_ENGINE";
             if(ProfileEditing.IsNative(layers[i].Raw)&&Importer.Fields(layers[i].Raw)[34]!="1")return "SHARING_DISABLED";

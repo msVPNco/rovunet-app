@@ -134,9 +134,10 @@ public sealed partial class MainWindow
         appearance.Children.Add(Text(L.Text("ACCENT_COLOR"),14));
         var accents=new WrapPanel{Tag="ACCENT_CHOICES"};
         foreach(var accent in Accents27){
-            var swatch=Button(accent.Key,()=>{SetAccent(accent.Value);close();},data.AccentColor==accent.Value);
+            var swatch=Button(L.Text(accent.Key),()=>{SetAccent(accent.Value);close();},data.AccentColor==accent.Value);
             swatch.Tag="accent:"+accent.Value;
             swatch.BorderBrush=new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(accent.Dark));
+            swatch.Background=new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(darkTheme?accent.Dark:accent.Light));
             swatch.ToolTip=L.Text(accent.Key);
             accents.Children.Add(swatch);
         }

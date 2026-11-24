@@ -10,10 +10,19 @@
     <Compile Include="../../src/Rovunet.Desktop/PublicFeed.cs" Link="PublicFeed.cs" />
     <Compile Include="../../src/Rovunet.Desktop/SubscriptionClient.cs" Link="SubscriptionClient.cs" />
     <Compile Include="../../src/Rovunet.Desktop/MahsaFeed28.cs" Link="MahsaFeed28.cs" />
-    <!-- Public RFC 8032 fixture key, never a production trust root. -->
+    <!-- Public RFC 8032 fixture key and fixture AES key, never production trust roots.
+         The catalog address points at a synthetic repository path, never the real one. -->
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>RovunetFreeEd25519PublicKey</_Parameter1>
       <_Parameter2>11qYAYKxCrfVS/7TyWQHOg7hcvPapiMlrwIaaPcHURo=</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeAesKey</_Parameter1>
+      <_Parameter2>AQIDBAUGBwgJCgsMDQ4PEBESExQVFhcYGRobHB0eHyA=</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeCatalogAddress</_Parameter1>
+      <_Parameter2>https://raw.githubusercontent.com/msVPNco/rovunet-app/fixture/free/v2/catalog.json</_Parameter2>
     </AssemblyAttribute>
   </ItemGroup>
 </Project>

@@ -343,6 +343,35 @@ Test("group-fast-direct-before-dns",()=>{var slow=Importer.Single("socks5://127.
 Test("group-dns-only-after-all-direct-fail",()=>{var plan=new CollectionProbePlan([Importer.Single(FakeDns("dnstt"))]);Check(plan.NeedsDns(false,0)&&!plan.NeedsDns(false,1)&&!plan.NeedsDns(true,0));});
 Test("quick-scope-twenty-direct-ten-dns",()=>{var direct=Enumerable.Range(1,20).Select(i=>Importer.Single("socks5://127.0.0.1:"+(1000+i))).ToArray();var dns=Enumerable.Range(1,10).Select(_=>Importer.Single(FakeDns())).ToArray();var plan=new CollectionProbePlan(dns.Concat(direct));Check(plan.Direct.SequenceEqual(direct)&&plan.Dns.SequenceEqual(dns)&&plan.Direct.All(CollectionProbePlan.IsDirect)&&plan.Dns.All(p=>!CollectionProbePlan.IsDirect(p)));});
 Test("quick-scope-cannot-hide-dns-inside-chain",()=>{var dns=Importer.Single(FakeDns());var a=Importer.Single("socks5://127.0.0.1:1001");var b=Importer.Single("socks5://127.0.0.1:1002");var dnsChain=Importer.Single(ChainProfiles.Create("DNS chain",new[]{dns,a}));var directChain=Importer.Single(ChainProfiles.Create("Direct chain",new[]{a,b}));Check(!CollectionProbePlan.IsDirect(dnsChain)&&CollectionProbePlan.IsDirect(directChain)&&new CollectionProbePlan(new[]{dnsChain,directChain}).Direct.SequenceEqual(new[]{directChain}));});
+// Chain editor parity: a VLESS path is an Xray layer, and the second dropdown must
+// still offer the one layer that can follow it instead of coming up empty.
+string sshFixture=ManualProfiles.Native("ssh","SSH fixture","127.0.0.1",22,"fixture","fixture");
+string dnsFixture=ManualProfiles.Dns("dnstt","DNS fixture","t.example.invalid","127.0.0.1:5353","udp",new string('a',64),"127.0.0.1","22","fixture","fixture");
+string comboFixture=ManualProfiles.Dns("dnstt_ssh","Combo fixture","t.example.invalid","127.0.0.1:5353","udp",new string('a',64),"127.0.0.1","22","fixture","fixture");
+Test("chain-vless-path-is-an-xray-layer",()=>{
+    var xray=Importer.Single(link);var ssh=Importer.Single(sshFixture);
+    Check(ChainProfiles.Kind(xray)=="xray");
+    Check(ChainProfiles.Rule(new[]{xray,ssh},complete:true)==null);
+    _=ChainProfiles.Create("Xray + SSH",new[]{xray,ssh});
+});
+Test("chain-second-layer-lists-what-fits",()=>{
+    var xray=Importer.Single(link);var ssh=Importer.Single(sshFixture);var dns=Importer.Single(dnsFixture);
+    var after=ChainProfiles.Appendable(new[]{xray},new[]{ssh,dns});
+    Check(after.Count==1&&after[0].Raw==ssh.Raw);
+    Check(ChainProfiles.AppendBlock(new[]{xray},dns)=="XRAY_CHAIN_REQUIRES_OUTER_SSH");
+});
+Test("chain-combo-profile-can-only-open",()=>{
+    var combo=Importer.Single(comboFixture);var ssh=Importer.Single(sshFixture);
+    Check(ChainProfiles.Kind(combo)=="combo");
+    Check(ChainProfiles.Rule(new[]{combo,ssh},complete:true)==null);
+    Check(ChainProfiles.AppendBlock(new[]{ssh},combo)=="CHAIN_COMBO_FIRST_ONLY");
+    Reject(()=>ChainProfiles.Validate(new[]{ssh,combo}),"CHAIN_COMBO_FIRST_ONLY");
+});
+Test("chain-xray-cannot-be-a-middle-layer",()=>{
+    var dns=Importer.Single(dnsFixture);var xray=Importer.Single(link);var ssh=Importer.Single(sshFixture);
+    Reject(()=>ChainProfiles.Validate(new[]{dns,xray,ssh}),"XRAY_CHAIN_REQUIRES_OUTER_SSH");
+    Check(ChainProfiles.Appendable(new[]{dns},new[]{xray}).Count==0);
+});
 Test("group-unmeasured-keeps-order-and-is-not-invented-fast",()=>{var a=Importer.Single("socks5://127.0.0.1:1001");var b=Importer.Single("socks5://127.0.0.1:1002");var c=Importer.Single("socks5://127.0.0.1:1003");var plan=new CollectionProbePlan([a,b,c],new Dictionary<string,long>{{c.Id,20}});Check(plan.Direct.SequenceEqual(new[]{c,a,b})&&!plan.NeedsDns(false,0));});
 Test("scanner-multi-dns-preserves-flags-and-other-fields",()=>{var p=Importer.Single(FakeDns("dnstt","tcp"));var prior=Importer.Fields(p.Raw);var changed=ResolverScan.Selected(p,new[]{("127.0.0.1:5353","tcp"),("127.0.0.2:5353","tcp"),("127.0.0.3:5353","tcp")});var next=Importer.Fields(changed.Raw);Check(next[4].Split(',').Length==3&&next[22]=="tcp"&&next.Where((v,i)=>i!=4&&v!=prior[i]).Count()==0&&p.Raw==FakeDns("dnstt","tcp"));});
 Test("scanner-multi-dns-deduplicates",()=>{var p=Importer.Single(FakeDns("dnstt","tcp"));var next=ResolverScan.Selected(p,new[]{("127.0.0.1:5353","tcp"),("127.0.0.1:5353","tcp")});Check(Importer.Fields(next.Raw)[4].Split(',').Length==1);});

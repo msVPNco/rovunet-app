@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Org.BouncyCastle.Crypto.Parameters;
@@ -6,18 +7,45 @@ using Org.BouncyCastle.Crypto.Signers;
 using Rovunet.Core;
 using Rovunet.Desktop;
 
-// Link the production download/verifier/parser classes into a portable harness.
-// It performs no HTTP requests and never opens or modifies a user's store.
+// Portable harness for the Free v2 client. It links the production verifier,
+// makes no HTTP requests and never opens a user store. Fixture keys are the
+// public RFC 8032 test vectors, never a production trust root.
 const string seed = "9d61b19deffd5a60ba844af492ec2cc44449c5697b326919703bac031cae7f60";
 const string link = "vless://00000000-0000-4000-8000-000000000001@example.invalid:443?security=tls&type=ws";
 var now = DateTimeOffset.UtcNow;
+var aesKey = new byte[32];
+for (int i = 0; i < aesKey.Length; i++) aesKey[i] = (byte)(i + 1);
 string Time(DateTimeOffset value) => value.UtcDateTime.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", CultureInfo.InvariantCulture);
-object Donation(DateTimeOffset created, params string[] links) => new {
-    donation_id = new string('a', 32), created_at = Time(created), expires_at = Time(created.AddDays(30)),
-    quota_gb = 50, items = links.Select((value, i) => new { id = "item-" + i, link = value }).ToArray()
-};
-string Catalog(DateTimeOffset generated, params object[] donations) =>
-    JsonSerializer.Serialize(new { version = 1, generated_at = Time(generated), donations }) + "\n";
+string Hex(byte[] value) => Convert.ToHexString(value).ToLowerInvariant();
+
+string Entry(string id, string donation, DateTimeOffset created, string sha, string keyId = "fixture-key") =>
+    JsonSerializer.Serialize(new
+    {
+        id, donation_id = donation, key_id = keyId, quota_gib = 50,
+        created_at = Time(created), expires_at = Time(created.AddDays(30)),
+        path = "configs/" + id + ".json", sha256 = sha
+    });
+
+string Envelope(string id, string donation, DateTimeOffset created, string secret = link)
+{
+    byte[] nonce = new byte[12];
+    for (int i = 0; i < nonce.Length; i++) nonce[i] = (byte)(0x40 + i);
+    byte[] plain = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { link = secret }));
+    byte[] aad = Encoding.UTF8.GetBytes($"rovunet-free-v2|{id}|{donation}|{Time(created)}|{Time(created.AddDays(30))}|fixture-key");
+    byte[] ciphertext = new byte[plain.Length + 16];
+    using (var gcm = new AesGcm(aesKey, 16))
+        gcm.Encrypt(nonce, plain, ciphertext.AsSpan(0, plain.Length), ciphertext.AsSpan(plain.Length), aad);
+    return JsonSerializer.Serialize(new
+    {
+        version = 2, algorithm = "AES-256-GCM", id, donation_id = donation,
+        created_at = Time(created), expires_at = Time(created.AddDays(30)), key_id = "fixture-key", quota_gib = 50,
+        nonce = Convert.ToBase64String(nonce), ciphertext = Convert.ToBase64String(ciphertext)
+    });
+}
+
+string Catalog(DateTimeOffset generated, params string[] entries) =>
+    "{\"version\":2,\"generated_at\":\"" + Time(generated) + "\",\"entries\":[" + string.Join(',', entries) + "]}\n";
+
 string Signature(string body)
 {
     var signer = new Ed25519Signer();
@@ -26,6 +54,7 @@ string Signature(string body)
     signer.BlockUpdate(bytes, 0, bytes.Length);
     return Convert.ToBase64String(signer.GenerateSignature());
 }
+
 void Check(bool value) { if (!value) throw new Exception("ASSERTION_FAILED"); }
 async Task Reject(Func<Task> action, string expected)
 {
@@ -33,57 +62,128 @@ async Task Reject(Func<Task> action, string expected)
     catch (SafeError error) when (error.Code == expected) { return; }
     throw new Exception("EXPECTED_" + expected);
 }
-async Task<SubscriptionClient.Payload> Fetch(string body, string? detached = null, CancellationToken cancellation = default)
+
+// One active, well-formed item: catalog + signature + envelope + empty revoked list.
+var goodId = new string('a', 32);
+var goodDonation = new string('b', 32);
+var goodCreated = now.AddDays(-1);
+var goodEnvelope = Envelope(goodId, goodDonation, goodCreated);
+var goodEntry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(goodEnvelope))));
+
+async Task<SubscriptionClient.Payload> Fetch(
+    string body,
+    Func<string, string>? documents = null,
+    string? detached = null,
+    CancellationToken cancellation = default)
 {
-    var requests = new List<string>();
+    string baseAddress = RovunetFreeCatalog.Url[..(RovunetFreeCatalog.Url.LastIndexOf('/') + 1)];
+    string configAddress = baseAddress + "configs/" + goodId + ".json";
+    string revokedAddress = baseAddress + "revoked.json";
     Task<SubscriptionClient.Payload> Transport(Uri uri, CancellationToken token, int port)
     {
         token.ThrowIfCancellationRequested();
         Check(port == 17891);
-        requests.Add(uri.AbsoluteUri);
-        return Task.FromResult(new SubscriptionClient.Payload(
-            uri.AbsoluteUri == RovunetFreeCatalog.Url ? body : detached ?? Signature(body), now, ""));
+        string address = uri.AbsoluteUri;
+        string payload = address == RovunetFreeCatalog.Url ? body
+            : address == RovunetFreeCatalog.Url.Replace("catalog.json", "catalog.sig", StringComparison.Ordinal) ? detached ?? Signature(body)
+            : address == revokedAddress ? "[]"
+            : address == configAddress ? goodEnvelope
+            : throw new Exception("UNEXPECTED_ADDRESS " + address);
+        if (documents != null) payload = documents(payload);
+        return Task.FromResult(new SubscriptionClient.Payload(payload, now, ""));
     }
-    var result = await PublicFeed.FetchUsing28(RovunetFreeCatalog.Url, Transport, cancellation, 17891);
-    Check(requests.SequenceEqual(new[] { RovunetFreeCatalog.Url, RovunetFreeCatalog.SigUrl }));
-    return result;
+    return await PublicFeed.FetchUsing28(RovunetFreeCatalog.Url, Transport, cancellation, 17891);
 }
+
 var tests = new List<(string Name, Func<Task> Run)> {
-    ("signed empty catalog reaches empty replacement preview", async () => {
-        var payload = await Fetch(Catalog(now));
-        var batch = PublicFeed.PreviewUpdate(RovunetFreeCatalog.Url, payload.Body, true);
-        Check(payload.Body == "" && batch.Total == 0 && batch.Profiles.Count == 0);
+    ("pinned build values enable the official source", () =>
+    {
+        Check(RovunetFreeCatalog.Enabled);
+        Check(PublicFeed.Presets.Any(preset => preset.Key == "rovunet"));
+        return Task.CompletedTask;
     }),
-    ("expired final donation reaches empty replacement preview", async () => {
-        var payload = await Fetch(Catalog(now, Donation(now.AddDays(-31), link)));
-        var batch = PublicFeed.PreviewUpdate(RovunetFreeCatalog.Url, payload.Body, true);
-        Check(batch.Total == 0 && batch.Profiles.Count == 0);
-    }),
-    ("valid signed catalog retains the normal protocol parser", async () => {
-        var payload = await Fetch(Catalog(now, Donation(now.AddDays(-1), link)));
+    ("signed catalog decrypts into one importable path", async () =>
+    {
+        var payload = await Fetch(Catalog(now, goodEntry));
         var batch = PublicFeed.PreviewUpdate(RovunetFreeCatalog.Url, payload.Body, true);
         Check(batch.Total == 1 && batch.Profiles.Count == 1 && !PublicFeed.IsPartial(batch));
+        Check(batch.Profiles[0].CanConnect);
     }),
-    ("tampered empty catalog fails before replacement preview", async () => {
-        var original = Catalog(now, Donation(now.AddDays(-1), link));
-        await Reject(async () => { await Fetch(Catalog(now), Signature(original)); }, "FREE_SIGNATURE_INVALID");
+    ("tampered catalog fails before any entry is read", async () =>
+    {
+        var original = Catalog(now, goodEntry);
+        await Reject(async () => { await Fetch(Catalog(now, goodEntry + " "), detached: Signature(original)); }, "ROVUNET_FREE_UNVERIFIED");
     }),
-    ("unsigned or malformed signature cannot retire profiles", async () => {
+    ("catalog without its trailing newline is rejected", async () =>
+    {
+        var body = Catalog(now, goodEntry).TrimEnd('\n');
+        await Reject(async () => { await Fetch(body, detached: Signature(body)); }, "ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("unsigned or malformed signature cannot retire profiles", async () =>
+    {
         foreach (var signature in new[] { "", "not-base64", Convert.ToBase64String(new byte[64]) })
-            await Reject(async () => { await Fetch(Catalog(now), signature); }, "FREE_SIGNATURE_INVALID");
+            await Reject(async () => { await Fetch(Catalog(now, goodEntry), detached: signature); }, "ROVUNET_FREE_UNVERIFIED");
     }),
-    ("stale signed empty catalog is rejected", async () => {
-        await Reject(async () => { await Fetch(Catalog(now.AddDays(-8))); }, "FREE_CATALOG_STALE");
+    ("future-dated catalog is rejected", async () =>
+    {
+        await Reject(async () => { await Fetch(Catalog(now.AddMinutes(30), goodEntry)); }, "ROVUNET_FREE_UNVERIFIED");
     }),
-    ("third-party empty feeds retain their rejection", async () => {
-        foreach (var url in new[] { PublicFeed.MahsaUrl, PublicFeed.Presets[1].Url, "https://example.invalid/feed" })
+    ("expired entry yields no links", async () =>
+    {
+        var id = new string('c', 32);
+        var created = now.AddDays(-31);
+        var envelope = Envelope(id, goodDonation, created);
+        var entry = Entry(id, goodDonation, created, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(envelope))));
+        await Reject(async () => { await Fetch(Catalog(now, entry)); }, "ROVUNET_FREE_UNAVAILABLE");
+    }),
+    ("revoked donation drops every member", async () =>
+    {
+        string baseAddress = RovunetFreeCatalog.Url[..(RovunetFreeCatalog.Url.LastIndexOf('/') + 1)];
+        await Reject(async () =>
+        {
+            await Fetch(Catalog(now, goodEntry), documents: payload =>
+                payload == "[]" ? "[\"" + goodDonation + "\"]" : payload);
+        }, "ROVUNET_FREE_UNAVAILABLE");
+    }),
+    ("envelope bytes that do not match the signed hash are skipped", async () =>
+    {
+        await Reject(async () =>
+        {
+            await Fetch(Catalog(now, goodEntry), documents: payload =>
+                payload.StartsWith("{\"version\":2,\"algorithm\"", StringComparison.Ordinal) ? payload.Replace("\"version\":2", "\"version\":2 ", StringComparison.Ordinal) : payload);
+        }, "ROVUNET_FREE_UNAVAILABLE");
+    }),
+    ("a wrong AES key cannot authenticate the envelope", () =>
+    {
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(goodEnvelope))));
+        var parsed = RovunetFreeCatalog.ParseCatalog(Catalog(now, entry), now).Single();
+        var wrong = new byte[32];
+        for (int i = 0; i < wrong.Length; i++) wrong[i] = (byte)(0xF0 + i);
+        try { RovunetFreeCatalog.Decrypt(goodEnvelope, parsed, wrong); }
+        catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { return Task.CompletedTask; }
+        throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("entries must stay sorted by id", async () =>
+    {
+        var secondId = new string('d', 32);
+        var secondEnvelope = Envelope(secondId, new string('e', 32), goodCreated);
+        var second = Entry(secondId, new string('e', 32), goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(secondEnvelope))));
+        await Reject(async () => { await Fetch(Catalog(now, second, goodEntry)); }, "ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("third-party empty feeds retain their rejection", async () =>
+    {
+        foreach (var url in new[] { PublicFeed.MahsaUrl, PublicFeed.Presets.First(p => p.Key == "anonymous").Url, "https://example.invalid/feed" })
             await Reject(() => { PublicFeed.PreviewUpdate(url, "", true); return Task.CompletedTask; }, "INVALID_IMPORT");
     }),
-    ("partial official catalog is rejected atomically", async () => {
-        var payload = await Fetch(Catalog(now, Donation(now.AddDays(-1), link, "future-protocol://example.invalid")));
-        await Reject(() => { PublicFeed.PreviewUpdate(RovunetFreeCatalog.Url, payload.Body, true); return Task.CompletedTask; }, "INVALID_IMPORT");
-        var ordinary = PublicFeed.PreviewUpdate(PublicFeed.Presets[1].Url, payload.Body, true);
+    ("partial official catalog is rejected atomically", () =>
+    {
+        // The official source may never quietly drop a row it cannot parse.
+        string mixed = link + "\nfuture-protocol://example.invalid";
+        var ordinary = PublicFeed.PreviewUpdate(PublicFeed.Presets.First(p => p.Key == "anonymous").Url, mixed, true);
         Check(ordinary.Profiles.Count == 1 && PublicFeed.IsPartial(ordinary));
+        try { PublicFeed.PreviewUpdate(RovunetFreeCatalog.Url, mixed, true); }
+        catch (SafeError error) when (error.Code == "INVALID_IMPORT") { return Task.CompletedTask; }
+        throw new Exception("EXPECTED_INVALID_IMPORT");
     }),
 };
 var failed = 0;

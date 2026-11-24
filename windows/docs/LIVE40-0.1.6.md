@@ -1,0 +1,50 @@
+# Rovunet Windows 0.1.6 Beta
+
+## فارسی
+
+**زنجیره دیگر در لایهٔ دوم گیر نمی‌کند.** ریشهٔ ایراد این بود که مسیرهای VLESS در
+تشخیص نوع، «xray» شمرده نمی‌شدند و پروفایل‌های ترکیبی (مثل DNSTT + SSH) هم به‌کل از
+فهرست حذف می‌شدند؛ نتیجه این بود که بعد از انتخاب لایهٔ اول، هیچ گزینه‌ای برای لایهٔ
+دوم نمی‌ماند. حالا مسیر VLESS همان لایهٔ Xray است و پروفایل ترکیبی می‌تواند زنجیره را
+باز کند (فقط در جایگاه اول) و لایه‌های بعدی از آن تغذیه می‌کنند.
+
+**رنگ لهجه واقعاً اعمال می‌شود.** پیش از این انتخاب رنگ فقط منابع رابط بومی را عوض
+می‌کرد و نمای اصلی که HTML است روی رنگ پیش‌فرض می‌ماند؛ به همین دلیل فقط روشن/تیره
+دیده می‌شد. حالا رنگ انتخاب‌شده با مدل به پوستهٔ HTML می‌رود و هم روی لهجه و هم روی
+پس‌زمینهٔ گزینه‌های انتخاب‌شده اثر می‌گذارد. هر رنگ یک نقطهٔ رنگی و نام ترجمه‌شده در
+تنظیمات دارد و در حالت کنتراست بالا رنگ سیستم حاکم می‌ماند.
+
+**اتصال رایگان روونت به بخش منابع عمومی آمد.** کلاینت Free v2 دقیقاً با همان قرارداد
+اندروید پیاده شد: امضای Ed25519 روی بایت‌های دقیق کاتالوگ (شامل خط جدید پایانی)،
+پاکت AES-256-GCM با AAD قرارداد، بررسی SHA-256 فایل پاکت، فهرست revoked و انقضای
+۳۰روزه. کلید عمومی و کلید AES در زمان ساخت از بیرون مخزن تزریق می‌شوند و بدون آن‌ها
+این منبع پنهان می‌ماند؛ کاتالوگ دانلودی هرگز نمی‌تواند کلید خودش را جایگزین کند.
+سیزده بررسی قراردادی این مسیر را پوشش می‌دهد.
+
+**محدودیت‌ها:** نصب‌کننده هنوز امضای Authenticode ندارد، پس SmartScreen ممکن است هشدار
+بدهد. TUN و kill switch مثل قبل در این نسخه فعال نیستند.
+
+## English
+
+**The chain builder no longer stalls at the second layer.** A VLESS path was not
+recognised as an Xray layer, and combined profiles such as DNSTT + SSH were
+dropped from the pool entirely, so after the first layer there was nothing left
+to choose. A VLESS path is treated as the Xray layer, and a combined profile can
+open a chain (first layer only) and feed the layers after it.
+
+**Accent colours now actually apply.** Choosing a colour used to change only the
+native resources while the HTML shell kept its default, which is why only
+light/dark appeared to work. The chosen accent now travels with the model and
+drives both the accent and the selected-row background; each choice has a colour
+dot and a translated name, and high contrast still wins.
+
+**Rovunet Free is now in Public sources**, using the same Free v2 contract as
+Android: Ed25519 over the exact catalog bytes including the trailing newline,
+AES-256-GCM envelopes with the contract AAD, per-envelope SHA-256, the revoked
+list and the 30-day expiry. The public and AES keys are injected at build time
+from outside the repository; without them the source stays hidden, and a
+downloaded catalog can never supply its own key. Thirteen contract checks cover
+this path.
+
+**Limits:** the installer is not Authenticode-signed, so SmartScreen may warn.
+TUN and the kill switch remain inactive in this consumer beta.

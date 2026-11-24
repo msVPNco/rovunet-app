@@ -12,5 +12,13 @@
       <_Parameter1>RovunetFreeEd25519PublicKey</_Parameter1>
       <_Parameter2>$(RovunetFreePublicKey)</_Parameter2>
     </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeAesKey</_Parameter1>
+      <_Parameter2>$(RovunetFreeAesKey)</_Parameter2>
+    </AssemblyAttribute>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeCatalogAddress</_Parameter1>
+      <_Parameter2>$(RovunetFreeCatalogAddress)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

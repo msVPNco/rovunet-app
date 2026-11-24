@@ -1,7 +1,12 @@
 <Project>
+  <!-- Local-only trust values for Rovunet Free v2 (public Ed25519 key, the shared
+       AES key and the catalog address). The file is gitignored and absent from
+       every source archive; without it the client fails closed and hides the
+       official source instead of fetching an unverified catalog. -->
+  <Import Project="free-v2.local.props" Condition="Exists('free-v2.local.props')" />
   <PropertyGroup>
     <Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><LangVersion>latest</LangVersion>
-    <Version>0.1.5-beta</Version><Authors>Rovunet contributors</Authors>
+    <Version>0.1.6-beta</Version><Authors>Rovunet contributors</Authors>
     <Copyright>Copyright © 2026 Rovunet contributors</Copyright>
     <Deterministic>true</Deterministic><DebugType>embedded</DebugType>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
