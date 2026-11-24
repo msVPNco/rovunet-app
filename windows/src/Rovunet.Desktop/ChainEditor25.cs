@@ -24,9 +24,13 @@ public sealed partial class MainWindow
         var current=original==null?new List<Profile>():ChainProfiles.Read(original.Raw).Layers;
         var selects=new List<ComboBox>();
         var rows=new StackPanel();
+        var preview=Text("",14);      // "VLESS WS → SSH" as it is assembled
+        var validity=Text("",13,Red); // why the current chain cannot be saved, or empty
         bool refreshing=false;
         Button? add=null;
         panel.Children.Add(rows);
+        panel.Children.Add(preview);
+        panel.Children.Add(validity);
 
         List<Profile> Prefix(int count)
         {
@@ -50,7 +54,16 @@ public sealed partial class MainWindow
                     box.IsEnabled=allowed.Count>0;
                 }
             }finally{refreshing=false;}
+            ShowPath();
             UpdateAdd();
+        }
+        void ShowPath()
+        {
+            var chosen=Prefix(selects.Count);
+            preview.Text=chosen.Count==0?"":string.Join(" → ",chosen.Select(p=>p.Protocol.Length>0?p.Protocol:ChainProfiles.Kind(p)));
+            string? problem=chosen.Count==0?null:ChainProfiles.Rule(chosen,complete:true);
+            // An incomplete chain is not an error yet: the user is still choosing.
+            validity.Text=chosen.Count>=2&&problem!=null?L.Text(problem):"";
         }
         void UpdateAdd()
         {
@@ -95,7 +108,12 @@ public sealed partial class MainWindow
             }catch(Exception e){error.Text=L.Text(e is SafeError s?s.Code:"INVALID_IMPORT");}
         }
         page.SetPageAction(Button("SAVE",Apply,true));
-        panel.Children.Add(Button(original==null?"ADD":"SAVE",Apply,true));
+        var save=Button(original==null?"ADD":"SAVE",Apply,true);
+        // Save stays disabled until the assembled path is actually valid.
+        void SyncSave(){bool ready=selects.Count>=2&&selects.Count==Prefix(selects.Count).Count&&ChainProfiles.Rule(Prefix(selects.Count),complete:true)==null;save.IsEnabled=ready;}
+        selects.ForEach(box=>box.SelectionChanged+=(_,_)=>SyncSave());
+        SyncSave();
+        panel.Children.Add(save);
         page.Content=panel;
         RefreshChoices();
         UpdateAdd();
