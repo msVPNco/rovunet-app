@@ -1,6 +1,6 @@
-# Current Android alpha23 release/code57 — 2026-11-24
+# Current Android alpha23 release/code58 — 2026-11-24
 
-**Alpha23 Full / code57 · public alpha release:** Same package and production signer as alpha22, so it installs as a normal update with profiles and settings kept. R8-minified; smooth scrolling, marquee text back inside its box, and no first-launch language flash. [Release, download and limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) · [Full notes](releases/alpha23.md). No debug AES key is included, so official Free v2 stays disabled until the owner-controlled key broker and final keys exist. Physical-device battery, carrier and Doze measurements were not repeated for this build.
+**Alpha23 Full / code57 · public alpha release:** Same package and production signer as alpha22, so it installs as a normal update with profiles and settings kept. R8-minified; smooth scrolling, marquee text back inside its box, and no first-launch language flash. [Release, download and limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) · [Full notes](releases/alpha23.md). No debug AES key is included, so official Free v2 stays disabled until the owner-controlled key broker and final keys exist. Physical-device battery, carrier and Doze measurements were not repeated for this build.
 
 # Historical Android alpha21/code46 — 2026-11-14
 

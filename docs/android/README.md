@@ -1,6 +1,8 @@
-**Android Release:** [alpha23 Full / code57](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) — Same package and production signer as alpha22, so it installs as a normal update. Smooth scrolling, marquee text back in its boxes and no first-launch language flash. TUIC remains unresolved; see release limitations.
+**Android Release:** [alpha23.1 Full / code58](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) — Same package and production signer as alpha22, so it installs as a normal update. Rovunet free connection enabled, plus a working in-app update prompt. TUIC remains unresolved; see release limitations.
 
 <p align="center"><img src="../../assets/rovunet-logo.png" alt="Rovunet" width="140"></p>
+
+Alpha23.1 Full / code58 adds the Rovunet free connection and the update-path fixes on top of this build: the free catalog now decrypts, the launch check prompts by itself, and Settings can start the download. The AES key ships inside the APK, so anyone with the file can read the catalog links; the catalog expires on 2026-12-23.
 
 Alpha23 Full / code57 replaces alpha22 / code49 on installed devices: same package, same production signer, higher version code, so it arrives as a normal update and keeps profiles and settings. It is minified with R8, which restores the scrolling smoothness of earlier release builds; three code changes also cut per-frame work: live traffic counters moved off the main UI state, the measurement clock left the list's grouping step, and the clock advances only while the list is idle.
 
@@ -13,7 +15,7 @@ This build intentionally carries no debug AES key, so official Free v2 stays dis
 <p align="center"><b>Several routes to your own server, in one Android app</b><br>DNS tunnels, SSH, HTTPS proxies and Xray profiles in named collections, with direct connection and real HTTPS tests.</p>
 
 <p align="center">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk"><img alt="Release" src="https://img.shields.io/badge/Android-alpha23%20Full%20%C2%B7%20code57-0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk"><img alt="Release" src="https://img.shields.io/badge/Android-alpha23.1%20Full%20%C2%B7%20code58-0E7C86"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android%207%2B-14304D">
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -23,7 +25,7 @@ This build intentionally carries no debug AES key, so official Free v2 stays dis
 
 <p align="center"><a href="../../README.md">← All Rovunet apps</a></p>
 
-<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk">Download</a> · 📘 <a href="../guides/Rovunet-App-Guide-EN.pdf">Complete guide (PDF)</a> · <a href="../USER_GUIDE.md">User guide</a> · <a href="https://github.com/msVPNco/rovunet-panel">Server panel</a></p>
+<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk">Download</a> · 📘 <a href="../guides/Rovunet-App-Guide-EN.pdf">Complete guide (PDF)</a> · <a href="../USER_GUIDE.md">User guide</a> · <a href="https://github.com/msVPNco/rovunet-panel">Server panel</a></p>
 
 ---
 
@@ -33,17 +35,17 @@ This is the shared Rovunet app repository for Android, Windows and future macOS 
 
 ## Release status
 
-The current release is **0.3.0-alpha23 Full, version code 57**. It keeps the same package and the [production signing identity](../SIGNING-IDENTITY.md) introduced in alpha14, so it installs over public alpha14 and later, alpha22 included, without uninstalling. Historical alpha11 and private Rovunet Test use different identities. [Download Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) · [Release record](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) · [Current status](../STATUS.md).
+The current release is **0.3.0-alpha23.1 Full, version code 58**. It keeps the same package and the [production signing identity](../SIGNING-IDENTITY.md) introduced in alpha14, so it installs over public alpha14 and later, alpha22 included, without uninstalling. Historical alpha11 and private Rovunet Test use different identities. [Download Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [Release record](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) · [Current status](../STATUS.md).
 
 **Subscriptions:** choose Update on the collection card to update in place; progress blocks repeated clicks and the outcome stays on Home. Existing-profile replacement still requires a disconnected VPN. Names are optional: explicit/saved name, safe provider title, then hostname. `subscription-userinfo` reports upload + download, volume and expiry from the same response; missing fields stay unknown. Provider snapshots show their age and are not independent metering. No additional periodic full-feed downloads are introduced. Panel status retains its separate contract.
 
 **Imports:** supported VLESS/VMess/Trojan `cs` and `fm` are preserved with verified TLS; unsupported masks/scripts/settings are rejected explicitly. Shadowsocks 2022 validates key lengths. Hy2 supports bounded `mport` lists and `hop-interval`. Standard WireGuard sharing URIs and single-peer AmneziaWG `.conf`/supported URI parameters are accepted. AWG runs in a separate authenticated userspace engine; one address per IP family, no scripts, multi-peer or ranged keepalive. Arbitrary core/Mihomo YAML is not executed.
 
-**Direct upgrade for public alpha14–alpha16 (through code32):** download the [Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) and install over the existing app **without uninstalling or clearing data**. The old updater embeds the former repository URL; web redirects cannot repair that check. Package and production signer are unchanged.
+**Direct upgrade for public alpha14–alpha16 (through code32):** download the [Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) and install over the existing app **without uninstalling or clearing data**. The old updater embeds the former repository URL; web redirects cannot repair that check. Package and production signer are unchanged.
 
 ## Quick start
 
-1. **Download** the Full APK from [Releases](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) and install it. Public alpha14 and later install in place, without uninstalling.
+1. **Download** the Full APK from [Releases](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) and install it. Public alpha14 and later install in place, without uninstalling.
 2. **Open** Rovunet, choose language and theme, and grant the Android VPN permission when asked.
 3. **Import**: Subscriptions → paste your HTTPS subscription link → **Import**, or **+ → Import** for a link, QR code or file.
 4. **Connect**: expand the collection, tap a path to select it and tap it again to connect.

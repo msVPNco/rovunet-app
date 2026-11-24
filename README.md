@@ -6,7 +6,7 @@
 <p align="center"><b>Several routes to your own server, on every device</b><br>DNS tunnels, SSH, HTTPS proxies and Xray profiles in named collections, with direct connection and real HTTPS tests.</p>
 
 <p align="center">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk"><img alt="Android release" src="https://img.shields.io/badge/Android-alpha23%20Full%20%C2%B7%20code57-0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk"><img alt="Android release" src="https://img.shields.io/badge/Android-alpha23.1%20Full%20%C2%B7%20code58-0E7C86"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Android%20%C2%B7%20Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-14304D">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -20,20 +20,20 @@
 
 **Rovunet is a family of VPN clients for reaching your own server by several different routes.** It brings DNS tunnels, SSH transports, HTTPS proxies and Xray-backed profiles into one interface. Related paths stay together in named collections: connect a selected path directly, or separately measure HTTPS through the actual tunnel. Every client lives in this one repository; the matching server side is [Rovunet Panel](https://github.com/msVPNco/rovunet-panel).
 
-**Android Release:** [alpha23 Full / code57](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) — Same package and production signer as alpha22, so it installs as a normal update. Smooth scrolling, marquee text back in its boxes and no first-launch language flash. TUIC remains unresolved; see release limitations.
+**Android Release:** [alpha23.1 Full / code58](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) — Same package and production signer as alpha22, so it installs as a normal update. Rovunet free connection enabled, plus a working in-app update prompt. TUIC remains unresolved; see release limitations.
 
 **macOS Beta:** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · compact DNS results and separate quick/HTTPS tests. Apple Silicon installation and owner daily TUN use accepted; **Intel hardware untested**. Local ad hoc signing; no Apple Developer ID or notarization. [Mac guide](docs/macos/README.md).
 
 <a id="apps"></a>
 
-<!-- android-code57-release -->
-**Android code57 · Release:** [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) · [Release / limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57)
+<!-- android-code58-release -->
+**Android code58 · Release:** [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [Release / limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58)
 
 ## Apps
 
 | Platform | Status | Download and details |
 | --- | --- | --- |
-| **Android** | **alpha23 Full / code57 · Release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) · [Android page](docs/android/README.md) |
+| **Android** | **alpha23.1 Full / code58 · Release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [Android page](docs/android/README.md) |
 | **Windows** | **0.1.4 Beta · x64 · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.4-beta/Rovunet-Windows-0.1.4-Beta-x64-Setup.exe) · [Windows page](windows/README.md) |
 | **Linux** | Planned | No release yet |
 | **macOS** | **0.1.8-beta · Apple Silicon / Intel · Pre-release** | [Download](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Mac page](docs/macos/README.md) · Intel: **not tested on physical Intel hardware** |
@@ -55,7 +55,7 @@ Full lists, limits and caveats are on the [Android page](docs/android/README.md)
 
 ## Get started on Android
 
-1. **Download** the Full APK from the [release page](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) and install it. Public alpha14 and later install in place, without uninstalling.
+1. **Download** the Full APK from the [release page](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) and install it. Public alpha14 and later install in place, without uninstalling.
 2. **Open** Rovunet, choose language and theme, and grant the Android VPN permission when asked.
 3. **Import**: Subscriptions → paste your HTTPS subscription link → **Import**, or **+ → Import** for a link, QR code or file.
 4. **Connect**: expand the collection, tap a path to select it and tap it again to connect.

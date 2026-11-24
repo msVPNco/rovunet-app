@@ -1,6 +1,6 @@
 # Rovunet 用户指南 — alpha23
 
-**Alpha23 Full / code57 · public alpha release:** Same package and production signer as alpha22, so it installs as a normal update with profiles and settings kept. R8-minified; smooth scrolling, marquee text back inside its box, and no first-launch language flash. [Release, download and limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) · [Full notes](releases/alpha23.md). No debug AES key is included, so official Free v2 stays disabled until the owner-controlled key broker and final keys exist. Physical-device battery, carrier and Doze measurements were not repeated for this build.
+**Alpha23 Full / code57 · public alpha release:** Same package and production signer as alpha22, so it installs as a normal update with profiles and settings kept. R8-minified; smooth scrolling, marquee text back inside its box, and no first-launch language flash. [Release, download and limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) · [Full notes](releases/alpha23.md). No debug AES key is included, so official Free v2 stays disabled until the owner-controlled key broker and final keys exist. Physical-device battery, carrier and Doze measurements were not repeated for this build.
 
 
 Alpha20 Full / 代码43：三主题、四语言 Rovunet 启动封面，减少配置加载时重复摘要计算，直接获取并解密 Mahsa，隐藏公共来源原始地址，通过活动隧道安全下载更新，可取消且有大小限制的文件导入，红色失败文字和小号英文法律署名。修复辅助引擎 SOCKS 域名长度处理。保留 alpha19 功能，没有新增协议。

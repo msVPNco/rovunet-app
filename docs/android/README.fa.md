@@ -1,6 +1,8 @@
 <div dir="rtl">
 
-**انتشار اندروید:** [آلفا۲۳ Full / کد۵۷](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) — همان بسته و همان امضای تولیدی آلفا۲۲؛ مثل یک به‌روزرسانی عادی روی آن نصب می‌شود. پیمایش روان، بازگشت چرخش متن‌های بلند و رفع پرش صفحهٔ زبان. TUIC هنوز رفع نشده؛ محدودیت‌ها در توضیحات انتشار آمده‌اند.
+**انتشار اندروید:** [آلفا۲۳٫۱ Full / کد۵۸](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) — همان بسته و همان امضای تولیدی آلفا۲۲؛ مثل یک به‌روزرسانی عادی روی آن نصب می‌شود. پیمایش روان، بازگشت چرخش متن‌های بلند و رفع پرش صفحهٔ زبان. TUIC هنوز رفع نشده؛ محدودیت‌ها در توضیحات انتشار آمده‌اند.
+
+آلفا۲۳٫۱ Full، کد ۵۸ روی همین بیلد، اتصال رایگان رووُنت و اصلاح مسیر به‌روزرسانی را اضافه می‌کند: فهرست رایگان باز می‌شود، اعلان به‌روزرسانی خودش می‌آید و تنظیمات می‌تواند دانلود را شروع کند. کلید AES همراه APK است، پس هر کسی این فایل را داشته باشد لینک‌های فهرست را می‌بیند؛ فهرست در ۲۰۲۶-۱۲-۲۳ منقضی می‌شود.
 
 آلفا۲۳ Full، کد ۵۷ جای آلفا۲۲ / کد ۴۹ را روی دستگاه‌های نصب‌شده می‌گیرد: همان بسته، همان امضای تولیدی و کد نسخهٔ بالاتر، پس مثل یک به‌روزرسانی عادی نصب می‌شود و پروفایل‌ها و تنظیمات می‌مانند. با R8 کوچک‌سازی شده و روانی پیمایش بیلدهای release قبلی را برمی‌گرداند؛ سه اصلاح کد هم کار هر فریم را کم کرده: آمار زندهٔ ترافیک از state اصلی جدا شد، زمان اندازه‌گیری از مرحلهٔ گروه‌بندی لیست بیرون رفت و ساعت فقط وقتی لیست ساکن است جلو می‌رود.
 
@@ -15,7 +17,7 @@
 <p align="center"><b>چند مسیر به سرور خودتان، در یک اپ اندروید</b><br>تونل‌های DNS، SSH، پروکسی‌های HTTPS و پروفایل‌های Xray در مجموعه‌های نام‌دار، با اتصال مستقیم و تست واقعی HTTPS.</p>
 
 <p align="center" dir="ltr">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk"><img alt="Release" src="https://img.shields.io/badge/Android-alpha23%20Full%20%C2%B7%20code57-0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk"><img alt="Release" src="https://img.shields.io/badge/Android-alpha23.1%20Full%20%C2%B7%20code58-0E7C86"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Android%207%2B-14304D">
   <a href="../../LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -25,7 +27,7 @@
 
 <p align="center"><a href="../../README.md">→ همهٔ برنامه‌های رووُنت</a></p>
 
-<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk">دانلود</a> · 📘 <a href="../guides/Rovunet-App-Guide-FA.pdf">راهنمای جامع (PDF)</a> · <a href="../USER_GUIDE.md">راهنمای کاربر</a> · <a href="https://github.com/msVPNco/rovunet-panel">پنل سرور</a></p>
+<p align="center">📥 <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk">دانلود</a> · 📘 <a href="../guides/Rovunet-App-Guide-FA.pdf">راهنمای جامع (PDF)</a> · <a href="../USER_GUIDE.md">راهنمای کاربر</a> · <a href="https://github.com/msVPNco/rovunet-panel">پنل سرور</a></p>
 
 ---
 
@@ -35,17 +37,17 @@
 
 ## وضعیت نسخه
 
-نسخهٔ فعلی **آلفا۲۳ Full با کد نسخهٔ ۵۷** است؛ بسته و [امضای تولیدی آلفا۱۴](../SIGNING-IDENTITY.md) را حفظ می‌کند و روی آلفا۱۴ عمومی و پس از آن — از جمله آلفا۲۲ — بدون حذف برنامه نصب می‌شود. آلفا۱۱ تاریخی و بستهٔ خصوصی Rovunet Test هویت متفاوت دارند. [دانلود مستقیم APK کامل](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) · [ثبت انتشار](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) · [وضعیت فعلی](../STATUS.md).
+نسخهٔ فعلی **آلفا۲۳٫۱ Full با کد نسخهٔ ۵۸** است؛ بسته و [امضای تولیدی آلفا۱۴](../SIGNING-IDENTITY.md) را حفظ می‌کند و روی آلفا۱۴ عمومی و پس از آن — از جمله آلفا۲۲ — بدون حذف برنامه نصب می‌شود. آلفا۱۱ تاریخی و بستهٔ خصوصی Rovunet Test هویت متفاوت دارند. [دانلود مستقیم APK کامل](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [ثبت انتشار](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) · [وضعیت فعلی](../STATUS.md).
 
 **اشتراک‌ها:** آپدیت روی کارت، همان‌جا انجام می‌شود؛ پیشرفت جلوی کلیک تکراری را می‌گیرد و نتیجه در صفحهٔ اصلی می‌ماند. جایگزینی پروفایل موجود همچنان به قطع VPN نیاز دارد. نام اختیاری است: نام واردشده یا ذخیره‌شده، سپس عنوان امن ارائه‌دهنده و در نهایت نام میزبان. هدر `subscription-userinfo` مجموع ارسال و دریافت، حجم و انقضا را از همان پاسخ می‌خواند؛ دادهٔ غایب «نامشخص» می‌ماند. سن داده و اعلامی‌بودن آن مشخص است؛ این شمارش مستقل اپ نیست. دانلود دوره‌ای تازه‌ای برای کل اشتراک اضافه نشده است. قرارداد وضعیت پنل جدا حفظ شده است.
 
 **ورودی‌ها:** گزینه‌های سازگار `cs` و `fm` در VLESS/VMess/Trojan با TLS معتبر حفظ می‌شوند؛ ماسک، اسکریپت یا تنظیم ناسازگار صریحاً رد می‌شود. طول کلید Shadowsocks 2022 بررسی می‌شود. Hy2 از فهرست محدود `mport` و `hop-interval` پشتیبانی می‌کند. لینک‌های سازگار WireGuard و فایل `.conf` تک‌همتای AmneziaWG با پارامترهای سازگار وارد می‌شوند. AWG موتور فضای کاربر مستقل با احراز هویت دارد؛ یک آدرس برای هر خانوادهٔ IP؛ اسکریپت، چند همتا و keepalive بازه‌ای پشتیبانی نمی‌شوند. YAML دلخواه هسته/Mihomo اجرا نمی‌شود.
 
-**ارتقای مستقیم برای آلفا۱۴ تا آلفا۱۶ عمومی (تا کد۳۲):** [APK کامل](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) را **بدون حذف اپ یا پاک‌کردن داده‌ها** روی برنامهٔ فعلی نصب کنید. آپدیتر قدیمی نشانی قبلی مخزن را درون خود دارد و تغییر مسیر وب آن بررسی را اصلاح نمی‌کند. بسته و امضای تولیدی ثابت‌اند.
+**ارتقای مستقیم برای آلفا۱۴ تا آلفا۱۶ عمومی (تا کد۳۲):** [APK کامل](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) را **بدون حذف اپ یا پاک‌کردن داده‌ها** روی برنامهٔ فعلی نصب کنید. آپدیتر قدیمی نشانی قبلی مخزن را درون خود دارد و تغییر مسیر وب آن بررسی را اصلاح نمی‌کند. بسته و امضای تولیدی ثابت‌اند.
 
 ## شروع سریع
 
-1. **دانلود**: APK کامل را از [Releases](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) بگیرید و نصب کنید. نسخه‌های عمومی آلفا۱۴ به بعد بدون حذف برنامه روی هم نصب می‌شوند.
+1. **دانلود**: APK کامل را از [Releases](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) بگیرید و نصب کنید. نسخه‌های عمومی آلفا۱۴ به بعد بدون حذف برنامه روی هم نصب می‌شوند.
 2. **باز کردن**: زبان و تم را انتخاب کنید و مجوز VPN اندروید را بدهید.
 3. **ورود کانفیگ**: اشتراک‌ها ← لینک اشتراک HTTPS را بچسبانید ← **ایمپورت**؛ یا **+ ← ورود** برای لینک، QR یا فایل.
 4. **اتصال**: مجموعه را باز کنید، مسیر را یک بار لمس کنید تا انتخاب شود و دوباره لمس کنید تا وصل شود.
