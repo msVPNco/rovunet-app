@@ -80,6 +80,9 @@ public sealed partial class MainWindow
                 var encoder = new System.Windows.Media.Imaging.PngBitmapEncoder(); encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap)); using var file = new FileStream(Path.Combine(Path.GetDirectoryName(Path.GetFullPath(report))!, "ui-fixture-" + theme + ".png"), FileMode.CreateNew); encoder.Save(file);
             }
             SetState(new()); Check("disconnected_clears_ports", httpAddress.Text == "—" && socksAddress.Text == "—" && !copyHttp.IsEnabled && !copySocks.IsEnabled);
+            // The official free source must appear exactly when this build pinned its
+            // trust values, and stay hidden otherwise.
+            Check("public_sources_match_build", PublicFeed.Presets.Any(preset=>preset.Key=="rovunet")==RovunetFreeCatalog.Enabled);
             search.Text = "NO_MATCH_FIXTURE"; Check("search_hides_unmatched", groups.All(g => g.Card.Visibility == Visibility.Collapsed)); search.Clear();
             InteractionSmoke(checks, report);
             NavigationSmoke(checks);

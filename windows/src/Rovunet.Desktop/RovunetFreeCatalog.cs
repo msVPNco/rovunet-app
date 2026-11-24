@@ -46,16 +46,29 @@ internal static class RovunetFreeCatalog
         .GetCustomAttributes<AssemblyMetadataAttribute>()
         .FirstOrDefault(a => a.Key == key)?.Value ?? "";
 
-    /// <summary>Address compiled into this build; empty when the operator did not publish one.</summary>
-    internal static string Url => Metadata("RovunetFreeCatalogAddress").Trim();
+    // Test seam for the offline harnesses that link this file into their own
+    // assembly. The shipped application never assigns these, so its trust
+    // anchor is always the value compiled into the build.
+    internal static string? OverrideAddress;
+    internal static string? OverridePublicKey;
+    internal static string? OverrideAesKey;
 
-    static string PublicKeyText => Metadata("RovunetFreeEd25519PublicKey").Trim();
+    /// <summary>Address compiled into this build; empty when the operator did not publish one.</summary>
+    internal static string Url => (OverrideAddress ?? Metadata("RovunetFreeCatalogAddress")).Trim();
+
+    static string PublicKeyText => (OverridePublicKey ?? Metadata("RovunetFreeEd25519PublicKey")).Trim();
 
     /// <summary>The quick path needs all three pinned values; otherwise it stays hidden.</summary>
     internal static bool Enabled
     {
         get
         {
+            // Debug builds opt in explicitly with RovunetFreeDebug=1, which only the
+            // gitignored local props file sets. A public package therefore cannot
+            // carry the debug catalog keys even if they leak into the environment.
+            if (!string.IsNullOrEmpty(OverrideAesKey))
+                return Url.Length > 0 && PublicKey().Length == 32 && AesKey().Length == 32;
+            if (Metadata("RovunetFreeDebug") != "1") return false;
             try { return Url.Length > 0 && PublicKey().Length == 32 && AesKey().Length == 32; }
             catch { return false; }
         }
@@ -78,7 +91,7 @@ internal static class RovunetFreeCatalog
     {
         try
         {
-            byte[] key = Convert.FromBase64String(Metadata("RovunetFreeAesKey").Trim());
+            byte[] key = Convert.FromBase64String((OverrideAesKey ?? Metadata("RovunetFreeAesKey")).Trim());
             return key.Length == 32 ? key : throw new SafeError("ROVUNET_FREE_UNVERIFIED");
         }
         catch (FormatException) { throw new SafeError("ROVUNET_FREE_UNVERIFIED"); }
@@ -153,8 +166,10 @@ internal static class RovunetFreeCatalog
             if (link != null) links.Add(link);
         }
         if (links.Count == 0) throw new SafeError("ROVUNET_FREE_UNAVAILABLE");
-        links.Sort(StringComparer.Ordinal); // stable order for reproducible previews
-        return new(string.Join('\n', links), payload.Date, "");
+        // Every item in one catalog shares a single 50 GiB donation group, so the
+        // order is shuffled instead of always serving the same path first.
+        var ordered = links.OrderBy(_ => Random.Shared.Next()).ToList();
+        return new(string.Join('\n', ordered), payload.Date, "");
     }
 
     static async Task<HashSet<string>> FetchRevoked(

@@ -14,12 +14,14 @@
 پس‌زمینهٔ گزینه‌های انتخاب‌شده اثر می‌گذارد. هر رنگ یک نقطهٔ رنگی و نام ترجمه‌شده در
 تنظیمات دارد و در حالت کنتراست بالا رنگ سیستم حاکم می‌ماند.
 
-**اتصال رایگان روونت به بخش منابع عمومی آمد.** کلاینت Free v2 دقیقاً با همان قرارداد
+**اتصال رایگان روونت (فقط نسخهٔ Debug).** کلاینت Free v2 دقیقاً با همان قرارداد
 اندروید پیاده شد: امضای Ed25519 روی بایت‌های دقیق کاتالوگ (شامل خط جدید پایانی)،
 پاکت AES-256-GCM با AAD قرارداد، بررسی SHA-256 فایل پاکت، فهرست revoked و انقضای
-۳۰روزه. کلید عمومی و کلید AES در زمان ساخت از بیرون مخزن تزریق می‌شوند و بدون آن‌ها
-این منبع پنهان می‌ماند؛ کاتالوگ دانلودی هرگز نمی‌تواند کلید خودش را جایگزین کند.
-سیزده بررسی قراردادی این مسیر را پوشش می‌دهد.
+۳۰روزه. در آزمون محلی، شش مورد از کاتالوگ آزمایشی هم هش و هم رمزگشایی‌شان درست بود،
+هر شش مسیر وصل شدند و پنج مسیر محتوای HTTPS واقعی را رد کردند. این قابلیت **در
+نسخهٔ عمومی روشن نیست**: کلیدهای آزمایشی بیرون از مخزن می‌مانند و اسکریپت بسته‌بندی
+اگر آن‌ها حاضر باشند از ساخت بستهٔ عمومی امتناع می‌کند. کلید ثابت آزمایشی جای سامانهٔ
+تحویل کلید نهایی را نمی‌گیرد.
 
 **محدودیت‌ها:** نصب‌کننده هنوز امضای Authenticode ندارد، پس SmartScreen ممکن است هشدار
 بدهد. TUN و kill switch مثل قبل در این نسخه فعال نیستند.
@@ -38,13 +40,15 @@ light/dark appeared to work. The chosen accent now travels with the model and
 drives both the accent and the selected-row background; each choice has a colour
 dot and a translated name, and high contrast still wins.
 
-**Rovunet Free is now in Public sources**, using the same Free v2 contract as
-Android: Ed25519 over the exact catalog bytes including the trailing newline,
-AES-256-GCM envelopes with the contract AAD, per-envelope SHA-256, the revoked
-list and the 30-day expiry. The public and AES keys are injected at build time
-from outside the repository; without them the source stays hidden, and a
-downloaded catalog can never supply its own key. Thirteen contract checks cover
-this path.
+**Rovunet Free (debug builds only).** The Free v2 client follows the same
+contract as Android: Ed25519 over the exact catalog bytes including the trailing
+newline, AES-256-GCM envelopes with the contract AAD, per-envelope SHA-256, the
+revoked list and the 30-day expiry. Against the debug catalog, all six items
+matched their hashes and decrypted, all six paths connected, and five carried a
+real HTTPS payload. This is **disabled in the public build**: the debug keys stay
+outside the repository and the packaging script refuses to build a public package
+while they are present. A fixed debug key is not a substitute for the final key
+delivery system.
 
 **Limits:** the installer is not Authenticode-signed, so SmartScreen may warn.
 TUN and the kill switch remain inactive in this consumer beta.

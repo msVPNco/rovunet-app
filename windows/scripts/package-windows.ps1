@@ -16,6 +16,14 @@ $Dotnet = [IO.Path]::GetFullPath($Dotnet)
 $MakeNsis = [IO.Path]::GetFullPath($MakeNsis)
 $EngineDirectory = [IO.Path]::GetFullPath($EngineDirectory)
 if ((& $MakeNsis /VERSION).Trim() -ne 'v3.09') { throw 'Pinned NSIS 3.09 is required.' }
+# A public package must never embed the debug Rovunet Free trust values. They only
+# exist in the gitignored local props file used for owner-side Debug builds.
+$debugFreeProps = Join-Path $sourceRoot 'free-v2.local.props'
+if (Test-Path -LiteralPath $debugFreeProps) {
+  [xml]$debugFree = Get-Content -LiteralPath $debugFreeProps -Raw
+  $debugFreeValues = @($debugFree.Project.PropertyGroup | ForEach-Object { $_.RovunetFreeAesKey; $_.RovunetFreePublicKey; $_.RovunetFreeCatalogAddress }) | Where-Object { $_ }
+  if ($debugFreeValues.Count -gt 0) { throw 'Debug Rovunet Free keys are present; remove free-v2.local.props before a public package.' }
+}
 New-Item -ItemType Directory -Path $outputRoot | Out-Null
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 # Single-file setup publishing adds ILLink dependencies. Restore with the exact
@@ -34,7 +42,7 @@ $commit = $SourceRevision
 $revision = $commit
 $sourceFiles = @(Get-ChildItem -LiteralPath $sourceRoot -Recurse -File | Where-Object {
   $relative = [IO.Path]::GetRelativePath($sourceRoot,$_.FullName)
-  $relative -notmatch '(^|\\)(bin|obj|\.git|artifacts)(\\|$)' -and ($relative -notmatch '^engines\\' -or $relative -in @('engines\pins.json','engines\transports-pins.json','engines\tor-manifest.json','engines\supplemental-pins.json','engines\handshake-pins.json')) -and $relative -notmatch '\.bak-' -and $relative -ne 'SOURCE-SHA256.json'
+  $relative -notmatch '(^|\\)(bin|obj|\.git|artifacts)(\\|$)' -and ($relative -notmatch '^engines\\' -or $relative -in @('engines\pins.json','engines\transports-pins.json','engines\tor-manifest.json','engines\supplemental-pins.json','engines\handshake-pins.json')) -and $relative -notmatch '\.bak-' -and $relative -ne 'SOURCE-SHA256.json' -and $relative -notin @('free-v2.local.props','local.properties') -and $_.Name -notin @('free-v2.local.props','local.properties')
 })
 $sourceManifest = @(foreach ($file in $sourceFiles) { @{ path=[IO.Path]::GetRelativePath($sourceRoot,$file.FullName).Replace('\','/'); sha256=(Get-FileHash -LiteralPath $file.FullName).Hash.ToLowerInvariant(); bytes=$file.Length } })
 $sourceManifest | ConvertTo-Json -Depth 3 | Set-Content (Join-Path $outputRoot 'SOURCE-SHA256.json') -Encoding utf8
