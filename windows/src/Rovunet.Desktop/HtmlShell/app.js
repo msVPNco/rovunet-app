@@ -57,11 +57,15 @@
     const node=el('div','roll '+className);node.dir=dir;node.append(el('span','',text));return node;
   }
   function measureRolls() {
-    app.querySelectorAll('.roll').forEach(node=>{
-      const text=node.firstElementChild;if(!text)return;
-      const excess=Math.max(0,text.scrollWidth-node.clientWidth);
+    // Read every width first, then write: one layout pass instead of one per
+    // label. A collection with many rows used to stall while it opened.
+    const nodes=[...app.querySelectorAll('.roll')];
+    const measured=nodes.map(node=>{const text=node.firstElementChild;if(!text)return null;return [Math.max(0,text.scrollWidth-node.clientWidth),node.dir==='rtl'];});
+    nodes.forEach((node,index)=>{
+      const value=measured[index];if(!value)return;
+      const [excess,rtl]=value;
       node.dataset.overflow=String(excess>2);
-      const rtl=getComputedStyle(node).direction==='rtl';node.style.setProperty('--travel',(rtl?excess:-excess)+'px');
+      node.style.setProperty('--travel',(rtl?-excess:excess)+'px');
     });
     const header=app.querySelector('.topbar');
     if(header){const first=header.querySelector('.top-slot'),last=header.querySelector('.top-slot.end'),flags=header.querySelector('.flags');if(first&&last&&flags)header.classList.toggle('split',header.clientWidth<2*Math.max(first.scrollWidth,last.scrollWidth)+flags.scrollWidth+25);}

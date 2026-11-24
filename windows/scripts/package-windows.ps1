@@ -3,7 +3,11 @@ param(
   [Parameter(Mandatory=$true)][string]$MakeNsis,
   [Parameter(Mandatory=$true)][string]$EngineDirectory,
   [Parameter(Mandatory=$true)][string]$OutputDirectory,
-  [Parameter(Mandatory=$true)][ValidatePattern('^[0-9a-f]{40}$')][string]$SourceRevision
+  [Parameter(Mandatory=$true)][ValidatePattern('^[0-9a-f]{40}$')][string]$SourceRevision,
+  # Owner-only Debug package that carries the Rovunet Free test key. It is never
+  # publishable: the output directory must name a debug folder, and the public
+  # release path below still refuses to run with the key present.
+  [switch]$DebugFree
 )
 $ErrorActionPreference = 'Stop'
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -18,13 +22,20 @@ $EngineDirectory = [IO.Path]::GetFullPath($EngineDirectory)
 if ((& $MakeNsis /VERSION).Trim() -ne 'v3.09') { throw 'Pinned NSIS 3.09 is required.' }
 # A public package must never embed the debug Rovunet Free trust values. They only
 # exist in the gitignored local props file used for owner-side Debug builds.
+$debugFreeBuild = $false
 $debugFreeProps = Join-Path $sourceRoot 'free-v2.local.props'
 if (Test-Path -LiteralPath $debugFreeProps) {
   [xml]$debugFree = Get-Content -LiteralPath $debugFreeProps -Raw
   $debugFreeValues = @($debugFree.Project.PropertyGroup | ForEach-Object { $_.RovunetFreeAesKey; $_.RovunetFreePublicKey; $_.RovunetFreeCatalogAddress }) | Where-Object { $_ }
-  if ($debugFreeValues.Count -gt 0) { throw 'Debug Rovunet Free keys are present; remove free-v2.local.props before a public package.' }
+  if ($debugFreeValues.Count -gt 0) {
+    if (-not $DebugFree) { throw 'Debug Rovunet Free keys are present; remove free-v2.local.props before a public package.' }
+    if ($outputRoot -notmatch '(?i)(^|\\)debug[^\\]*($|\\)') { throw 'A Debug Free package must be written to a folder whose name starts with "debug".' }
+    Write-Warning 'DEBUG FREE BUILD: this installer carries the Rovunet Free test key and must never be published.'
+    $debugFreeBuild = $true
+  }
 }
 New-Item -ItemType Directory -Path $outputRoot | Out-Null
+if ($debugFreeBuild) { Set-Content -LiteralPath (Join-Path $outputRoot 'DEBUG-FREE-BUILD.txt') -Encoding utf8 -Value 'Owner-only Debug build with the Rovunet Free v2 test key. Never publish this package.' }
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 # Single-file setup publishing adds ILLink dependencies. Restore with the exact
 # publish properties before freezing the source/lock files, then never restore

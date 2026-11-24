@@ -16,6 +16,17 @@ public sealed partial class MainWindow
         string? before=data.OpenCollectionId;var old=data.ExpandedCollections;int oldRevision=data.CollectionExpansionRevision;
         data.OpenCollectionId=before==key?null:key;
         data.ExpandedCollections=new(old);NormalizeCollections26();
+        // With the HTML shell visible, paint the new open state first and let the
+        // store write and the native card pass follow: doing both inline made the
+        // card sit frozen halfway while it expanded or collapsed.
+        if(htmlReady29){
+            QueueHtml29();
+            Dispatcher.InvokeAsync(()=>{
+                try{Save();}catch{data.OpenCollectionId=before;data.ExpandedCollections=old;data.CollectionExpansionRevision=oldRevision;QueueHtml29();return;}
+                RefreshCards();QueueHtml29();
+            },System.Windows.Threading.DispatcherPriority.Background);
+            return;
+        }
         try{Save();}catch{data.OpenCollectionId=before;data.ExpandedCollections=old;data.CollectionExpansionRevision=oldRevision;throw;}
         RefreshCards();
     }

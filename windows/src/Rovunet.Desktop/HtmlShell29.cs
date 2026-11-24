@@ -23,6 +23,7 @@ public sealed partial class MainWindow
     sealed record HtmlIdentity29(long Id);
     ContextMenu? htmlPopup29;
     readonly DispatcherTimer htmlPageTimer29=new(){Interval=TimeSpan.FromMilliseconds(500)};
+    readonly DispatcherTimer htmlResize29=new(){Interval=TimeSpan.FromMilliseconds(180)};
     bool WantsHtml29=>!fixtureMode||HtmlFixture29;
     long HtmlId29(FrameworkElement control){long id=htmlIds29.GetValue(control,_=>new(++htmlNextId29)).Id;htmlActions29[id]=control;return id;}
     async Task StartHtml29()
@@ -48,8 +49,12 @@ public sealed partial class MainWindow
             core.WebMessageReceived+=HtmlMessage29;
             core.NavigationCompleted+=(_,e)=>{if(e.IsSuccess){htmlReady29=true;native.Opacity=0;native.IsHitTestVisible=false;MarqueeLine.RefreshAll(native);QueueHtml29();}else if(e.WebErrorStatus!=CoreWebView2WebErrorStatus.OperationCanceled)HtmlFailed29();};
             core.Navigate(HtmlOrigin29+"/index.html");
-            Activated+=(_,_)=>{htmlInactiveSent29=false;htmlPageTimer29.Start();QueueHtml29();};Deactivated+=(_,_)=>{htmlPageTimer29.Stop();QueueHtml29();};StateChanged+=(_,_)=>QueueHtml29();
+            Activated+=(_,_)=>{htmlInactiveSent29=false;htmlPageTimer29.Start();QueueHtml29();};Deactivated+=(_,_)=>{htmlPageTimer29.Stop();QueueHtml29();};
+            // Maximising or restoring fires a burst of StateChanged events; one
+            // model rebuild after the window settles avoids the visible stall.
+            StateChanged+=(_,_)=>{htmlResize29.Stop();htmlResize29.Start();};
             htmlPageTimer29.Tick+=(_,_)=>{if(NavigationDepth>0&&IsActive)QueueHtml29();};if(IsActive)htmlPageTimer29.Start();
+            htmlResize29.Tick+=(_,_)=>{htmlResize29.Stop();QueueHtml29();};
             Closed+=(_,_)=>{htmlPageTimer29.Stop();html29?.Dispose();};
         }catch{HtmlFailed29();}finally{htmlStarting29=false;}
     }
