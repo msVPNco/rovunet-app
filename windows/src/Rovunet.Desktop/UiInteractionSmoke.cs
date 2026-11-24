@@ -7,14 +7,30 @@ namespace Rovunet.Desktop;
 
 public sealed partial class MainWindow
 {
+    // A freshly shown dialog exposes its controls in the logical tree before the
+    // visual tree is built, so fixtures search both and de-duplicate by identity.
     static IEnumerable<T> Visuals<T>(DependencyObject root) where T : DependencyObject
     {
-        for (int i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
+        var seen = new HashSet<DependencyObject>(ReferenceEqualityComparer.Instance);
+        IEnumerable<T> Walk(DependencyObject node)
         {
-            var child = VisualTreeHelper.GetChild(root, i);
-            if (child is T match) yield return match;
-            foreach (var nested in Visuals<T>(child)) yield return nested;
+            // Logical children include non-visuals such as ColumnDefinition, which
+            // has no visual children at all.
+            if (node is Visual)
+                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(node); i++)
+                {
+                    var child = VisualTreeHelper.GetChild(node, i);
+                    if (child is T match && seen.Add(match)) yield return match;
+                    foreach (var nested in Walk(child)) yield return nested;
+                }
+            if (node is not Visual && node is not FrameworkContentElement) yield break;
+            foreach (var child in LogicalTreeHelper.GetChildren(node).OfType<DependencyObject>())
+            {
+                if (child is T match && seen.Add(match)) yield return match;
+                foreach (var nested in Walk(child)) yield return nested;
+            }
         }
+        foreach (var match in Walk(root)) yield return match;
     }
 
     void InteractionSmoke(Dictionary<string, bool> checks, string report)
