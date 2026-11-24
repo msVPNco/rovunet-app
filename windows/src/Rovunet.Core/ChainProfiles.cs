@@ -62,7 +62,6 @@ public static class ChainProfiles
             string kind=kinds[i];if(i>0&&kind is "slipstream")return "CHAIN_SLIP_OUTERMOST";
             string group=kind switch{"sayedns"=>"dnstt","ss"=>"slipstream",_=>kind};
             if(kind is not("ssh" or "socks5")&&!groups.Add(group))return "CHAIN_DUPLICATE_ENGINE";
-            if(ProfileEditing.IsNative(layers[i].Raw)&&Importer.Fields(layers[i].Raw)[34]!="1")return "SHARING_DISABLED";
         }
         return null;
     }

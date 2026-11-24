@@ -22,6 +22,17 @@ AMOLED هیچ رنگی جز پیش‌فرض اثر نداشت. حالا رنگ �
 فعال است و بستهٔ 0.1.7 بدون کلید آزمایشی ساخته شده است؛ اسکریپت بسته‌بندی اگر
 `free-v2.local.props` در درخت باشد از ساخت بستهٔ عمومی امتناع می‌کند.
 
+**باز و بسته کردن منو دیگر هنگ نمی‌کند.** پیش‌تر هر بار باز یا بسته شدن منوی
+کناری کل نما از نو ساخته می‌شد؛ حالا منو لایهٔ مستقل خودش است و فقط همان
+به‌روز می‌شود. حجم و زمان باقی‌مانده روی کارت بسته هم دیده می‌شود و متن‌های
+بلندتر از کادر وقتی حرکت متن در تنظیمات روشن باشد می‌روند.
+
+**زنجیره با هر پروفایل ذخیره‌شده کار می‌کند.** یک شرط اضافی که در اندروید
+وجود ندارد، پروفایل‌هایی را که اشتراک‌گذاری دستگاه‌شان خاموش است از لایه‌های
+زنجیره حذف می‌کرد؛ نتیجه این بود که فهرست لایهٔ دوم خالی می‌ماند. آن شرط
+برداشته شد و اگر برای یک جایگاه واقعاً پروفایل مجازی نباشد، خود ویرایشگر
+توضیح می‌دهد.
+
 **محدودیت‌ها:** نصب‌کننده هنوز امضای Authenticode ندارد، پس SmartScreen ممکن است
 هشدار بدهد. TUN و kill switch مثل قبل در این نسخه فعال نیستند.
 
@@ -48,6 +59,16 @@ with a translated name and a colour dot; high contrast still wins.
 **The public package still has no Free source.** The Rovunet Free v2 client stays
 debug-only, and 0.1.7 is built without the debug key; the packaging script
 refuses to produce a public package while `free-v2.local.props` is in the tree.
+
+**The side menu no longer stutters.** Opening or closing it used to rebuild the
+whole view; the menu is now its own layer and only that layer is redrawn. Usage
+and remaining time show on a collapsed collection card too, and text wider than
+its box scrolls when text motion is enabled in Settings.
+
+**Chains accept every saved profile.** An extra condition that Android does not
+have dropped profiles whose device sharing is off from chain layers, which left
+the second layer list empty; it is gone, and when no profile really fits a
+position the editor now says so.
 
 **Limits:** the installer is not Authenticode-signed, so SmartScreen may warn.
 TUN and the kill switch remain inactive in this consumer beta.

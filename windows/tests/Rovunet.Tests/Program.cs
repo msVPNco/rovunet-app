@@ -372,6 +372,15 @@ Test("chain-xray-cannot-be-a-middle-layer",()=>{
     Reject(()=>ChainProfiles.Validate(new[]{dns,xray,ssh}),"XRAY_CHAIN_REQUIRES_OUTER_SSH");
     Check(ChainProfiles.Appendable(new[]{dns},new[]{xray}).Count==0);
 });
+// Device sharing (field 34) is a bundle/import rule, not a chain rule; Android's
+// ChainValidation never looks at it, so a profile with sharing off must still be
+// offered in the editor instead of leaving the next layer list empty.
+Test("chain-layer-with-device-sharing-off-still-chains",()=>{
+    var f=Fields();f[34]="0";var noShare=Importer.Single(Native(f));var ssh=Importer.Single(sshFixture);var dns=Importer.Single(dnsFixture);
+    Check(Importer.Fields(noShare.Raw)[34]=="0");
+    Check(ChainProfiles.Rule(new[]{noShare,ssh},complete:true)==null);
+    Check(ChainProfiles.Appendable(new[]{noShare},new[]{ssh,dns}).Any(p=>p.Raw==ssh.Raw));
+});
 Test("group-unmeasured-keeps-order-and-is-not-invented-fast",()=>{var a=Importer.Single("socks5://127.0.0.1:1001");var b=Importer.Single("socks5://127.0.0.1:1002");var c=Importer.Single("socks5://127.0.0.1:1003");var plan=new CollectionProbePlan([a,b,c],new Dictionary<string,long>{{c.Id,20}});Check(plan.Direct.SequenceEqual(new[]{c,a,b})&&!plan.NeedsDns(false,0));});
 Test("scanner-multi-dns-preserves-flags-and-other-fields",()=>{var p=Importer.Single(FakeDns("dnstt","tcp"));var prior=Importer.Fields(p.Raw);var changed=ResolverScan.Selected(p,new[]{("127.0.0.1:5353","tcp"),("127.0.0.2:5353","tcp"),("127.0.0.3:5353","tcp")});var next=Importer.Fields(changed.Raw);Check(next[4].Split(',').Length==3&&next[22]=="tcp"&&next.Where((v,i)=>i!=4&&v!=prior[i]).Count()==0&&p.Raw==FakeDns("dnstt","tcp"));});
 Test("scanner-multi-dns-deduplicates",()=>{var p=Importer.Single(FakeDns("dnstt","tcp"));var next=ResolverScan.Selected(p,new[]{("127.0.0.1:5353","tcp"),("127.0.0.1:5353","tcp")});Check(Importer.Fields(next.Raw)[4].Split(',').Length==1);});

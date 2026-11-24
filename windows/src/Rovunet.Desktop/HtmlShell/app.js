@@ -13,6 +13,7 @@
     settings:'M4 6h16 M4 12h16 M4 18h16 M8 3v6 M16 9v6 M10 15v6'
   };
   let model = null, currentPage = '', lastBody = '', lastPopup = '', fieldTimers = new Map();
+  let lastBase = '', popupNode = null, popupSignature = '';
   let hostFocused = false, motion = true;
   const pressedPointers=new Set();let deferredModel=null;
   const send = (command, id = '', value = '') => window.chrome?.webview?.postMessage({command, id:String(id), value:String(value)});
@@ -147,7 +148,9 @@
     const top=el('div','collection-top'),label=el('div','collection-label');label.append(icon('layers'));const identity=el('div','collection-identity');identity.append(roll(group.name,'collection-name'),roll(group.meta,'muted'));label.append(identity);label.addEventListener('click',()=>send('toggle',group.id));top.append(label);
     const actions=el('div','actions');const toggle=button(group.open?data.strings.HIDE_PATHS:data.strings.SHOW_PATHS,()=>send('toggle',group.id),group.open?'up':'down');toggle.setAttribute('aria-expanded',String(group.open));const test=button(group.running?data.strings.STOP_TEST:data.strings.QUICK_PING,()=>send(group.running?'stop':'ping',group.id),group.running?'stop':'check','test-button');test.dataset.test='quick-ping';test.dataset.state=group.running?'stop':'ping';test.disabled=group.stopping||(!group.running&&!group.testEnabled);test.setAttribute('aria-busy',String(group.running));const power=button(group.powerLabel||data.strings.CONNECT,()=>send('group-power',group.id),'power','group-power'+(group.active?' connected':''));power.disabled=group.powerEnabled===false;const more=button(data.strings.MORE,()=>send('group-menu',group.id),'more');actions.append(toggle,test,power,more);top.append(actions);head.append(top);
     if(group.activity){const activity=roll(group.activity.text,'collection-activity');activity.setAttribute('role','status');activity.setAttribute('aria-live','polite');activity.dataset.busy=String(group.activity.running);activity.style.color=group.activity.color;head.append(activity);}else if(group.status)head.append(roll(group.status,'collection-status'));
-    if(group.open&&group.quota){const quota=el('div','quota');quota.append(roll(group.quota.used),roll([group.quota.remaining,group.quota.time,group.quota.note,group.quota.percent].filter(Boolean).join(' · ')));head.append(quota);}
+    // Usage and remaining time belong on the card itself, not only after it is
+    // opened; Android shows them on the collapsed collection too.
+    if(group.quota){const quota=el('div','quota');quota.append(roll(group.quota.used),roll([group.quota.remaining,group.quota.time,group.quota.note,group.quota.percent].filter(Boolean).join(' · ')));head.append(quota);}
     if(group.open&&group.summary&&!group.activity)head.append(roll(group.summary,'summary'));
     if(group.running){const progress=el('progress');progress.max=group.total;progress.value=group.progress;head.append(progress);}section.append(head);
     if(group.open){const profiles=el('div','profiles');group.rows.forEach(item=>profiles.append(profile(item,data)));section.append(profiles);}return section;
@@ -162,7 +165,21 @@
     function append(entries,parent){entries.forEach(item=>{if(item.kind==='separator'){parent.append(el('hr'));return;}if(item.kind!=='item')return;if(item.children.length){const details=el('details');details.append(el('summary','',item.label));const child=el('div');append(item.children,child);details.append(child);parent.append(details);}else{const action=button(item.label,()=>send('native',item.id));action.textContent=(item.selected?'✓  ':'')+item.label;action.disabled=!item.enabled;action.setAttribute('role','menuitem');parent.append(action);}});}
     append(items,menu);shade.append(menu);return shade;
   }
+  // The menu is its own layer. Opening or closing it used to rebuild the whole
+  // shell, cards included, which is what made the drawer stutter on Windows.
+  function syncPopup(data) {
+    const next = data.popup ? JSON.stringify(data.popup) : '';
+    if (next === popupSignature) return;
+    popupSignature = next;
+    if (popupNode) { popupNode.remove(); popupNode = null; }
+    if (data.popup) { popupNode = popup(data.popup, data); document.body.append(popupNode); }
+  }
   function render(data) {
+    // Menus change the popup only. When nothing else moved, redraw just that
+    // layer instead of replacing every card and re-measuring the page.
+    const base = JSON.stringify(data, (key, value) => key === 'popup' ? undefined : value);
+    if (base === lastBase) { model = data; syncPopup(data); return; }
+    lastBase = base;
     const animations=new Map();
     const rollKey=node=>(node.closest('[data-profile]')?.dataset.profile||node.closest('[data-group]')?.dataset.group||node.closest('.hero')&&'hero'||node.closest('.footer')&&'footer'||'page')+':'+node.textContent;
     app.querySelectorAll('.roll').forEach(node=>{const animation=node.firstElementChild?.getAnimations()[0];if(animation)animations.set(rollKey(node),animation.currentTime);});
@@ -174,7 +191,7 @@
       if(data.searchOpen){const query=el('input','query');query.value=data.query;query.placeholder=data.strings.SEARCH;query.dataset.field='query';query.addEventListener('input',()=>send('query','',query.value));query.addEventListener('keydown',event=>{if(event.key==='Enter')send('search');});content.append(query);}
       const home=el('div','home-scroll');home.append(hero(data));data.groups.forEach(group=>home.append(collection(group,data)));if(!data.groups.length){const empty=el('div','empty');empty.append(el('h2','',data.emptyTitle),el('small','',data.emptyHint));home.append(empty);}home.addEventListener('scroll',()=>collapse(home));content.append(home);const add=button(data.strings.ADD,()=>send('add'),'plus','add');add.disabled=data.busy;content.append(add);
     }
-    content.append(footer(data));work.append(content);shell.append(work);if(data.popup)shell.append(popup(data.popup,data));app.replaceChildren(shell);
+    content.append(footer(data));work.append(content);shell.append(work);app.replaceChildren(shell);syncPopup(data);
     const nextHome=app.querySelector('.home-scroll');if(nextHome){nextHome.scrollTop=homeOffset;collapse(nextHome);}const nextPage=app.querySelector('.page-scroll');if(nextPage&&currentPage===data.pageKey)nextPage.scrollTop=pageOffset;currentPage=data.pageKey;
     let replacement=field?app.querySelector('[data-field="'+CSS.escape(field)+'"]'):nativeId?app.querySelector('[data-native="'+CSS.escape(nativeId)+'"]'):null;
     if(replacement&&hostFocused){if(pendingValue!==null)replacement.value=pendingValue;replacement.focus({preventScroll:true});if(Number.isInteger(start)&&replacement.setSelectionRange)try{replacement.setSelectionRange(start,end);}catch{}}

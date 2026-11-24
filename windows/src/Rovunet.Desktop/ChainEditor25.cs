@@ -26,9 +26,11 @@ public sealed partial class MainWindow
         var rows=new StackPanel();
         var preview=Text("",14);      // "VLESS WS → SSH" as it is assembled
         var validity=Text("",13,Red); // why the current chain cannot be saved, or empty
+        var noFit=Text("",13,Muted);  // a position no saved profile can legally fill
         bool refreshing=false;
         Button? add=null;
         panel.Children.Add(rows);
+        panel.Children.Add(noFit);
         panel.Children.Add(preview);
         panel.Children.Add(validity);
 
@@ -54,6 +56,8 @@ public sealed partial class MainWindow
                     box.IsEnabled=allowed.Count>0;
                 }
             }finally{refreshing=false;}
+            var last=selects.Count==0?null:selects[selects.Count-1];
+            noFit.Text=last!=null&&last.Items.Count==0?L.Text("CHAIN_NO_LAYER"):"";
             ShowPath();
             UpdateAdd();
         }
@@ -81,6 +85,9 @@ public sealed partial class MainWindow
             box.SelectedItem=selected;
             RefreshChoices();
             UpdateAdd();
+            // A row added below the fold used to read as "the button did nothing";
+            // bring the new layer into view so its dropdown is right there.
+            box.Dispatcher.BeginInvoke(()=>box.BringIntoView());
         }
 
         if(current.Count>0)foreach(var layer in current)AddLayer(layer);
