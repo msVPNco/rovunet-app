@@ -215,7 +215,10 @@ public partial class App : Application
             if(!Path.IsPathFullyQualified(e.Args[1])||File.Exists(e.Args[1])){Shutdown(12);return;}
             var fixture=new MainWindow(new(){UseSystemProxy=false,IncludeExperimental=true},true);MainWindow=fixture;fixture.Show();bool passed=await fixture.RunDesktop17Smoke(e.Args[1]);fixture.Close();Shutdown(passed?0:1);return;
         }
-        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19045) || !Environment.Is64BitProcess) { Notice("OS_UNSUPPORTED"); Shutdown(1); return; }
+        // Windows 10 1809 (build 17763) is the floor for the bundled .NET 10 runtime.
+        // Alpha builds required build 19045, which refused every Windows 10 before
+        // 22H2 even though nothing in the app needs it.
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763) || !Environment.Is64BitProcess) { Notice("OS_UNSUPPORTED"); Shutdown(1); return; }
         if(e.Args.Length==2 && e.Args[0]=="--ui-trust-telemetry-smoke")
         {
             if(!Path.IsPathFullyQualified(e.Args[1])||File.Exists(e.Args[1])){Shutdown(12);return;}
@@ -314,10 +317,10 @@ public partial class App : Application
         }
         L.Language = data.Language;
         if(firstRun){
-            var chooser=new DialogWindow(null,"Language · زبان · 语言 · Язык",470,300);
-            var choices=new StackPanel{Margin=new(20)};
-            foreach(var (value,title) in new[]{("fa","فارسی"),("en","English"),("ru","Русский"),("zh-CN","简体中文")}){
-                var select=new Button{Content=title};select.Click+=(_,_)=>{data.Language=value;L.Language=value;chooser.DialogResult=true;};choices.Children.Add(select);
+            var chooser=new DialogWindow(null,"Language · زبان · 语言 · Язык",640,700);
+            var choices=new WrapPanel{Margin=new(20)};
+            foreach(var entry in Languages.All){
+                var select=new Button{Content=entry.NativeName,Tag="firstrun:"+entry.Code,Margin=new(0,0,6,6)};select.Click+=(_,_)=>{data.Language=entry.Code;L.Language=entry.Code;chooser.DialogResult=true;};choices.Children.Add(select);
             }
             chooser.Content=choices;if(chooser.ShowDialog()!=true){Shutdown();return;}
             try{PrivateStore.Save("profiles.dpapi",data);}catch{Notice("PRIVATE_STORE_FAILED");Shutdown(1);return;}

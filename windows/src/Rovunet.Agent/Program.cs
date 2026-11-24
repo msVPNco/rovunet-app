@@ -7,7 +7,8 @@ using Rovunet.Core;
 using Rovunet.Agent;
 using Rovunet.Platform;
 
-if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 19045) || !Environment.Is64BitProcess) return 10;
+// Windows 10 1809 (build 17763) is the floor for the bundled .NET 10 runtime.
+if (!OperatingSystem.IsWindowsVersionAtLeast(10, 0, 17763) || !Environment.Is64BitProcess) return 10;
 // Keep all state mutations on this thread, including a thread-affine named Mutex.
 bool probeOnly = args.Length == 4 && args[0] == "--probe-pipe";
 using var mutex = probeOnly ? null : new Mutex(false, @"Global\Rovunet.NetworkOwner." + WindowsIdentity.GetCurrent().User!.Value);

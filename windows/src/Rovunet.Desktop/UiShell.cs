@@ -94,6 +94,27 @@ public sealed partial class MainWindow
     {
         string old=data.Theme;data.Theme=mode;try{Save();}catch{data.Theme=old;throw;}ApplyTheme();Build();
     }
+    // Android offers eight accent colours; the Windows build keeps the same set so
+    // the two clients feel like one product. "default" is the original purple.
+    static readonly (string Value,string Key,string Light,string Dark,string SelectedLight,string SelectedDark)[] Accents27 =
+    [
+        ("default","ACCENT_DEFAULT","#6345AC","#D2C4ED","#DED8EB","#655A7E"),
+        ("teal","ACCENT_TEAL","#0E7C86","#7FE0E8","#CFE8F0","#1E5A63"),
+        ("blue","ACCENT_BLUE","#2563C9","#A8C8FF","#D6E4FB","#24466F"),
+        ("violet","ACCENT_VIOLET","#7B3FBF","#D7B8FF","#E6DAF6","#54376F"),
+        ("rose","ACCENT_ROSE","#B52A6B","#FFBBD4","#F6DCE6","#6E2C46"),
+        ("amber","ACCENT_AMBER","#9A6400","#F3CF7D","#F4E6CB","#5F4A22"),
+        ("green","ACCENT_GREEN","#1E7A46","#A5E5C8","#D5EBDD","#2C5344"),
+        ("slate","ACCENT_SLATE","#4A5A70","#C6D2E2","#E0E6EF","#3C4657")
+    ];
+    static (string Value,string Key,string Light,string Dark,string SelectedLight,string SelectedDark) Accent27(string value) =>
+        Accents27.FirstOrDefault(a=>a.Value==value, Accents27[0]);
+    void SetAccent(string value)
+    {
+        string old=data.AccentColor;data.AccentColor=value;
+        try{Save();}catch{data.AccentColor=old;throw;}
+        ApplyTheme();Build();
+    }
     void ToggleTheme()=>SetTheme(darkTheme?"light":"dark");
     void OnPreferenceChanged(object sender,Microsoft.Win32.UserPreferenceChangedEventArgs args)
     {

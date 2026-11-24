@@ -42,6 +42,21 @@ public sealed partial class MainWindow
             var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
             brush.Freeze(); Application.Current.Resources[key] = brush;
         }
+        // Accent overrides the per-mode defaults; high contrast still wins below.
+        if (!SystemParameters.HighContrast)
+        {
+            var accent = Accent27(data.AccentColor);
+            foreach (var (key, color) in new[]
+            {
+                ("Accent", darkTheme ? accent.Dark : accent.Light),
+                ("Selected", darkTheme ? accent.SelectedDark : accent.SelectedLight),
+                ("Collection", darkTheme ? accent.SelectedDark : accent.SelectedLight)
+            })
+            {
+                var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(color));
+                brush.Freeze(); Application.Current.Resources[key] = brush;
+            }
+        }
         if (SystemParameters.HighContrast)
         {
             foreach (var key in new[] { "PowerSurface", "AddSurface" }) Application.Current.Resources[key] = SystemColors.HighlightBrush;

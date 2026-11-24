@@ -131,6 +131,16 @@ public sealed partial class MainWindow
         foreach (var (value, label) in new[] { ("system", "SYSTEM_THEME"), ("light", "LIGHT_THEME"), ("dark", "DARK_THEME"), ("amoled", "AMOLED_THEME") })
             themes.Children.Add(Button(label, () => { SetTheme(value); close(); }, data.Theme == value));
         appearance.Children.Add(themes);
+        appearance.Children.Add(Text(L.Text("ACCENT_COLOR"),14));
+        var accents=new WrapPanel{Tag="ACCENT_CHOICES"};
+        foreach(var accent in Accents27){
+            var swatch=Button(accent.Key,()=>{SetAccent(accent.Value);close();},data.AccentColor==accent.Value);
+            swatch.Tag="accent:"+accent.Value;
+            swatch.BorderBrush=new System.Windows.Media.SolidColorBrush((System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(accent.Dark));
+            swatch.ToolTip=L.Text(accent.Key);
+            accents.Children.Add(swatch);
+        }
+        appearance.Children.Add(accents);
         appearance.Children.Add(Text(L.Text("TEXT_MOTION"),14));
         var textMotion=new ComboBox{Tag="TEXT_MOTION",ItemsSource=new[]{L.Text("TEXT_MOTION_SYSTEM"),L.Text("TEXT_MOTION_ON"),L.Text("TEXT_MOTION_OFF")},SelectedIndex=data.MarqueeMotion=="on"?1:data.MarqueeMotion=="off"?2:0};
         textMotion.SelectionChanged+=(_,_)=>{

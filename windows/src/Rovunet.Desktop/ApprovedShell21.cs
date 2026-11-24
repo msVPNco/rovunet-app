@@ -40,7 +40,9 @@ public sealed partial class MainWindow
             if (L.Direction == FlowDirection.LeftToRight) { titleWithSidebar.Children.Add(new Border { Width = 222 }); titleWithSidebar.Children.Add(title); leading = titleWithSidebar; trailing = actions; }
             else { titleWithSidebar.Children.Add(title); titleWithSidebar.Children.Add(new Border { Width = 222 }); leading = actions; trailing = titleWithSidebar; }
         }
-        header21 = new() { Leading = leading, Trailing = trailing, Flags = LanguageFlags() }; header21.Initialize();
+        // The language flags were removed from the header; languages now live in the
+        // three-dot menu. A zero-size placeholder keeps the header's centring rule.
+        header21 = new() { Leading = leading, Trailing = trailing, Flags = new Border { Width = 0, Height = 0 } }; header21.Initialize();
         Grid.SetColumnSpan(header21, 2); Panel.SetZIndex(header21, 4); root.Children.Add(header21);
 
         search = new TextBox { Visibility = Visibility.Collapsed, Margin = new(HomeInset21, 0, HomeInset21, 8), MinHeight = 44, VerticalContentAlignment = VerticalAlignment.Center, ToolTip = L.Text("SEARCH") };

@@ -733,5 +733,19 @@
   "CLIPBOARD_EMPTY": "There is no text to paste.",
   "CLIPBOARD_UNAVAILABLE": "The clipboard is unavailable. Try again.",
   "PASTED": "Text pasted.",
-  "PROBE_TLS_STREAM_CLOSED36": "The connection stream closed during the test TLS handshake"
+  "PROBE_TLS_STREAM_CLOSED36": "The connection stream closed during the test TLS handshake",
+  "CHAIN_FILTERED_HINT": "Each layer only lists profiles that are valid at that position, so the chain stays connectable.",
+  "APP_UPDATE_READY_TO_INSTALL": "Download complete and verified. Press Install update to start the installer.",
+  "APP_UPDATE_INSTALL_FAILED": "The installer could not be started. Open the downloaded file manually.",
+  "APP_UPDATE_INSTALL_STARTED": "The installer is starting. Follow its prompts to finish the update.",
+  "APP_UPDATE_INSTALL": "Install update",
+  "ACCENT_ROSE": "Rose",
+  "ACCENT_SLATE": "Slate",
+  "ACCENT_GREEN": "Green",
+  "ACCENT_COLOR": "Accent colour",
+  "ACCENT_DEFAULT": "Purple",
+  "ACCENT_VIOLET": "Violet",
+  "ACCENT_TEAL": "Teal",
+  "ACCENT_BLUE": "Blue",
+  "ACCENT_AMBER": "Amber"
 }

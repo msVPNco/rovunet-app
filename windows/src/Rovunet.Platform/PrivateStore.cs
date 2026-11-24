@@ -96,6 +96,9 @@ public sealed class UserData
     public string DnsPoolList { get; set; } = "";
     public bool DnsPoolVerify { get; set; }
     public string Theme { get; set; } = "system";
+    // Accent colour, matching the Android app's eight choices. Missing in older
+    // stores, so the default keeps the existing purple.
+    public string AccentColor { get; set; } = "default";
     public string MarqueeMotion { get; set; } = "on";
     public Dictionary<string,ScanOptions> ResolverOptions { get; set; } = [];
     public Dictionary<string,ScannerViewOptions> ScannerViews {get;set;}=[];

@@ -86,7 +86,16 @@ public sealed partial class MainWindow
         try{
             switch(command){
                 case "ready":htmlLastModel29="";break;
-                case "language":if(new[]{"fa","en","ru","zh-CN"}.Contains(value)){htmlPopup29=null;ChangeLanguage(value);}break;
+                case "language":if(Languages.IsSupported(value)){htmlPopup29=null;ChangeLanguage(value);}break;
+                case "language-picker":{
+                    var menu=new ContextMenu();
+                    foreach(var entry in Languages.All){
+                        var item=new MenuItem{Header=entry.NativeName+(entry.Code==L.Language?" ✓":""),Tag="language:"+entry.Code};
+                        var code=entry.Code;item.Click+=(_,e)=>{e.Handled=true;htmlPopup29=null;ChangeLanguage(code);};
+                        menu.Items.Add(item);
+                    }
+                    htmlPopup29=HtmlMenu29(menu);
+                }break;
                 case "power":HeroConnect();break;
                 case "search":homeSearchAction30.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));break;
                 case "query":if(value.Length<=2000)search.Text=value;break;

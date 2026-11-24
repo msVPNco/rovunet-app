@@ -351,9 +351,16 @@ public sealed partial class MainWindow : Window
     }
     void LanguageDialog()
     {
-        var d = Dialog("LANGUAGE", 500, 360); var panel = new StackPanel { Margin = new(24) };
-        foreach (var (code, title) in new[] { ("fa", "فارسی"), ("en", "English"), ("zh-CN", "简体中文"), ("ru", "Русский") })
-        { var b = Button("LANGUAGE", () => { L.Language = code; data.Language = code; try { Save(); } catch { lastError = "PRIVATE_STORE_FAILED"; } d.DialogResult = true; Build(); }); b.Content = title; panel.Children.Add(b); }
+        var d = Dialog("LANGUAGE", 520, 620); var panel = new StackPanel { Margin = new(24) };
+        var grid = new WrapPanel();
+        foreach (var entry in Languages.All)
+        {
+            var b = Button("LANGUAGE", () => { L.Language = entry.Code; data.Language = entry.Code; try { Save(); } catch { lastError = "PRIVATE_STORE_FAILED"; } d.DialogResult = true; Build(); });
+            b.Content = entry.NativeName; b.Tag = "language:" + entry.Code; b.Margin = new(0, 0, 6, 6);
+            if (entry.Code == L.Language) b.FontWeight = FontWeights.SemiBold;
+            grid.Children.Add(b);
+        }
+        panel.Children.Add(grid);
         d.Content = panel; d.ShowDialog();
     }
     void Help() => Info("HELP", L.Text("HELP_BODY"));

@@ -7,19 +7,99 @@ public sealed partial class MainWindow
 {
     List<ChainIdentity> ChainIdentityOptions25(Profile p)=>!ChainProfiles.IsChain(p.Raw)?[]:ChainProfiles.Read(p.Raw).Layers.Select(layer=>new ChainIdentity{HostKey=StoredSshKey(layer),SlipCertificate=StoredSlipPin(layer),SshTlsCa=StoredSshTlsCa(layer),SlipInterval=SlipInterval(layer)}).ToList();
     Profile TrustLayer25(Profile p,AgentReply reply)=>ChainProfiles.IsChain(p.Raw)&&reply.ChainLayerIndex>=0?ChainProfiles.Read(p.Raw).Layers[reply.ChainLayerIndex]:p;
+
+    // Stepwise builder: each row lists only profiles that can legally sit at that
+    // position given the rows above it, so an impossible chain cannot be assembled
+    // and the user never meets a save-time rejection after a long selection.
     DialogWindow BuildChainEditor25(Profile? original=null)
     {
-        var page=Dialog("CHAIN_TITLE");var panel=new StackPanel{Margin=new(20)};
-        var name=new TextBox{Text=original?.Name??L.Text("CHAIN_TITLE"),Tag="chain:name"};panel.Children.Add(OutlinedField("PROFILE_NAME",name));panel.Children.Add(Text(L.Text("CHAIN_HINT"),13,Muted));
+        var page=Dialog("CHAIN_TITLE");
+        var panel=new StackPanel{Margin=new(20)};
+        var name=new TextBox{Text=original?.Name??L.Text("CHAIN_TITLE"),Tag="chain:name"};
+        panel.Children.Add(OutlinedField("PROFILE_NAME",name));
+        panel.Children.Add(Text(L.Text("CHAIN_HINT"),13,Muted));
+        panel.Children.Add(Text(L.Text("CHAIN_FILTERED_HINT"),13,Muted));
+
+        var pool=data.Profiles.Where(p=>!ChainProfiles.IsChain(p.Raw)&&p.CanConnect).GroupBy(p=>p.Id).Select(g=>g.First()).ToList();
         var current=original==null?new List<Profile>():ChainProfiles.Read(original.Raw).Layers;
-        var choices=data.Profiles.Where(p=>!ChainProfiles.IsChain(p.Raw)&&p.CanConnect).Concat(current).GroupBy(p=>p.Id).Select(g=>g.First()).ToList();
-        var selects=new List<ComboBox>();var rows=new StackPanel();panel.Children.Add(rows);
-        void AddLayer(Profile? selected=null){if(selects.Count>=4)return;var box=new ComboBox{ItemsSource=choices,DisplayMemberPath="Name",SelectedItem=selected,Tag="chain:layer:"+selects.Count};selects.Add(box);rows.Children.Add(OutlinedField("CHAIN_LAYER",box));}
-        if(current.Count>0)foreach(var layer in current)AddLayer(choices.FirstOrDefault(x=>x.Id==layer.Id));else{AddLayer();AddLayer();}
-        var buttons=new WrapPanel();var add=Button("CHAIN_ADD_LAYER",()=>AddLayer());var remove=Button("CHAIN_REMOVE_LAYER",()=>{if(selects.Count>2){selects.RemoveAt(selects.Count-1);rows.Children.RemoveAt(rows.Children.Count-1);}});buttons.Children.Add(add);buttons.Children.Add(remove);panel.Children.Add(buttons);
+        var selects=new List<ComboBox>();
+        var rows=new StackPanel();
+        bool refreshing=false;
+        Button? add=null;
+        panel.Children.Add(rows);
+
+        List<Profile> Prefix(int count)
+        {
+            var list=new List<Profile>(count);
+            for(int i=0;i<count&&i<selects.Count;i++)if(selects[i].SelectedItem is Profile p)list.Add(p);
+            return list;
+        }
+        void RefreshChoices()
+        {
+            if(refreshing)return;
+            refreshing=true;
+            try{
+                for(int i=0;i<selects.Count;i++){
+                    var box=selects[i];
+                    var keep=box.SelectedItem as Profile;
+                    var allowed=new List<Profile>(ChainProfiles.Appendable(Prefix(i),pool));
+                    if(keep!=null&&!allowed.Contains(keep))allowed.Add(keep); // an already-chosen layer stays visible
+                    box.ItemsSource=allowed;
+                    box.DisplayMemberPath="Name";
+                    box.SelectedItem=keep;
+                    box.IsEnabled=allowed.Count>0;
+                }
+            }finally{refreshing=false;}
+            UpdateAdd();
+        }
+        void UpdateAdd()
+        {
+            if(add==null)return;
+            add.IsEnabled=selects.Count<4&&Prefix(selects.Count).Count==selects.Count&&ChainProfiles.Appendable(Prefix(selects.Count),pool).Count>0;
+        }
+        void AddLayer(Profile? selected=null)
+        {
+            if(selects.Count>=4)return;
+            var box=new ComboBox{Tag="chain:layer:"+selects.Count,MinHeight=44,DisplayMemberPath="Name"};
+            box.SelectionChanged+=(_,_)=>{if(!refreshing)RefreshChoices();};
+            selects.Add(box);
+            rows.Children.Add(OutlinedField("CHAIN_LAYER",box));
+            box.ItemsSource=selected!=null?new List<Profile>(ChainProfiles.Appendable(Prefix(selects.Count-1),pool.Concat(new[]{selected}).Distinct())):new List<Profile>(ChainProfiles.Appendable(Prefix(selects.Count-1),pool));
+            box.SelectedItem=selected;
+            RefreshChoices();
+            UpdateAdd();
+        }
+
+        if(current.Count>0)foreach(var layer in current)AddLayer(layer);
+        else{AddLayer();AddLayer();}
+
+        add=Button("CHAIN_ADD_LAYER",()=>AddLayer());
+        var remove=Button("CHAIN_REMOVE_LAYER",()=>{
+            if(selects.Count<=2)return;
+            selects.RemoveAt(selects.Count-1);
+            rows.Children.RemoveAt(rows.Children.Count-1);
+            RefreshChoices();
+        });
+        var buttons=new WrapPanel();
+        buttons.Children.Add(add);buttons.Children.Add(remove);
+        panel.Children.Add(buttons);
+
         var error=Text("",13,Red);panel.Children.Add(error);
-        void Apply(){try{var layers=selects.Select(b=>b.SelectedItem as Profile??throw new SafeError("SELECT_PATH")).ToList();string raw=ChainProfiles.Create(name.Text,layers);if(original==null)AddLocalProfile25(Importer.Single(raw));else SaveEdited(original,raw);page.DialogResult=true;}catch(Exception e){error.Text=L.Text(e is SafeError s?s.Code:"INVALID_IMPORT");}}
-        page.SetPageAction(Button("SAVE",Apply,true));panel.Children.Add(Button(original==null?"ADD":"SAVE",Apply,true));page.Content=panel;return page;
+        void Apply()
+        {
+            try{
+                var layers=selects.Select(b=>b.SelectedItem as Profile??throw new SafeError("SELECT_PATH")).ToList();
+                string raw=ChainProfiles.Create(name.Text,layers);
+                if(original==null)AddLocalProfile25(Importer.Single(raw));else SaveEdited(original,raw);
+                page.DialogResult=true;
+            }catch(Exception e){error.Text=L.Text(e is SafeError s?s.Code:"INVALID_IMPORT");}
+        }
+        page.SetPageAction(Button("SAVE",Apply,true));
+        panel.Children.Add(Button(original==null?"ADD":"SAVE",Apply,true));
+        page.Content=panel;
+        RefreshChoices();
+        UpdateAdd();
+        return page;
     }
     void PrepareChainCertificates25(Profile p)
     {

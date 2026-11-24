@@ -31,7 +31,7 @@ public sealed partial class MainWindow
     {
         var panel=new StackPanel{Margin=new(18)};
         void Row(string key,Action action,bool enabled=true){var b=Button(key,()=>{close();action();});b.Template=(ControlTemplate)Application.Current.FindResource("MenuRowTemplate");b.Tag=Geometry.Parse(MenuIcon(key));b.Background=Brushes.Transparent;b.HorizontalContentAlignment=HorizontalAlignment.Stretch;b.IsEnabled=enabled;panel.Children.Add(Card(b));}
-        Row("SETTINGS",SettingsDialog);Row("CONNECTION_DETAILS",ConnectionDetails);Row("MANAGE_COLLECTIONS",CollectionManagement);Row("BACKUP_EXPORT",BackupExport);Row("DIAGNOSTICS",ExportDiagnostics);Row("EXIT",()=>_=ExitApplication());return panel;
+        Row("LANGUAGE",LanguageDialog);Row("SETTINGS",SettingsDialog);Row("CONNECTION_DETAILS",ConnectionDetails);Row("MANAGE_COLLECTIONS",CollectionManagement);Row("BACKUP_EXPORT",BackupExport);Row("DIAGNOSTICS",ExportDiagnostics);Row("EXIT",()=>_=ExitApplication());return panel;
     }
     void GeneralPage(){var page=Dialog("SECTION_GENERAL");page.UsePageChrome();page.Content=GeneralMenu(page.Close);page.ShowDialog();}
     void CollectionManagement()

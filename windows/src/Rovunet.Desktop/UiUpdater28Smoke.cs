@@ -56,7 +56,8 @@ public sealed partial class MainWindow
                 checks[id+"_version_runs_keep_english_reading_order"]=Visuals<TextBlock>(page.PageVisual).Single(t=>Equals(t.Tag,"update:release")).FlowDirection==FlowDirection.LeftToRight&&Visuals<TextBlock>(page.PageVisual).Single(t=>Equals(t.Tag,"update:current")).Inlines.OfType<System.Windows.Documents.Run>().Any(r=>r.Text==Version.Split('+')[0]&&r.FlowDirection==FlowDirection.LeftToRight);
                 checks[id+"_download_enabled_only_for_verified_metadata"]=Find("download").IsEnabled;
                 SetState(new(){State="connected",HttpPort=12456,SocksPort=12457});await Complete(Find("download"));
-                checks[id+"_active_tunnel_route_and_download_completed"]=ports.Last()==12456&&Visuals<TextBlock>(page.PageVisual).Single(t=>Equals(t.Tag,"update:status")).Text==L.Text("APP_UPDATE_DOWNLOADED")&&File.ReadAllBytes(destination).SequenceEqual(bytes);
+                checks[id+"_active_tunnel_route_and_download_completed"]=ports.Last()==12456&&Visuals<TextBlock>(page.PageVisual).Single(t=>Equals(t.Tag,"update:status")).Text==L.Text("APP_UPDATE_READY_TO_INSTALL")&&File.ReadAllBytes(destination).SequenceEqual(bytes);
+                checks[id+"_install_offered_after_verified_download"]=Find("install").IsEnabled&&Find("install").Visibility==Visibility.Visible;
                 checks[id+"_all_update_text_localized"]=L.Text("APP_UPDATE_TITLE")!="APP_UPDATE_TITLE"&&Visuals<TextBlock>(page.PageVisual).Any(t=>Equals(t.Tag,"update:integrity-note")&&t.Text==L.Text("APP_UPDATE_INTEGRITY_NOTE"));
                 if(language is "fa" or "en"){await Idle();SavePage((FrameworkElement)Content,Path.Combine(folder,"updater-"+id+".png"));}page.Close();SetState(new());
             }

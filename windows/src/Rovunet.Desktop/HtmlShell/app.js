@@ -121,6 +121,8 @@
   }
   function profile(item,data) {
     const row=el('article','profile'+(item.selected?' selected':'')+(item.active?' active':''));row.dataset.profile=item.id;row.tabIndex=0;row.setAttribute('role','button');row.setAttribute('aria-pressed',String(item.selected));row.addEventListener('click',()=>send('profile',item.id));row.addEventListener('keydown',event=>{if(event.target===row&&['Enter',' '].includes(event.key)){event.preventDefault();send('profile',item.id);}});
+    // Four-step speed stripe on the card edge, matching the Android client's tiers.
+    if(item.speed){const stripe=el('span','speed-stripe');stripe.style.background=item.speed;stripe.setAttribute('aria-hidden','true');row.append(stripe);}
     const copy=el('div','profile-copy');copy.append(roll(item.name,'profile-name'),roll(item.host,'profile-host','ltr'));const info=roll(item.protocol+(item.result?' · '+item.result:''),'profile-result');info.style.color=item.resultColor;copy.append(info);row.append(copy);
     const ping=el('span','ping',item.ping||'—');ping.dir='ltr';ping.style.color=item.pingColor;row.append(ping);
     const actions=el('div','actions');const edit=button(data.strings.EDIT,()=>send('edit',item.id),'edit');edit.disabled=!item.edit;const more=button(data.strings.MORE,()=>send('profile-menu',item.id),'more');const remove=button(data.strings.DELETE,()=>send('delete',item.id),'trash');remove.disabled=!item.delete;actions.append(edit,more,remove);row.append(actions);return row;

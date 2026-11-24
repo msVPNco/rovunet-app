@@ -733,5 +733,19 @@
   "CLIPBOARD_EMPTY": "没有可粘贴的文本。",
   "CLIPBOARD_UNAVAILABLE": "无法访问剪贴板，请重试。",
   "PASTED": "文本已粘贴。",
-  "PROBE_TLS_STREAM_CLOSED36": "测试 TLS 握手期间连接流已关闭"
+  "PROBE_TLS_STREAM_CLOSED36": "测试 TLS 握手期间连接流已关闭",
+  "CHAIN_FILTERED_HINT": "每个层级只列出在该位置有效的配置，因此组合始终可连接。",
+  "APP_UPDATE_READY_TO_INSTALL": "下载已完成并通过校验。请点击“安装更新”。",
+  "APP_UPDATE_INSTALL_FAILED": "无法启动安装程序，请手动运行已下载的文件。",
+  "APP_UPDATE_INSTALL_STARTED": "安装程序正在启动，请按提示完成更新。",
+  "APP_UPDATE_INSTALL": "安装更新",
+  "ACCENT_ROSE": "玫红",
+  "ACCENT_SLATE": "石板灰",
+  "ACCENT_GREEN": "绿色",
+  "ACCENT_COLOR": "强调色",
+  "ACCENT_DEFAULT": "紫色",
+  "ACCENT_VIOLET": "紫罗兰",
+  "ACCENT_TEAL": "青色",
+  "ACCENT_BLUE": "蓝色",
+  "ACCENT_AMBER": "琥珀"
 }

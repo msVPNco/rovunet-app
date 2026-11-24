@@ -23,7 +23,8 @@ public sealed partial class MainWindow
             focused=IsActive&&WindowState!=WindowState.Minimized,motion=data.MarqueeMotion!="off"&&(data.MarqueeMotion=="on"||SystemParameters.ClientAreaAnimation)&&!SystemParameters.HighContrast,
             compact=compactLayout,busy,strings,depth=NavigationDepth,pageKey=NavigationDepth==0?"home":HtmlId29(pageStack[^1].PageVisual).ToString(),
             header=new{leading=HtmlNode29(header21.Leading),trailing=HtmlNode29(header21.Trailing)},
-            flags=new[]{"fa","en","ru","zh-CN"}.Select(code=>new{code,image=HtmlFlag29(code),label=code switch{"fa"=>"فارسی","en"=>"English","ru"=>"Русский",_=>"中文"}}),
+            // Language flags are gone from the view; the three-dot menu offers them.
+            flags=Array.Empty<object>(),
             navigation=sidebarRows20.Select(entry=>new{key=entry.Key,label=L.Text(entry.Key),id=HtmlId29(entry.Value),selected=sidebarRoute20==entry.Key,path=MenuIcon(entry.Key)}),
             hero=new{state=state.State,title=heroTitle.Text,name=heroName21.Text,detail=heroDetail.Text,ping=heroPing.Text,color=HtmlBrush29(heroTitle.Foreground),detailColor=HtmlBrush29(heroDetail.Foreground),enabled=connect.IsEnabled},
             query=search.Text,searchOpen=search.Visibility==Visibility.Visible,searchAction=AutomationProperties.GetItemStatus(homeSearchAction30),
@@ -36,7 +37,7 @@ public sealed partial class MainWindow
                 quota=g.Quota?.Root.Visibility==Visibility.Visible?new{used=g.Quota.Used.Text,remaining=g.Quota.Remaining.Text,time=g.Quota.Time.Text,note=g.Quota.Note.Visibility==Visibility.Visible?g.Quota.Note.Text:"",percent=g.Quota.Percent.Text}:null,
                 running=collectionRuns.GetValueOrDefault(g.Key)?.Running==true,stopping=testStop?.IsCancellationRequested==true,progress=g.Progress.Value,total=g.Progress.Maximum,testEnabled=g.Test.IsEnabled,
                 rows=data.OpenCollectionId==g.Key?g.Paths.Children.OfType<Border>().Select(tile=>rows.FirstOrDefault(r=>ReferenceEquals(r.Tile,tile))).Where(r=>r!=null&&r.Tile.Visibility==Visibility.Visible).Select(r=>new{
-                    id=r!.Profile.Id,name=r.Profile.Name,host=ProfileHost(r.Profile),protocol=r.Protocol.Text,result=r.Result.Visibility==Visibility.Visible?r.Result.Text:"",resultColor=HtmlBrush29(r.Result.Foreground),ping=r.Timing.Visibility==Visibility.Visible?r.Timing.Text:"",pingColor=HtmlBrush29(r.Timing.Foreground),selected=r.Profile.Id==data.SelectedId,active=state.State=="connected"&&r.Profile.Id==activeProfile?.Id,edit=r.Edit.IsEnabled,delete=r.Delete.IsEnabled
+                    id=r!.Profile.Id,name=r.Profile.Name,host=ProfileHost(r.Profile),protocol=r.Protocol.Text,result=r.Result.Visibility==Visibility.Visible?r.Result.Text:"",resultColor=HtmlBrush29(r.Result.Foreground),ping=r.Timing.Visibility==Visibility.Visible?r.Timing.Text:"",pingColor=HtmlBrush29(r.Timing.Foreground),selected=r.Profile.Id==data.SelectedId,active=state.State=="connected"&&r.Profile.Id==activeProfile?.Id,edit=r.Edit.IsEnabled,delete=r.Delete.IsEnabled,speed=SpeedTier27.Color(r.Profile)
                 }).Cast<object>().ToArray():[]
             }),
             page=NavigationDepth==0?null:HtmlNode29(pageStack[^1].PageVisual),

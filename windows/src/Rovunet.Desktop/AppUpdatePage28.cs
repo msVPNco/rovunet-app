@@ -16,30 +16,47 @@ public sealed partial class MainWindow
         var saved=Text("",13,Muted);saved.FlowDirection=FlowDirection.LeftToRight;saved.Tag="update:saved";var actions=new WrapPanel();
         AppUpdate28? candidate=null;CancellationTokenSource? operation=null;bool running=false,checkedOnce=false;string statusKey="APP_UPDATE_READY",savedPath="";Brush statusInk=Muted;
         var check=Button("APP_UPDATE_CHECK",()=>{},true);check.Tag="update:check";var download=Button("APP_UPDATE_DOWNLOAD",()=>{},true);download.Tag="update:download";
+        var install=Button("APP_UPDATE_INSTALL",()=>{},true);install.Tag="update:install";
         var cancel=Button("CANCEL",()=>operation?.Cancel());cancel.Tag="update:cancel";
         int Route()=>state.State=="connected"?(state.HttpPort is >0 and <=65535?state.HttpPort:throw new SafeError("APP_UPDATE_ROUTE_CHANGED")):0;
         void Render(){
             page.SetPageTitle(L.Text("APP_UPDATE_TITLE"));current.Inlines.Clear();current.Inlines.Add(new System.Windows.Documents.Run(L.Text("APP_UPDATE_CURRENT")+" · "));current.Inlines.Add(new System.Windows.Documents.Run(Version.Split('+')[0]){FlowDirection=FlowDirection.LeftToRight});route.Text=L.Text(state.State=="connected"?"APP_UPDATE_VIA_TUNNEL":"APP_UPDATE_DIRECT");
             release.TextAlignment=L.Direction==FlowDirection.RightToLeft?TextAlignment.Right:TextAlignment.Left;
             status.Text=L.Text(statusKey);status.Foreground=statusInk;release.Text=candidate==null?"":"Rovunet Windows "+candidate.Version+" · x64";info.Text=L.Text("APP_UPDATE_INTEGRITY_NOTE");saved.Text=savedPath;
-            check.Content=L.Text(checkedOnce?"APP_UPDATE_RETRY":"APP_UPDATE_CHECK");download.Content=L.Text("APP_UPDATE_DOWNLOAD");cancel.Content=L.Text("CANCEL");
-            check.IsEnabled=!running;download.IsEnabled=!running&&candidate!=null;download.Visibility=candidate==null?Visibility.Collapsed:Visibility.Visible;cancel.Visibility=running?Visibility.Visible:Visibility.Collapsed;
+            check.Content=L.Text(checkedOnce?"APP_UPDATE_RETRY":"APP_UPDATE_CHECK");download.Content=L.Text("APP_UPDATE_DOWNLOAD");install.Content=L.Text("APP_UPDATE_INSTALL");cancel.Content=L.Text("CANCEL");
+            check.IsEnabled=!running;download.IsEnabled=!running&&candidate!=null;download.Visibility=candidate==null?Visibility.Collapsed:Visibility.Visible;
+            // A verified download can be launched straight from here; the installer still
+            // asks for its own elevation and shows its own progress.
+            install.IsEnabled=!running&&savedPath.Length>0;install.Visibility=savedPath.Length>0?Visibility.Visible:Visibility.Collapsed;
+            cancel.Visibility=running?Visibility.Visible:Visibility.Collapsed;
+        }
+        void LaunchInstall(){
+            try{
+                if(savedPath.Length==0||!System.IO.File.Exists(savedPath)){statusKey="APP_UPDATE_INTEGRITY_FAILED";statusInk=Red;Render();return;}
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(savedPath){UseShellExecute=true});
+                statusKey="APP_UPDATE_INSTALL_STARTED";statusInk=Green;Render();
+            }catch{statusKey="APP_UPDATE_INSTALL_FAILED";statusInk=Red;Render();}
         }
         async Task Run(bool fetching){
             if(running||fetching&&candidate==null)return;string? destination=null;
-            if(fetching){if(pick!=null)destination=pick(candidate!);else{var picker=new SaveFileDialog{FileName=candidate!.Name,Filter="Windows installer|*.exe",OverwritePrompt=true};if(picker.ShowDialog(page.NativeOwner)==true)destination=picker.FileName;}if(destination==null)return;}
+            if(fetching){
+                // Keep a stable, predictable file name next to the app so the Install
+                // button works without a second dialog for users who just want to update.
+                destination=pick!=null?pick(candidate!):System.IO.Path.Combine(System.IO.Path.GetTempPath(),candidate!.Name);
+                if(destination==null)return;
+            }
             var lease=routeGeneration.Capture();operation=CancellationTokenSource.CreateLinkedTokenSource(lease.Cancelled);var stop=operation.Token;int port=0;
             if(!fetching)candidate=null;
             running=true;statusKey=fetching?"APP_UPDATE_DOWNLOADING":"APP_UPDATE_CHECKING";statusInk=Muted;progress.Visibility=Visibility.Visible;progress.IsIndeterminate=!fetching;progress.Value=0;Render();
             try{
                 port=Route();
-                if(fetching){await service.Download(candidate!,port,destination!,new Progress<double>(value=>{progress.Value=value;}),stop,commit=>routeGeneration.Commit(lease,commit));savedPath=destination!;statusKey="APP_UPDATE_DOWNLOADED";statusInk=Green;}
+                if(fetching){await service.Download(candidate!,port,destination!,new Progress<double>(value=>{progress.Value=value;}),stop,commit=>routeGeneration.Commit(lease,commit));savedPath=destination!;statusKey="APP_UPDATE_READY_TO_INSTALL";statusInk=Green;}
                 else{var received=await service.Check(Version,port,stop);routeGeneration.Commit(lease,()=>candidate=received);checkedOnce=true;statusKey=candidate==null?"APP_UPDATE_CURRENT_OK":"APP_UPDATE_AVAILABLE";statusInk=candidate==null?Green:Accent;}
             }catch(Exception ex){statusKey=!routeGeneration.IsCurrent(lease)?"APP_UPDATE_ROUTE_CHANGED":ex is SafeError safe?safe.Code:ex is OperationCanceledException?"CANCELLED":"APP_UPDATE_NETWORK_FAILED";statusInk=statusKey=="CANCELLED"?Muted:Red;checkedOnce=true;}
             finally{running=false;operation.Dispose();operation=null;progress.Visibility=Visibility.Collapsed;Render();}
         }
-        check.Click+=async(_,_)=>await Run(false);download.Click+=async(_,_)=>await Run(true);
-        actions.Children.Add(check);actions.Children.Add(download);actions.Children.Add(cancel);panel.Children.Add(current);panel.Children.Add(route);panel.Children.Add(release);panel.Children.Add(status);panel.Children.Add(progress);panel.Children.Add(actions);panel.Children.Add(info);panel.Children.Add(saved);page.Content=panel;
+        check.Click+=async(_,_)=>await Run(false);download.Click+=async(_,_)=>await Run(true);install.Click+=(_,_)=>LaunchInstall();
+        actions.Children.Add(check);actions.Children.Add(download);actions.Children.Add(install);actions.Children.Add(cancel);panel.Children.Add(current);panel.Children.Add(route);panel.Children.Add(release);panel.Children.Add(status);panel.Children.Add(progress);panel.Children.Add(actions);panel.Children.Add(info);panel.Children.Add(saved);page.Content=panel;
         page.RelocalizePage=Render;page.Closed+=(_,_)=>operation?.Cancel();if(checkOnOpen)page.Loaded+=async(_,_)=>await Run(false);Render();return page;
     }
 }

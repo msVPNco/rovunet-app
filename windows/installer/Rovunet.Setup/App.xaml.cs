@@ -12,7 +12,8 @@ public partial class App : Application
     protected override async void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
-        if (!OperatingSystem.IsWindowsVersionAtLeast(10,0,19045) || !Environment.Is64BitProcess) { Shutdown(30);return; }
+        // Windows 10 1809 (build 17763) is the floor for the bundled .NET 10 runtime.
+        if (!OperatingSystem.IsWindowsVersionAtLeast(10,0,17763) || !Environment.Is64BitProcess) { Shutdown(30);return; }
         // Elevated helper only installs the embedded payload; never loads or launches user profiles.
         if(e.Args is ["--install-elevated",var target,var desktop,var test])
         {

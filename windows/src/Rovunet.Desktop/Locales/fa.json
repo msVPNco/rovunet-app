@@ -733,5 +733,19 @@
   "CLIPBOARD_EMPTY": "متنی برای چسباندن وجود ندارد.",
   "CLIPBOARD_UNAVAILABLE": "دسترسی به کلیپ‌بورد ممکن نیست؛ دوباره تلاش کنید.",
   "PASTED": "متن چسبانده شد.",
-  "PROBE_TLS_STREAM_CLOSED36": "جریان ارتباط هنگام دست‌دهی TLS آزمون قطع شد"
+  "PROBE_TLS_STREAM_CLOSED36": "جریان ارتباط هنگام دست‌دهی TLS آزمون قطع شد",
+  "CHAIN_FILTERED_HINT": "هر لایه فقط پروفایل‌هایی را نشان می‌دهد که در همان جایگاه مجازند، پس زنجیره قابل اتصال می‌ماند.",
+  "APP_UPDATE_READY_TO_INSTALL": "دانلود کامل و تأیید شد. دکمهٔ «نصب به‌روزرسانی» را بزنید.",
+  "APP_UPDATE_INSTALL_FAILED": "نصب‌کننده باز نشد. فایل دانلودشده را دستی اجرا کنید.",
+  "APP_UPDATE_INSTALL_STARTED": "نصب‌کننده در حال باز شدن است؛ مراحلش را ادامه دهید.",
+  "APP_UPDATE_INSTALL": "نصب به‌روزرسانی",
+  "ACCENT_ROSE": "گلی",
+  "ACCENT_SLATE": "سرمه‌ای",
+  "ACCENT_GREEN": "سبز",
+  "ACCENT_COLOR": "رنگ لهجه",
+  "ACCENT_DEFAULT": "بنفش",
+  "ACCENT_VIOLET": "ارغوانی",
+  "ACCENT_TEAL": "فیروزه‌ای",
+  "ACCENT_BLUE": "آبی",
+  "ACCENT_AMBER": "کهربایی"
 }
