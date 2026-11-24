@@ -1,6 +1,6 @@
-# Руководство Rovunet — alpha20
+# Руководство Rovunet — alpha23
 
-**Alpha21 Full / code46 · public alpha release:** Account/source binding and revision high-water, independent private/advisory cache, additive Room50→51, partial metadata without invented usage and diagnostic ownership. [Release, source and limitations](releases/alpha21.md). Same production signer; install over the app without uninstall/clear-data. Seven Room methods and174 JVM tests passed; real main-upgrade/Keystore and device/network/Doze gates remain open. This alpha release is not Latest; alpha20 is retained.
+**Alpha23 Full / code57 · public alpha release:** Same package and production signer as alpha22, so it installs as a normal update with profiles and settings kept. R8-minified; smooth scrolling, marquee text back inside its box, and no first-launch language flash. [Release, download and limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57). No debug AES key is included, so official Free v2 stays disabled until the owner-controlled key broker and final keys exist. Physical-device battery, carrier and Doze measurements were not repeated for this build.
 
 
 Alpha20 Full / код43: фирменный стартовый экран Rovunet в трёх темах и четырёх языках, меньше лишних вычислений при загрузке профилей, прямое получение зашифрованной Mahsa, скрытые URL публичных источников, безопасное обновление через активный туннель, ограниченный отменяемый импорт файлов, красные ошибки и небольшой английский текст лицензий. Исправлена обработка длины домена SOCKS вспомогательного движка. Возможности alpha19 сохранены; новых протоколов нет.

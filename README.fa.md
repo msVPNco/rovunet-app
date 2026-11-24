@@ -8,7 +8,7 @@
 <p align="center"><b>چند مسیر به سرور خودتان، روی هر دستگاه</b><br>تونل‌های DNS، SSH، پروکسی‌های HTTPS و پروفایل‌های Xray در مجموعه‌های نام‌دار، با اتصال مستقیم و تست واقعی HTTPS.</p>
 
 <p align="center" dir="ltr">
-  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk"><img alt="Android release" src="https://img.shields.io/badge/Android-alpha22%20Full%20%C2%B7%20code50-0E7C86"></a>
+  <a href="https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk"><img alt="Android release" src="https://img.shields.io/badge/Android-alpha23%20Full%20%C2%B7%20code57-0E7C86"></a>
   <img alt="Platforms" src="https://img.shields.io/badge/platforms-Android%20%C2%B7%20Windows%20%C2%B7%20Linux%20%C2%B7%20macOS-14304D">
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-6D4AFF"></a>
   <a href="https://t.me/RovunetVPN"><img alt="Telegram" src="https://img.shields.io/badge/Telegram-RovunetVPN-2F6FEB?logo=telegram&logoColor=white"></a>
@@ -22,20 +22,20 @@
 
 **رووُنت مجموعه‌ای از کلاینت‌های VPN برای دسترسی به سرور شخصی از چند مسیر متفاوت است.** تونل‌های DNS، روش‌های اتصال SSH، پراکسی‌های HTTPS و کانفیگ‌های مبتنی بر Xray را در یک رابط جمع می‌کند. مسیرهای مرتبط در مجموعه‌های نام‌دار کنار هم می‌مانند؛ مسیر دلخواه را مستقیم وصل کنید یا جداگانه HTTPS را از داخل تونل اندازه بگیرید. همهٔ کلاینت‌ها در همین یک مخزن‌اند و سمت سرور آن [پنل رووُنت](https://github.com/msVPNco/rovunet-panel) است.
 
-**انتشار اندروید:** [آلفا۲۲ Full / کد۵۰](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) — با همان امضای تولیدی قبلی و اصلاح تست HTTPS واقعی. TUIC هنوز رفع نشده؛ محدودیت‌ها در توضیحات انتشار آمده‌اند.
+**انتشار اندروید:** [آلفا۲۳ Full / کد۵۷](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57) — همان بسته و همان امضای تولیدی آلفا۲۲؛ مثل یک به‌روزرسانی عادی روی آن نصب می‌شود. پیمایش روان، بازگشت چرخش متن‌های بلند و رفع پرش صفحهٔ زبان. TUIC هنوز رفع نشده؛ محدودیت‌ها در توضیحات انتشار آمده‌اند.
 
 **نسخهٔ بتای مک:** [۰٫۱٫۸ بتا](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15 و بالاتر · نتایج جمع‌وجور DNS و تست سریع/HTTPS جدا. نصب Apple Silicon و استفادهٔ روزمرهٔ TUN تأیید شده؛ **اینتل روی سخت‌افزار واقعی تست نشده**. امضای محلی ad hoc، بدون Developer ID و notarization اپل. [راهنمای مک](docs/macos/README.fa.md).
 
 <a id="apps"></a>
 
-<!-- android-code50-release -->
-**Android code50 · Release:** [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) · [Release / limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha22-code50) · [Source](https://github.com/msVPNco/rovunet-app/tree/0c107ddd49ade077770ee86b0493f81181e8a202)
+<!-- android-code57-release -->
+**Android code57 · Release:** [Signed Full APK](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) · [Release / limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57)
 
 ## برنامه‌ها
 
 | پلتفرم | وضعیت | دانلود و جزئیات |
 | --- | --- | --- |
-| **اندروید** | **آلفا۲۲ Full / کد۵۰ · Release** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) · [صفحهٔ اندروید](docs/android/README.fa.md) |
+| **اندروید** | **آلفا۲۳ Full / کد۵۷ · Release** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) · [صفحهٔ اندروید](docs/android/README.fa.md) |
 | **ویندوز** | **0.1.4 Beta · نسخهٔ x64 · پیش‌انتشار** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.4-beta/Rovunet-Windows-0.1.4-Beta-x64-Setup.exe) · [صفحهٔ ویندوز](windows/README.md) |
 | **لینوکس** | برنامه‌ریزی‌شده | هنوز انتشاری ندارد |
 | **مک** | **0.1.8-beta · Apple Silicon / Intel · پری‌ریلیز** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [صفحهٔ مک](docs/macos/README.fa.md) · Intel: **روی مک اینتل واقعی تست نشده** |
@@ -57,7 +57,7 @@
 
 ## شروع سریع در اندروید
 
-1. **دانلود**: APK کامل را از [صفحهٔ انتشار](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha22-code50/Rovunet-v0.3.0-alpha22-code50-Full.apk) بگیرید و نصب کنید. نسخه‌های عمومی آلفا۱۴ به بعد بدون حذف برنامه روی هم نصب می‌شوند.
+1. **دانلود**: APK کامل را از [صفحهٔ انتشار](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23-code57/Rovunet-v0.3.0-alpha23-code57-Full.apk) بگیرید و نصب کنید. نسخه‌های عمومی آلفا۱۴ به بعد بدون حذف برنامه روی هم نصب می‌شوند.
 2. **باز کردن**: زبان و تم را انتخاب کنید و مجوز VPN اندروید را بدهید.
 3. **ورود کانفیگ**: اشتراک‌ها ← لینک اشتراک HTTPS را بچسبانید ← **ایمپورت**؛ یا **+ ← ورود** برای لینک، QR یا فایل.
 4. **اتصال**: مجموعه را باز کنید، مسیر را یک بار لمس کنید تا انتخاب شود و دوباره لمس کنید تا وصل شود.

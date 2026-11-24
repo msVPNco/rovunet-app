@@ -1,6 +1,6 @@
-# Rovunet user guide — alpha20 / راهنمای کاربر
+# Rovunet user guide — alpha23 / راهنمای کاربر
 
-**Alpha21 Full / code46 · public alpha release:** Account/source binding and revision high-water, independent private/advisory cache, additive Room50→51, partial metadata without invented usage and diagnostic ownership. [Release, source and limitations](releases/alpha21.md). Same production signer; install over the app without uninstall/clear-data. Seven Room methods and174 JVM tests passed; real main-upgrade/Keystore and device/network/Doze gates remain open. This alpha release is not Latest; alpha20 is retained.
+**Alpha23 Full / code57 · public alpha release:** Same package and production signer as alpha22, so it installs as a normal update with profiles and settings kept. R8-minified; smooth scrolling, marquee text back inside its box, and no first-launch language flash. [Release, download and limitations](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23-code57). No debug AES key is included, so official Free v2 stays disabled until the owner-controlled key broker and final keys exist. Physical-device battery, carrier and Doze measurements were not repeated for this build.
 
 
 **Alpha20:** Import refreshes an existing URL without deleting its source. Direct success finishes collection tests without a DNS prompt; resolver fallback requires failure and consent. Long labels move inside fixed single-line bounds. AnyTLS, TUIC v5 and single-binding Mieru `mierus://` have import, manual and runtime support. Unsupported effective settings are rejected explicitly. [Details](releases/alpha20.md).
