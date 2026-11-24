@@ -273,7 +273,7 @@
   "SCAN_NEEDS_PROFILE": "استورد ملفًا شخصيًا من DNSTT أو NoizDNS أو Soar أو Slipstream أو VayDNS، ثم افتح أداة البحث عن المُحلِّلات من قائمته.",
   "DNS_SCAN_INVALID": "تحقق من إعدادات الفحص. العمال 1–50، المحاولات 1–30، الحد حتى عدد المحاولات، حجم الاستجابة 0 أو 200–4096.",
   "INVALID_RANGE": "أدخل شبكة IPv4 CIDR صالحة واحدة أو أكثر.",
-  "PRISM_FAILED": "لم يُبلغ حد Prism",
+  "PRISM_FAILED": "لم يتم بلوغ حد Prism",
   "HANDSHAKE_OK": "تم التحقق من مصافحة النفق",
   "SSH_OK": "تم التحقق من هوية SSH وتسجيل الدخول",
   "TEST_QUEUED": "في قائمة الانتظار لـ HTTPS",

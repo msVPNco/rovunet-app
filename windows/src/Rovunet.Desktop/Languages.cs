@@ -30,7 +30,9 @@ public static class Languages
         new("th","ไทย",FlowDirection.LeftToRight,"Leelawadee UI")
     ];
 
-    public static IReadOnlyList<Entry> All => entries;
+    // Only languages with a complete locale file are offered, so nothing in the picker
+    // silently falls back to English. Adding a Locales/<code>.json makes it appear here.
+    public static IReadOnlyList<Entry> All => entries.Where(e => L.Has(e.Code)).ToArray();
     public static IReadOnlyList<string> Codes => entries.Select(e => e.Code).ToArray();
     public static bool IsSupported(string code) => entries.Any(e => e.Code == code);
     public static Entry Get(string code) => entries.FirstOrDefault(e => e.Code == code) ?? entries[1];
