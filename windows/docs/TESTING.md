@@ -1,3 +1,15 @@
+# 0.1.5 candidate checks
+
+Before packaging this candidate, 393 portable-domain, 60 protocol25-domain, 8
+signed-catalog, 34 windows-amnezia-domain and 25 protocol25-runtime cases passed
+on Windows 10.0.26300, and the offline `--ui-smoke` fixture passed every check
+after its palette, gradient power-button contrast and menu-row expectations were
+brought in line with the approved 0.1.5 design. Sixteen locale files were
+verified to hold the same 749 keys in the same order. Remote UDP, remote HTTPS,
+installation, TUN and public certification are not claimed here.
+
+--- Previous stage ---
+
 # MAINT36 development checks
 
 See [MAINT36](MAINT36.md) for393 portable cases, Local UI146 checks/96 pointer

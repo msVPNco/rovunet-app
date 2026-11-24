@@ -1,3 +1,15 @@
+# Windows 0.1.5 Beta prerelease
+
+This release was built for owner testing and is published as a prerelease. It
+changes the UI and the update path from 0.1.4: the chain builder is stepwise,
+the update page installs the verified installer, eight accent colours and
+sixteen complete languages are available from the three-dot menu, the header
+flags are gone, paths carry a speed stripe, and the version floor is build
+17763 (Windows 10 1809) in the app, agent and installer. TUIC and US WireGuard
+live data acceptance remains unresolved; no all-provider or TUN pass is claimed.
+
+--- 0.1.4 evidence ---
+
 # Windows 0.1.4 Beta prerelease
 
 The owner accepted the MAINT36 preview.9 application tests and authorized the
