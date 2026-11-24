@@ -15,9 +15,14 @@
 سرمه‌ای. از تنظیمات ← نمایش.
 
 **زبان‌ها از منوی سه‌نقطه.** پرچم‌ها از نوار بالا برداشته شدند و فهرست زبان‌ها به منوی
-سه‌نقطه رفت. زبان‌های فعلی: فارسی، انگلیسی، روسی، چینی، عربی، ترکی، اردو، اسپانیایی و
-فرانسوی. زبان‌هایی که فایل ترجمهٔ کامل ندارند در فهرست نمایش داده نمی‌شوند تا هیچ‌جا
-متن انگلیسیِ ناخواسته ظاهر نشود.
+سه‌نقطه رفت. شانزده زبان مثل اندروید اضافه شد: فارسی، انگلیسی، روسی، چینی، عربی، ترکی،
+اردو، هندی، بنگالی، اسپانیایی، فرانسوی، پرتغالی، ویتنامی، اندونزیایی، تایلندی و برمه‌ای.
+هر زبان یک فایل ترجمهٔ کامل ۷۴۹ کلیدی دارد و فقط زبان‌هایی که فایل کامل دارند در فهرست
+نمایش داده می‌شوند.
+
+**پیش‌نمایش مسیر در زنجیره.** زیر ردیف‌ها مسیر انتخابی نوشته می‌شود («VLESS WS → SSH»)
+و اگر ترکیب نادرست باشد دلیلش همان‌جا می‌آید؛ دکمهٔ ذخیره تا معتبرشدن زنجیره غیرفعال
+است.
 
 **نوار رنگ سرعت روی هر مسیر.** مثل اندروید: سبز (سریع‌ترین)، زیتونی، کهربایی و نارنجی.
 
@@ -38,9 +43,13 @@ offers an “Install update” button that launches the installer itself.
 
 **Accent colours.** Eight choices, matching Android, under Settings → Appearance.
 
-**Languages moved to the three-dot menu**, and the header flags are gone. Shipped:
-Persian, English, Russian, Chinese, Arabic, Turkish, Urdu, Spanish, French. A language
-without a complete locale file is not listed, so no screen silently shows English.
+**Languages moved to the three-dot menu**, and the header flags are gone. Sixteen
+languages, matching Android: Persian, English, Russian, Chinese, Arabic, Turkish, Urdu,
+Hindi, Bengali, Spanish, French, Portuguese, Vietnamese, Indonesian, Thai and Burmese.
+Each ships a complete 749-key file, and only complete languages appear in the picker.
+
+**The chain shows the assembled path** (“VLESS WS → SSH”) with the reason when a
+combination is invalid, and Save stays disabled until the chain is valid.
 
 **Speed stripe per path row**, using the same four tiers and colours as Android.
 
