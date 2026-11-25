@@ -10,6 +10,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
 
 $git    = 'C:\Users\Mohsen\AppData\Local\Temp\rovunet_git\git\cmd\git.exe'
 $build  = $BuildPath
@@ -65,15 +66,37 @@ else {
 
 Get-ChildItem $stage | Sort-Object Length -Descending | Select-Object -First 8 | ForEach-Object {
     $assetName = $_.Name
+    $release = Invoke-RestMethod -Uri "https://api.github.com/repos/msVPNco/rovunet-app/releases/$($release.id)" -Headers $headers
     $present = $release.assets | Where-Object { $_.name -eq $assetName }
-    if ($present) { Write-Output "skip: $assetName"; return }
+    if ($present -and $present.state -eq 'uploaded' -and $present.size -eq $_.Length) { Write-Output "skip: $assetName"; return }
+    # A dropped upload leaves an unusable record under the same name; remove it
+    # before asking again, or every retry would be refused as a duplicate.
+    if ($present) {
+        Invoke-RestMethod -Method Delete -Uri "https://api.github.com/repos/msVPNco/rovunet-app/releases/assets/$($present.id)" -Headers $headers | Out-Null
+        Write-Output "removed incomplete asset: $assetName (state=$($present.state) size=$($present.size))"
+    }
     $url = "https://uploads.github.com/repos/msVPNco/rovunet-app/releases/$($release.id)/assets?name=$assetName"
     $ct = if ($assetName -like '*.exe') { 'application/vnd.microsoft.portable-executable' } else { 'application/octet-stream' }
-    $sw = [Diagnostics.Stopwatch]::StartNew()
-    $r = Invoke-WebRequest -Method Post -Uri $url -Headers $headers -ContentType $ct -InFile $_.FullName -TimeoutSec 3600
-    $sw.Stop()
-    $asset = $r.Content | ConvertFrom-Json
-    Write-Output ("uploaded {0} {1} MB state={2} {3}s digest={4}" -f $asset.name, [math]::Round($asset.size/1MB,1), $asset.state, [int]$sw.Elapsed.TotalSeconds, $asset.digest)
+    $uploaded = $false
+    foreach ($attempt in 1..3) {
+        $sw = [Diagnostics.Stopwatch]::StartNew()
+        try {
+            $r = Invoke-WebRequest -Method Post -Uri $url -Headers $headers -ContentType $ct -InFile $_.FullName -TimeoutSec 3600
+            $sw.Stop()
+            $asset = $r.Content | ConvertFrom-Json
+            Write-Output ("uploaded {0} {1} MB state={2} {3}s digest={4}" -f $asset.name, [math]::Round($asset.size/1MB,1), $asset.state, [int]$sw.Elapsed.TotalSeconds, $asset.digest)
+            $uploaded = $true
+            break
+        } catch {
+            $sw.Stop()
+            Write-Output ("upload attempt {0} failed after {1}s: {2}" -f $attempt, [int]$sw.Elapsed.TotalSeconds, $_.Exception.Message)
+            $release = Invoke-RestMethod -Uri "https://api.github.com/repos/msVPNco/rovunet-app/releases/$($release.id)" -Headers $headers
+            $partial = $release.assets | Where-Object { $_.name -eq $assetName -and $_.state -ne 'uploaded' }
+            if ($partial) { Invoke-RestMethod -Method Delete -Uri "https://api.github.com/repos/msVPNco/rovunet-app/releases/assets/$($partial.id)" -Headers $headers | Out-Null }
+            Start-Sleep -Seconds 15
+        }
+    }
+    if (-not $uploaded) { throw "Could not upload $assetName after three attempts." }
 }
 
 $final = Invoke-RestMethod -Uri "https://api.github.com/repos/msVPNco/rovunet-app/releases/tags/$tag" -Headers $headers
