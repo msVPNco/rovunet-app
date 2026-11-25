@@ -35,7 +35,14 @@ public sealed partial class MainWindow
         compactLayout = (ActualWidth > 0 ? ActualWidth : Width) < ContextThreshold;
         FontFamily = Typography.Family(L.Language); TextOptions.SetTextFormattingMode(this, TextFormattingMode.Display);
         FlowDirection = FlowDirection.LeftToRight; Language = System.Windows.Markup.XmlLanguage.GetLanguage(L.Language);
-        cardsSignature = ""; rows.Clear(); groups.Clear();
+        // Re-theming while the HTML shell is visible used to throw away every
+        // card and rebuild each path row, which is why switching the theme felt
+        // like the app had gone to fetch it. Keep the cards; RefreshCards
+        // repaints them with the new palette.
+        bool keepCards41 = htmlReady29 && cardsSignature.Length > 0 && cards.Children.Count > 0;
+        var keptGroups41 = keepCards41 ? groups.ToArray() : null;
+        if(!keepCards41){cardsSignature = ""; rows.Clear(); groups.Clear();}
+        else nativeCardsKept29 = true;
         var root = new Grid { FlowDirection = L.Direction, Background = HomeBackdrop() };
         root.ColumnDefinitions.Add(new() { Width = compactLayout ? new(0) : new(222) }); root.ColumnDefinitions.Add(new());
         root.RowDefinitions.Add(new() { Height = GridLength.Auto }); root.RowDefinitions.Add(new());
@@ -59,7 +66,9 @@ public sealed partial class MainWindow
         AutomationProperties.SetName(search, L.Text("SEARCH")); search.TextChanged += (_, _) => RefreshCards(); home.Children.Add(search);
         BindSearchAction30(search,homeSearchAction30,RefreshCards,"HOME_SEARCH_ACTION");
         heroScrollSpacer19 = new Border { Height = 0, IsHitTestVisible = false };
+        var previousCards41 = cards;
         cards = new StackPanel { Margin = new(HomeInset21, 0, HomeInset21, 72) };
+        if(keptGroups41!=null){previousCards41?.Children.Clear();cards.Children.Add(heroScrollSpacer19);foreach(var kept in keptGroups41)cards.Children.Add(kept.Card);}
         mainScroll = new ScrollViewer { Content = cards, PanningMode = PanningMode.VerticalOnly, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
         mainScroll.ScrollChanged += HomeScrollChanged19; Grid.SetRow(mainScroll, 2); home.Children.Add(mainScroll);
         heroCard19 = (Border)BuildHero(); Grid.SetRow(heroCard19, 1); home.Children.Add(heroCard19); WireHeroScroll19();

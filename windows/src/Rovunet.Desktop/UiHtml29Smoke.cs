@@ -104,6 +104,14 @@ public sealed partial class MainWindow
         async Task Shot(string name){using var image=File.Create(Path.Combine(folder,name+".png"));await html29!.CoreWebView2.CapturePreviewAsync(CoreWebView2CapturePreviewImageFormat.Png,image);}
         try{
             storeSaveFixture28=()=>{};HtmlFixture29=true;htmlFixtureFolder29=folder;
+            // The felt cost of a tap includes the encrypted store write the real
+            // app performs; a no-op saver would hide it. A temp folder keeps the
+            // owner's own store untouched.
+            string storeFolder=Path.Combine(folder,"store");Directory.CreateDirectory(storeFolder);
+            // Pay the one-time store warmup the app pays at startup, so the tap
+            // measurement is the steady-state cost the owner sees.
+            Rovunet.Platform.PrivateStore.SaveIn(storeFolder,"warmup.dpapi",new{at=DateTimeOffset.UtcNow});File.Delete(Path.Combine(storeFolder,"warmup.dpapi"));
+            int saves41=0;long saveMs41=0;
             foreach(int count in new[]{200,500}){
                 data.Profiles=Enumerable.Range(0,count).Select(i=>{var p=Importer.Single("socks5://127.0.0.1:"+(19000+i)+"#"+Uri.EscapeDataString("Synthetic path "+i+" · نام طولانی مسیر آزمایشی"));p.CollectionId="resize41-"+(i%6);p.CollectionName=i%6==5?"مجموعهٔ آزمایشی با نام بسیار طولانی فارسی برای سنجش حرکت متن":"Synthetic collection "+(i%6);return p;}).ToList();
                 data.SelectedId=data.Profiles[0].Id;data.OpenCollectionId="resize41-0";data.CollectionExpansionRevision=1;data.MarqueeMotion="on";
@@ -163,14 +171,25 @@ public sealed partial class MainWindow
                 checks[count+"_selection_survives_blur"]=await Wait("document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");focusWindow.Close();Activate();
                 // Tapping a card itself is a choice: the ring and the open list move
                 // to that card, which is what the owner expects when disconnected.
+                // Measure the whole felt path: encrypted store write (real), then
+                // the page's own build and label measurement reported by app.js.
+                storeSaveFixture28=()=>{var save=System.Diagnostics.Stopwatch.StartNew();Rovunet.Platform.PrivateStore.SaveIn(storeFolder,"profiles.dpapi",data);save.Stop();saveMs41=save.ElapsedMilliseconds;saves41++;};
+                await core.ExecuteScriptAsync("window.__perf41={}");
                 var tap=System.Diagnostics.Stopwatch.StartNew();
                 await core.ExecuteScriptAsync("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-label")+").click()");
                 checks[count+"_card_tap_selects_that_collection"]=await Wait("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-head")+")?.classList.contains('selected')&&document.querySelector("+Quote("[data-group="+Quote(other)+"] .profiles")+")!==null");
                 checks[count+"_card_tap_releases_previous"]=await Wait("!document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");
                 tap.Stop();
+                string perf41=await core.ExecuteScriptAsync("JSON.stringify(window.__perf41||{})");
+                using var perfDoc=JsonDocument.Parse(JsonSerializer.Deserialize<string>(perf41)??"{}");
+                long jsBuildMs=perfDoc.RootElement.TryGetProperty("buildMs",out var buildValue)?buildValue.GetInt64():-1;
+                long jsMeasureMs=perfDoc.RootElement.TryGetProperty("measureMs",out var measureValue)?measureValue.GetInt64():-1;
                 // A card with hundreds of paths must open without a multi-second stall.
-                samples.Add(new{count,cardTapMs=tap.ElapsedMilliseconds});
+                samples.Add(new{count,cardTapMs=tap.ElapsedMilliseconds,jsBuildMs,jsMeasureMs,saveMs=saveMs41,saves=saves41});
                 checks[count+"_card_tap_under_1200ms"]=tap.ElapsedMilliseconds<1200;
+                checks[count+"_card_tap_saves_once"]=saves41>=1&&saveMs41<400;
+                checks[count+"_card_tap_builds_under_250ms"]=jsBuildMs>=0&&jsBuildMs<250;
+                checks[count+"_card_tap_measure_under_250ms"]=jsMeasureMs>=0&&jsMeasureMs<250;
             }
             // Choosing an accent must keep Settings open instead of dropping the
             // user back on Home.
@@ -184,9 +203,19 @@ public sealed partial class MainWindow
             checks["accent_click_keeps_settings_open"]=await State(()=>data.AccentColor!=accentBefore)
                 &&await Wait("document.querySelector('.native-page')!==null")&&NavigationDepth>0;
             string themeBefore=data.Theme;
+            // A theme switch must not send the app to the basement while a large
+            // collection is loaded: time the switch end to end.
+            var themeWatch=System.Diagnostics.Stopwatch.StartNew();
             await html29!.CoreWebView2.ExecuteScriptAsync("(()=>{const b=[...document.querySelectorAll('.native-page .n-button')].find(n=>n.getAttribute('aria-label')==="+Quote(L.Text("LIGHT_THEME"))+");if(b)b.click()})()");
-            checks["theme_click_keeps_settings_open"]=await State(()=>data.Theme=="light")
-                &&await Wait("document.querySelector('.native-page')!==null")&&NavigationDepth>0;
+            bool themeStateOk=await State(()=>data.Theme=="light");long themeStateMs=themeWatch.ElapsedMilliseconds;
+            bool themePageOk=await Wait("document.querySelector('.native-page')!==null");long themePageMs=themeWatch.ElapsedMilliseconds;
+            checks["theme_click_keeps_settings_open"]=themeStateOk&&themePageOk&&NavigationDepth>0;
+            if(!checks["theme_click_keeps_settings_open"])
+                File.WriteAllText(Path.Combine(folder,"theme-debug.json"),await html29!.CoreWebView2.ExecuteScriptAsync("JSON.stringify({theme:document.body.dataset.theme,depth:document.querySelectorAll('.native-page').length,labels:[...document.querySelectorAll('.native-page .n-button')].map(b=>b.getAttribute('aria-label')).slice(0,40)})"));
+            bool themePainted=await Wait("document.body.dataset.theme==='light'");
+            themeWatch.Stop();
+            samples.Add(new{themeSwitch=true,ms=themeWatch.ElapsedMilliseconds,stateMs=themeStateMs,pageMs=themePageMs,painted=themePainted,profiles=data.Profiles.Count});
+            checks["theme_switch_under_900ms"]=themeWatch.ElapsedMilliseconds<900&&themePainted;
             if(themeBefore!="light"){data.Theme=themeBefore;ApplyTheme();QueueHtml29();}
             await CloseNavigation();QueueHtml29();await Wait("document.querySelector('.hero')!==null");
             _ = Dispatcher.BeginInvoke(()=>PublicSourcesPage());

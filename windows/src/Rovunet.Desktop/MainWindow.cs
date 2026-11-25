@@ -55,6 +55,10 @@ public sealed partial class MainWindow : Window
             else if(sub.Usage!=null){try{statuses[sub.Id]=sub.Usage.Snapshot(sub.Id);}catch{}}
         }
         ApplyTheme();Build();WireAdaptiveBounds21();
+        // The first protected write costs about a second while DPAPI and the
+        // store folder warm up. Pay that at startup in the background instead of
+        // on the user's first tap.
+        if(!fixtureMode)_ = Task.Run(()=>{try{const string warm="startup-warmup.dpapi";PrivateStore.Save(warm,new{at=DateTimeOffset.UtcNow});File.Delete(Path.Combine(PrivateStore.Root,warm));}catch{/* best effort */}});
         SizeChanged += (_, args) => {
             if (!args.WidthChanged || closing) return;
             if (htmlReady29) ResizeHtml41(args.NewSize.Width);

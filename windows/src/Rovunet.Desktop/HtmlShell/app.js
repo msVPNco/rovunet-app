@@ -62,6 +62,7 @@
     node.append(track);return node;
   }
   function measureRolls() {
+    const started=performance.now();
     // Read every width first, then write: one layout pass instead of one per
     // label. A collection with many rows used to stall while it opened.
     const nodes=[...app.querySelectorAll('.roll')];
@@ -70,7 +71,7 @@
       // Measure the visible line only; the repeat is inert duplicated ink.
       const range=document.createRange();range.selectNodeContents(span);
       const content=Math.max(0,Math.round(range.getBoundingClientRect().width)||span.scrollWidth);
-      return [content,Math.max(0,content-node.clientWidth),getComputedStyle(node).direction==='rtl'];
+      return [content,Math.max(0,content-node.clientWidth),node.dir==='rtl'||getComputedStyle(node).direction==='rtl'];
     });
     // Every layout read happens above this point; only writes follow it.
     const header=app.querySelector('.topbar'),first=header?.querySelector('.top-slot'),last=header?.querySelector('.top-slot.end'),flags=header?.querySelector('.flags');
@@ -95,6 +96,7 @@
     });
     if(split!==null)header.classList.toggle('split',split);
     if(content&&footerHeight&&content.style.getPropertyValue('--footer-height')!==footerHeight)content.style.setProperty('--footer-height',footerHeight);
+    window.__perf41=Object.assign(window.__perf41||{}, {measureMs:Math.round(performance.now()-started),rolls:nodes.length});
   }
   function activity() {document.body.classList.toggle('active',hostFocused&&motion&&!document.hidden&&document.hasFocus());document.body.classList.toggle('motion-off',!motion);}
   window.addEventListener('focus',activity);window.addEventListener('blur',activity);document.addEventListener('visibilitychange',activity);
@@ -209,6 +211,7 @@
     if (data.popup) { popupNode = popup(data.popup, data); document.body.append(popupNode); }
   }
   function render(data) {
+    const renderStart=performance.now();
     // Width, host focus and popup updates do not change home/page content.
     // Preserve the live cards, scroll nodes, inputs and animation clocks.
     const {popup:ignoredPopup,compact,focused,header:headerModel,navigation,...body}=data;
@@ -221,7 +224,9 @@
       if(navKey!==lastNavigation)app.querySelector('.sidebar')?.replaceWith(sidebar(data));
       lastHeader=headerKey;lastNavigation=navKey;syncPopup(data);
       if(nativeId&&!focus.isConnected&&hostFocused)app.querySelector('[data-native="'+CSS.escape(nativeId)+'"]')?.focus({preventScroll:true});
-      scheduleMeasure();return;
+      scheduleMeasure();
+      window.__perf41=Object.assign(window.__perf41||{}, {buildMs:0,rows:document.querySelectorAll('.profile').length});
+      return;
     }
     lastBase=base;lastHeader=headerKey;lastNavigation=navKey;
     const animations=new Map();
@@ -244,6 +249,7 @@
     else if(replacement&&hostFocused)replacement.focus({preventScroll:true});
     // Restore clocks before the next paint, including the frame that deactivates the window.
     measureRolls();app.querySelectorAll('.roll').forEach(node=>{const time=animations.get(rollKey(node)),animation=node.firstElementChild?.getAnimations()[0];if(animation&&Number.isFinite(time))animation.currentTime=time;});
+    window.__perf41=Object.assign(window.__perf41||{}, {buildMs:Math.round(performance.now()-renderStart),rows:document.querySelectorAll('.profile').length});
   }
   function collapse(scroll){const card=scroll.querySelector('.hero');if(card){const fraction=Math.min(1,Math.max(0,scroll.scrollTop/60));card.style.setProperty('--collapse',fraction);card.classList.toggle('collapsed',fraction>=1);}}
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&model?.popup)send('close-menu');});

@@ -17,9 +17,11 @@ public sealed partial class MainWindow
         if(menu.Items.Count>0)menu.Items.Add(new Separator());
         menu.Items.Add(new MenuItem{Header=L.Text(key),IsEnabled=false,FontSize=11,MinHeight=28,Padding=new(12,6,12,2),Focusable=false});
     }
-    ContextMenu PathMenu(Profile profile,MenuItem connectItem,MenuItem edit,MenuItem remove)
+    ContextMenu PathMenu(Profile profile,MenuItem connectItem,MenuItem edit,MenuItem remove,ContextMenu? target=null)
     {
-        var menu=new ContextMenu{FlowDirection=L.Direction};
+        // A row's menu is filled the first time it is opened. Building every menu
+        // up front made a large collection slow to draw and slow to re-theme.
+        var menu=target??new ContextMenu{FlowDirection=L.Direction};
         MenuHeading(menu,"MENU_CONNECTION");menu.Items.Add(connectItem);
         menu.Items.Add(MenuAction("LAST_TEST",()=>ShowMeasurement(profile)));
         var quick=MenuAction("QUICK_PING",()=>QuickPing29([profile]));quick.IsEnabled=CollectionProbePlan.IsDirect(profile);quick.ToolTip=quick.IsEnabled?L.Text("QUICK_PING"):L.Text("QUICK_DNS_EXCLUDED");menu.Items.Add(quick);
@@ -47,6 +49,15 @@ public sealed partial class MainWindow
                 if(item.Tag is "LAST_TEST")item.IsEnabled=data.Measurements.ContainsKey(profile.Id)||HasCurrentPing29(profile,out _);
             }
         };
+        return menu;
+    }
+    ContextMenu LazyPathMenu(Profile profile,out MenuItem connectItem,out MenuItem edit,out MenuItem remove)
+    {
+        connectItem=MenuAction("CONNECT",()=>{if(state.State=="connected"&&activeProfile?.Id==profile.Id)RequestDisconnect();else SwitchPath(profile);});
+        edit=MenuAction("EDIT",()=>Edit(profile));remove=MenuAction("DELETE",()=>Delete(profile));
+        var connect=connectItem;var change=edit;var erase=remove;
+        var menu=new ContextMenu{FlowDirection=L.Direction};
+        menu.Opened+=(_,_)=>{if(menu.Items.Count==0)PathMenu(profile,connect,change,erase,menu);};
         return menu;
     }
     void RefreshCollectionMenu(ContextMenu menu,List<Profile> members)

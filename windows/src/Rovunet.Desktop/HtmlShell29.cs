@@ -62,6 +62,7 @@ public sealed partial class MainWindow
     // updated lazily, so expanding or selecting inside a large collection never
     // rebuilds hundreds of hidden WPF tiles.
     bool nativeCardsDeferred29;
+    bool nativeCardsKept29;
     void HtmlFailed29()
     {
         htmlReady29=false;
@@ -69,7 +70,10 @@ public sealed partial class MainWindow
         // Reveal the native tree before rebuilding it: a collapsed element
         // reports no width, and the rebuild reads one to pick compact or wide.
         if(nativeLayoutDeferred41) RebuildForResize();
-        if(nativeCardsDeferred29){nativeCardsDeferred29=false;RefreshCards();}
+        // Cards kept across a theme change carry the old palette; the native view
+        // is the visible one now, so rebuild them fully.
+        if(nativeCardsKept29){nativeCardsKept29=false;Build();}
+        else if(nativeCardsDeferred29){nativeCardsDeferred29=false;RefreshCards();}
         RefreshHeroCollapse19();
         if(html29!=null)html29.Visibility=Visibility.Collapsed;
         Notify(L.Text("HTML_RUNTIME_REQUIRED"),Amber);

@@ -58,6 +58,11 @@ public sealed partial class MainWindow
         var shadow = new System.Windows.Media.Effects.DropShadowEffect { Color = color, BlurRadius = 16, ShadowDepth = 4, Direction = 270, Opacity = darkTheme ? .32 : .18, RenderingBias = System.Windows.Media.Effects.RenderingBias.Performance };
         shadow.Freeze(); card.Effect = shadow;
     }
+    // Parsing this XAML once per row cost more than building the row itself:
+    // a collection with hundreds of paths took seconds to rebuild on every
+    // theme or accent change.
+    static readonly ControlTemplate SelectRowTemplate = (ControlTemplate)XamlReader.Parse("<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='{x:Type RadioButton}' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'><Border Background='Transparent' Padding='0'><ContentPresenter/></Border></ControlTemplate>");
+    static readonly DataTemplate StopContentTemplate = (DataTemplate)XamlReader.Parse("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{Binding}' TextWrapping='NoWrap' TextAlignment='Center' FontSize='13' FontWeight='SemiBold'/></DataTemplate>");
     static string ProfileHost(Profile profile)
     {
         try
@@ -118,7 +123,7 @@ public sealed partial class MainWindow
             var summary = Text("", 12, Muted); var summaryLine=MovingLine21(summary,20,L.Direction);summaryLine.SetBinding(VisibilityProperty,new Binding(nameof(Visibility)){Source=summary});details.Children.Add(summaryLine);
             var stop = Button("STOP_TEST", CancelCollectionTest); stop.Foreground = Red; stop.Background = Tone("Soft"); stop.Visibility = Visibility.Collapsed;
             stop.Margin = new(0); stop.Width = 132; stop.Height = 44; stop.Padding = new(6, 2, 6, 2);
-            stop.ContentTemplate = (DataTemplate)XamlReader.Parse("<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'><TextBlock Text='{Binding}' TextWrapping='NoWrap' TextAlignment='Center' FontSize='13' FontWeight='SemiBold'/></DataTemplate>"); tools.Children.Add(stop);
+            stop.ContentTemplate = StopContentTemplate; tools.Children.Add(stop);
             var progress = new ProgressBar { Height = 4, Minimum = 0, Visibility = Visibility.Collapsed, Margin = new(0, 1, 0, 0) }; headerBody.Children.Add(progress);
             var headerCard = new ElevatedBorder { Child = headerBody, MinHeight = 72, Background = GlassSurface("Collection"), CornerRadius = new(18), BorderBrush = GlassEdge(Tone("Outline")), BorderThickness = new(1), Padding = new(10, 6, 6, 6) };
             headerCard.CornerRadius=new(23);headerCard.BorderThickness=new(.75);CardDepth(headerCard); stack.Children.Add(headerCard);
@@ -143,14 +148,12 @@ public sealed partial class MainWindow
                 message.Children.Add(protocol);
                 var separator = Text(" · ", 12, Muted); separator.Margin = new(0); separator.SetBinding(VisibilityProperty, new Binding(nameof(Visibility)) { Source = result }); message.Children.Add(separator); message.Children.Add(result);
                 var messageLine = new MarqueeLine(message, 18, L.Direction, () => MarqueeEnabled21); Grid.SetRow(messageLine, 2); labels.Children.Add(messageLine);
-                var select = new RadioButton { Content = labels, GroupName = "selected", IsChecked = item.Id == data.SelectedId, Margin = new(0), Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch,
-                    Template = (ControlTemplate)XamlReader.Parse("<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' TargetType='{x:Type RadioButton}' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'><Border Background='Transparent' Padding='0'><ContentPresenter/></Border></ControlTemplate>") };
+                var select = new RadioButton { Content = labels, GroupName = "selected", IsChecked = item.Id == data.SelectedId, Margin = new(0), Padding = new(0), HorizontalContentAlignment = HorizontalAlignment.Stretch, Template = SelectRowTemplate };
                 AutomationProperties.SetName(select, L.Text("SELECT") + " " + item.Name); select.Checked += (_, _) => SelectProfile20(item); row.Children.Add(select);
                 var controls = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-                var edit = MenuAction("EDIT", () => Edit(item)); var remove = MenuAction("DELETE", () => Delete(item));
-                var connectItem = MenuAction("CONNECT", () => { if (state.State == "connected" && activeProfile?.Id == item.Id) RequestDisconnect(); else SwitchPath(item); });
+                var menu = LazyPathMenu(item,out var connectItem,out var edit,out var remove);
                 var editButton = IconButton("EDIT", "M2,18 L16,4 L20,8 L6,22 H2 Z M14,6 L18,10", () => Edit(item)); editButton.SetBinding(IsEnabledProperty, new Binding("IsEnabled") { Source = edit }); controls.Children.Add(editButton);
-                var menu = PathMenu(item, connectItem, edit, remove); controls.Children.Add(MoreButton(menu));
+                controls.Children.Add(MoreButton(menu));
                 var deleteButton = IconButton("DELETE", "M5,6 H19 M8,6 V3 H16 V6 M7,9 V21 H17 V9", () => Delete(item)); deleteButton.SetBinding(IsEnabledProperty, new Binding("IsEnabled") { Source = remove }); controls.Children.Add(deleteButton);
                 foreach (Button button in controls.Children) { button.Width = 44; button.Margin = new(0); button.Padding = new(10); button.Background = Brushes.Transparent; if(button.Content is System.Windows.Shapes.Path shape&&shape.Stroke!=null){shape.StrokeThickness=1.5;shape.Width=shape.Height=20;} }
                 Grid.SetColumn(controls, 2); row.Children.Add(controls);
