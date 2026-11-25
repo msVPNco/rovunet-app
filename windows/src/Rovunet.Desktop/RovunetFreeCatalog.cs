@@ -125,6 +125,11 @@ internal static class RovunetFreeCatalog
 
     // -------------------------------------------------------------------- fetch
 
+    // Debug-only seam: receives "<id prefix>:<stage>" per catalog entry so the
+    // live harness can say why a config was skipped. Never carries a link, key,
+    // hash or plaintext, and the shipped application leaves it unset.
+    internal static Action<string>? Trace;
+
     internal static async Task<SubscriptionClient.Payload> Fetch(
         Func<Uri,CancellationToken,int,Task<SubscriptionClient.Payload>> fetch,
         CancellationToken cancellation, int proxyPort)
@@ -155,22 +160,22 @@ internal static class RovunetFreeCatalog
 
         var links = new List<(string Group, string Link)>();
         string pinnedKeyId = KeyIdText;
+        void Report(Entry entry, string stage) => Trace?.Invoke(entry.Id[..8] + ":" + stage);
         foreach (var entry in entries)
         {
             cancellation.ThrowIfCancellationRequested();
-            if (entry.Expires <= DateTimeOffset.UtcNow) continue;
-            if (revoked.Contains(entry.Id) || revoked.Contains(entry.DonationId)) continue;
-            if (pinnedKeyId.Length > 0 && !string.Equals(entry.KeyId, pinnedKeyId, StringComparison.Ordinal)) continue;
+            if (entry.Expires <= DateTimeOffset.UtcNow) { Report(entry, "expired"); continue; }
+            if (revoked.Contains(entry.Id) || revoked.Contains(entry.DonationId)) { Report(entry, "revoked"); continue; }
+            if (pinnedKeyId.Length > 0 && !string.Equals(entry.KeyId, pinnedKeyId, StringComparison.Ordinal)) { Report(entry, "key-id"); continue; }
             string address;
             try { address = ConfigAddress(baseAddress + entry.Path); }
-            catch (SafeError) { continue; }
+            catch (SafeError) { Report(entry, "address"); continue; }
             SubscriptionClient.Payload envelope;
             try { envelope = await fetch(SubscriptionUrls.Validate(address), cancellation, proxyPort); }
-            catch (SafeError) { continue; }
-            catch (HttpRequestException) { continue; }
-            string? link;
-            try { link = Decrypt(envelope.Body, entry, aes); }
-            catch (SafeError) { link = null; }
+            catch (SafeError) { Report(entry, "fetch"); continue; }
+            catch (HttpRequestException) { Report(entry, "fetch"); continue; }
+            string stage = TryDecrypt(envelope.Body, entry, aes, out string? link);
+            Report(entry, stage.Length == 0 ? "ok" : stage);
             if (link != null) links.Add((entry.DonationId, link));
         }
         if (links.Count == 0) throw new SafeError("ROVUNET_FREE_UNAVAILABLE");
@@ -269,25 +274,41 @@ internal static class RovunetFreeCatalog
 
     internal static string Decrypt(string envelopeJson, Entry entry, byte[] aesKey, DateTimeOffset? now = null)
     {
-        if (aesKey.Length != 32) throw new SafeError("ROVUNET_FREE_UNVERIFIED");
-        if (entry.Expires <= (now ?? DateTimeOffset.UtcNow)) throw new SafeError("ROVUNET_FREE_EXPIRED");
+        string stage = TryDecrypt(envelopeJson, entry, aesKey, out string? link, now);
+        if (stage.Length > 0)
+            throw new SafeError(stage == "expired" ? "ROVUNET_FREE_EXPIRED" : "ROVUNET_FREE_UNVERIFIED");
+        return link!;
+    }
+
+    /// <summary>
+    /// Same checks as <see cref="Decrypt"/>, but reports which stage refused the
+    /// envelope instead of varying only by error code. The stage names carry no
+    /// key, hash or plaintext material, so a debug run can say whether a catalog
+    /// failed on its hash, its metadata, the GCM tag or the inner id.
+    /// </summary>
+    internal static string TryDecrypt(string envelopeJson, Entry entry, byte[] aesKey, out string? link,
+        DateTimeOffset? now = null)
+    {
+        link = null;
+        if (aesKey.Length != 32) return "key";
+        if (entry.Expires <= (now ?? DateTimeOffset.UtcNow)) return "expired";
         byte[] raw = Encoding.UTF8.GetBytes(envelopeJson);
-        if (raw.Length is < 1 or > MaxEnvelopeBytes) throw new SafeError("ROVUNET_FREE_UNVERIFIED");
+        if (raw.Length is < 1 or > MaxEnvelopeBytes) return "size";
         // The signed hash covers the exact ciphertext-file bytes.
         if (!string.Equals(Convert.ToHexString(SHA256.HashData(raw)).ToLowerInvariant(), entry.Sha256, StringComparison.Ordinal))
-            throw new SafeError("ROVUNET_FREE_UNVERIFIED");
+            return "hash";
 
         using var document = JsonDocument.Parse(envelopeJson);
         var env = document.RootElement;
-        if (env.GetProperty("version").GetInt32() != 2) throw new SafeError("ROVUNET_FREE_UNVERIFIED");
-        if (env.GetProperty("algorithm").GetString() != "AES-256-GCM") throw new SafeError("ROVUNET_FREE_UNVERIFIED");
+        if (env.GetProperty("version").GetInt32() != 2) return "meta";
+        if (env.GetProperty("algorithm").GetString() != "AES-256-GCM") return "meta";
         if (env.GetProperty("id").GetString() != entry.Id ||
             env.GetProperty("donation_id").GetString() != entry.DonationId ||
             env.GetProperty("created_at").GetString() != entry.CreatedAt ||
             env.GetProperty("expires_at").GetString() != entry.ExpiresAt ||
             env.GetProperty("key_id").GetString() != entry.KeyId ||
             env.GetProperty("quota_gib").GetInt32() != QuotaGiB)
-            throw new SafeError("ROVUNET_FREE_UNVERIFIED");
+            return "meta";
 
         byte[] nonce, ciphertext;
         try
@@ -295,8 +316,8 @@ internal static class RovunetFreeCatalog
             nonce = Convert.FromBase64String(env.GetProperty("nonce").GetString() ?? "");
             ciphertext = Convert.FromBase64String(env.GetProperty("ciphertext").GetString() ?? "");
         }
-        catch (FormatException) { throw new SafeError("ROVUNET_FREE_UNVERIFIED"); }
-        if (nonce.Length != 12 || ciphertext.Length < 17) throw new SafeError("ROVUNET_FREE_UNVERIFIED");
+        catch (FormatException) { return "encoding"; }
+        if (nonce.Length != 12 || ciphertext.Length < 17) return "encoding";
 
         byte[] aad = Encoding.UTF8.GetBytes(
             $"rovunet-free-v2|{entry.Id}|{entry.DonationId}|{entry.CreatedAt}|{entry.ExpiresAt}|{entry.KeyId}");
@@ -306,16 +327,17 @@ internal static class RovunetFreeCatalog
             using var gcm = new AesGcm(aesKey, 16);
             gcm.Decrypt(nonce, ciphertext.AsSpan(0, ciphertext.Length - 16), ciphertext.AsSpan(ciphertext.Length - 16), plain, aad);
         }
-        catch (CryptographicException) { throw new SafeError("ROVUNET_FREE_UNVERIFIED"); }
+        catch (CryptographicException) { return "auth"; }
 
         using var item = JsonDocument.Parse(plain);
         // The contract binds the plaintext to its entry: the inner id must be the
         // signed id, so a replayed link cannot ride along on another envelope.
         if (item.RootElement.GetProperty("id").GetString() != entry.Id)
-            throw new SafeError("ROVUNET_FREE_UNVERIFIED");
-        string link = item.RootElement.GetProperty("link").GetString() ?? "";
-        if (link.Length is < 1 or > 65536 || link.Contains('\n') || link.Contains('\r'))
-            throw new SafeError("ROVUNET_FREE_UNVERIFIED");
-        return link;
+            return "inner-id";
+        string value = item.RootElement.GetProperty("link").GetString() ?? "";
+        if (value.Length is < 1 or > 65536 || value.Contains('\n') || value.Contains('\r'))
+            return "link";
+        link = value;
+        return "";
     }
 }

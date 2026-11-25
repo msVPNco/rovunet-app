@@ -18,16 +18,25 @@ string[] checks = ["https://example.com/", "https://api.ipify.org"];
 
 // Debug trust values come from the owner's local secret files, passed as
 // arguments: <aes-key-file> <public-key-file> <catalog-base-url> [key-id].
-// Nothing is compiled in and nothing is printed.
+// The AES file may be the 32 raw bytes the import tool uses or its base64 text;
+// the public key file is base64 or an SPKI DER export. Nothing is compiled in
+// and nothing is printed.
 if (args.Length < 3)
 {
     Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = "usage: <aes-key-file> <public-key-file> <catalog-base-url> [key-id]" }));
     return 2;
 }
-RovunetFreeCatalog.OverrideAesKey = File.ReadAllText(args[0]).Trim();
-RovunetFreeCatalog.OverridePublicKey = File.ReadAllText(args[1]).Trim();
+static string KeyText(string path)
+{
+    byte[] bytes = File.ReadAllBytes(path);
+    return bytes.Length == 32 ? Convert.ToBase64String(bytes) : System.Text.Encoding.UTF8.GetString(bytes).Trim();
+}
+RovunetFreeCatalog.OverrideAesKey = KeyText(args[0]);
+RovunetFreeCatalog.OverridePublicKey = KeyText(args[1]);
 RovunetFreeCatalog.OverrideAddress = args[2].TrimEnd('/') + "/catalog.json";
 if (args.Length > 3) RovunetFreeCatalog.OverrideKeyId = args[3].Trim();
+var stages = new List<string>();
+RovunetFreeCatalog.Trace = stage => stages.Add(stage);
 if (!RovunetFreeCatalog.Enabled)
 {
     Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = "free catalog is not enabled with these values" }));
@@ -44,7 +53,7 @@ try
 }
 catch (SafeError error)
 {
-    Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = error.Code, fetched_decrypted = 0 }));
+    Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = error.Code, fetched_decrypted = 0, stages }));
     return 2;
 }
 
@@ -109,6 +118,7 @@ foreach (string raw in links)
 report["connected"] = connected;
 report["payload_verified"] = verified;
 report["total"] = links.Count;
+report["stages"] = stages;
 report["rows"] = outcomes;
 Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", report }));
 return verified > 0 ? 0 : 1;
