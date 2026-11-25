@@ -24,6 +24,8 @@
 
 **macOS Beta:** [0.1.8 Beta](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15+ · компактные результаты DNS и отдельные быстрые/HTTPS-тесты. Установка Apple Silicon и повседневный TUN подтверждены владельцем; **Intel на реальном оборудовании не проверен**. Локальная подпись ad hoc, без Apple Developer ID и нотариального заверения. [Руководство Mac](docs/macos/README.ru.md).
 
+**Выпуск Windows:** [0.2.0](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.2.0) · Windows 10 1809+ и Windows 11, x64 · официальный источник Rovunet Free входит в пакет, тёмная тема стала светлее, крупные коллекции открываются без зависания. Установщик не подписан Authenticode.
+
 <a id="apps"></a>
 
 <!-- android-code58-release -->
@@ -34,7 +36,7 @@
 | Платформа | Состояние | Загрузка и подробности |
 | --- | --- | --- |
 | **Android** | **alpha23.1 Full / код58 · Release** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [Страница Android](docs/android/README.ru.md) |
-| **Windows** | **0.1.7 Beta · x64 · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.7-beta/Rovunet-Windows-0.1.7-beta-x64-Setup.exe) · [Страница Windows](windows/README.md) |
+| **Windows** | **0.2.0 · x64 · Release** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.2.0/Rovunet-Windows-0.2.0-x64-Setup.exe) · [Страница Windows](windows/README.md) |
 | **Linux** | Планируется | Выпусков пока нет |
 | **macOS** | **0.1.8-beta · Apple Silicon / Intel · предварительный выпуск** | [Скачать](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [Страница Mac](docs/macos/README.ru.md) · Intel: **не проверено на физическом Intel Mac** |
 

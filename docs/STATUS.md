@@ -24,7 +24,11 @@ Subscription refresh/reimport, direct-first DNS fallback, moving labels, manual 
 
 Apple Silicon's dev.6 functional base was tested and accepted by the owner on a real Mac. **Intel: limited testing**, with host and package validation only. Both require macOS 15+. This Beta changes version and packaging metadata, retaining the functional base. [Mac guide](macos/README.md). [Pre-release](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.6-beta).
 
-## Windows 0.1.7 Beta
+## Windows 0.2.0
+
+Windows x64 [release](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.2.0): [installer, source and notes](../windows/docs/releases/windows-0.2.0.md) · [Windows page](../windows/README.md). Installs on Windows 10 1809 (build 17763) and later, and on Windows 11. Ships the official Rovunet Free source in the public package, with a lighter dark theme, and large collections that open without a stall: card taps are ~65 ms and theme switches ~300 ms at 500 paths in the WebView2 shell. The installer self-tests passed 34/34 (`--exercise`) and 66/66 (`--preview`); 529 portable/protocol/Amnezia/Free-contract tests and the 119-check UI fixture passed. Unsigned installer; no device-wide TUN.
+
+## Historical Windows 0.1.7 Beta
 
 Windows x64 [pre-release](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.1.7-beta): [installer, source and notes](../windows/docs/LIVE41-0.1.7.md). Rebuilds the Windows view on Android's Material roles — the same backgrounds, surfaces, pills and radii as the Android app — and fixes accent colours in AMOLED, where the theme block used to re-declare the colour variables over the chosen accent. All eight Android accents now apply in light, dark and AMOLED; high contrast still wins. 0.1.6 before it fixed the chain's second layer and the HTML accent path. 529 portable/protocol/Amnezia/Free-contract tests and the 119-check UI fixture passed. No trusted Authenticode signature; no new live-peer/hardware/native-service acceptance and no device-wide TUN enabled. The debug Free v2 key is absent from the public package and the feature stays debug-only.
 

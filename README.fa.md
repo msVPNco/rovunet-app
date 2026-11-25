@@ -24,6 +24,8 @@
 
 **انتشار اندروید:** [آلفا۲۳٫۱ Full / کد۵۸](https://github.com/msVPNco/rovunet-app/releases/tag/v0.3.0-alpha23.1-code58) — همان بسته و همان امضای تولیدی آلفا۲۲؛ مثل یک به‌روزرسانی عادی روی آن نصب می‌شود. اتصال رایگان رووُنت فعال است و اعلان به‌روزرسانی درون‌برنامه‌ای هم درست کار می‌کند. TUIC هنوز رفع نشده؛ محدودیت‌ها در توضیحات انتشار آمده‌اند.
 
+**انتشار ویندوز:** [۰٫۲٫۰](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.2.0) · ویندوز ۱۰ نسخهٔ 1809 و بالاتر و ویندوز ۱۱، ۶۴ بیتی · منبع رسمی روونت رایگان داخل بسته است، تم تیره به آبی‌خاکستری روشن‌تر تغییر کرده و مجموعه‌های بزرگ بدون هنگ باز می‌شوند. نصاب امضای Authenticode ندارد.
+
 **نسخهٔ بتای مک:** [۰٫۱٫۸ بتا](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · macOS 15 و بالاتر · نتایج جمع‌وجور DNS و تست سریع/HTTPS جدا. نصب Apple Silicon و استفادهٔ روزمرهٔ TUN تأیید شده؛ **اینتل روی سخت‌افزار واقعی تست نشده**. امضای محلی ad hoc، بدون Developer ID و notarization اپل. [راهنمای مک](docs/macos/README.fa.md).
 
 <a id="apps"></a>
@@ -36,7 +38,7 @@
 | پلتفرم | وضعیت | دانلود و جزئیات |
 | --- | --- | --- |
 | **اندروید** | **آلفا۲۳٫۱ Full / کد۵۸ · Release** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/v0.3.0-alpha23.1-code58/Rovunet-v0.3.0-alpha23.1-code58-Full.apk) · [صفحهٔ اندروید](docs/android/README.fa.md) |
-| **ویندوز** | **0.1.7 Beta · نسخهٔ x64 · پیش‌انتشار** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.1.7-beta/Rovunet-Windows-0.1.7-beta-x64-Setup.exe) · [صفحهٔ ویندوز](windows/README.md) |
+| **ویندوز** | **۰٫۲٫۰ · نسخهٔ x64 · انتشار** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/download/windows-v0.2.0/Rovunet-Windows-0.2.0-x64-Setup.exe) · [صفحهٔ ویندوز](windows/README.md) |
 | **لینوکس** | برنامه‌ریزی‌شده | هنوز انتشاری ندارد |
 | **مک** | **0.1.8-beta · Apple Silicon / Intel · پری‌ریلیز** | [دانلود](https://github.com/msVPNco/rovunet-app/releases/tag/macos-v0.1.8-beta) · [صفحهٔ مک](docs/macos/README.fa.md) · Intel: **روی مک اینتل واقعی تست نشده** |
 
