@@ -7,7 +7,13 @@ param(
   # Owner-only Debug package that carries the Rovunet Free test key. It is never
   # publishable: the output directory must name a debug folder, and the public
   # release path below still refuses to run with the key present.
-  [switch]$DebugFree
+  [switch]$DebugFree,
+  # Owner decision (2026-11-25): the public 0.2.0 package carries the Rovunet
+  # Free v2 trust values so the official source works out of the box. The values
+  # are read from the owner's local secrets file at build time and never enter
+  # the repository or the source archive.
+  [switch]$PublicFree,
+  [string]$FreeSecretsPath = (Join-Path $env:LOCALAPPDATA 'Rovunet\DebugSecrets\free-v2.local.json')
 )
 $ErrorActionPreference = 'Stop'
 $sourceRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
@@ -36,6 +42,25 @@ if (Test-Path -LiteralPath $debugFreeProps) {
 }
 New-Item -ItemType Directory -Path $outputRoot | Out-Null
 if ($debugFreeBuild) { Set-Content -LiteralPath (Join-Path $outputRoot 'DEBUG-FREE-BUILD.txt') -Encoding utf8 -Value 'Owner-only Debug build with the Rovunet Free v2 test key. Never publish this package.' }
+# A public build that ships the official Free source. The trust values are read
+# once from the owner's local file and handed to MSBuild through the child
+# process environment, so they are never written into the repository, the
+# command line, the source manifest or this script's output.
+$freeArgs = @()
+if ($PublicFree) {
+  if (-not (Test-Path -LiteralPath $FreeSecretsPath)) { throw 'Public Free build needs the Free v2 secrets file.' }
+  $freeSecrets = Get-Content -LiteralPath $FreeSecretsPath -Raw | ConvertFrom-Json
+  foreach ($name in @('key_id','aes_key_base64','public_key_base64','catalog_address')) {
+    if ([string]::IsNullOrWhiteSpace([string]$freeSecrets.$name)) { throw "Free v2 secrets file has no $name." }
+  }
+  $env:RovunetFreeAesKey = [string]$freeSecrets.aes_key_base64
+  $env:RovunetFreePublicKey = [string]$freeSecrets.public_key_base64
+  $env:RovunetFreeCatalogAddress = [string]$freeSecrets.catalog_address
+  $env:RovunetFreeKeyId = [string]$freeSecrets.key_id
+  $freeArgs = @('free')
+  Set-Content -LiteralPath (Join-Path $outputRoot 'PUBLIC-FREE-BUILD.txt') -Encoding utf8 -Value ("Public build with the Rovunet Free v2 source enabled.`nkey_id: " + $freeSecrets.key_id + "`ncatalog: " + $freeSecrets.catalog_address)
+  Write-Warning 'PUBLIC FREE BUILD: the package carries the Rovunet Free v2 catalog key.'
+}
 $env:DOTNET_CLI_TELEMETRY_OPTOUT = '1'
 # Single-file setup publishing adds ILLink dependencies. Restore with the exact
 # publish properties before freezing the source/lock files, then never restore
@@ -65,7 +90,9 @@ finally { $sourceZip.Dispose(); $sourceStream.Dispose() }
 Push-Location $sourceRoot
 try {
   foreach ($entry in @(@('src/Rovunet.Desktop','desktop'),@('src/Rovunet.Agent','agent'),@('tests/Rovunet.WindowsSmoke','smoke'))) {
-    & $Dotnet publish $entry[0] -c Release -r win-x64 --self-contained true --no-restore -m:1 "-p:SourceRevisionId=$revision" -o (Join-Path $outputRoot $entry[1])
+    $publishArgs = @("-p:SourceRevisionId=$revision")
+    if ($entry[1] -eq 'desktop' -and $freeArgs.Count -gt 0) { $publishArgs += $freeArgs }
+    & $Dotnet publish $entry[0] -c Release -r win-x64 --self-contained true --no-restore -m:1 @publishArgs -o (Join-Path $outputRoot $entry[1])
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
   }
   $stage = Join-Path $outputRoot 'payload'

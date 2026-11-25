@@ -2,9 +2,9 @@
 
 # Rovunet · Windows
 
-**0.1.7 Beta · Windows x64 · prerelease**
+**0.2.0 · Windows x64**
 
-[Download / دریافت](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.1.7-beta)
+[Download / دریافت](https://github.com/msVPNco/rovunet-app/releases/tag/windows-v0.2.0)
 
 [فارسی](#فارسی) · [English](#english) · [简体中文](#简体中文) · [Русский](#русский)
 
@@ -18,6 +18,8 @@
 
 اشتراک دلخواه با یک دکمهٔ چسباندن، منابع مهسا و انونیموس، ویرایش پروفایل‌ها، وضعیت حساب، پراکسی محلی HTTP/SOCKS5 و پراکسی اختیاری ویندوز در دسترس‌اند. گزینهٔ Local فقط نشانی IPv4 شبکه را انتخاب می‌کند؛ نبود IPv4 ورودی قبلی را پاک نمی‌کند. نشانی منابع آماده پنهان می‌ماند. گواهی Slipstream از سرور اشتراک و پس از بررسی هویت و هش دریافت می‌شود؛ سرور باید مسیر گواهی معتبر را ارائه کند. خطا، داده و گواهی قبلی را پاک نمی‌کند.
 
+منبع رسمی «روونت رایگان» در همین نسخه فعال است: کاتالوگ امضاشده دریافت، امضای Ed25519 بررسی، هش هر کانفیگ کنترل و سپس با AES-256-GCM رمزگشایی می‌شود. هر کانفیگ پس از رمزگشایی مثل هر مسیر دیگری به تونل واقعی وصل می‌شود. سرور مسیر به‌صورت تصادفی و گروه‌به‌گروه انتخاب می‌شود و سهمیهٔ ۵۰ گیگابایتی بین مسیرهای یک اهدا مشترک است.
+
 هدف این نسخه Windows10 نسخهٔ 1809 (build17763) و بالاتر و Windows11 x64 است. نصب‌کننده امضای ناشر ویندوز ندارد. بعضی مسیرهای آزمایشی سرور در تست زنده تأیید نشده‌اند؛ عرضهٔ یک آداپتور به معنی کارکرد همهٔ سرورها نیست. اجزای آزمایشگاهی TUN/kill switch/service در این نسخهٔ مصرفی فعال نمی‌شوند.
 
 [راهنما](docs/USER-GUIDE-FA.txt) · [وضعیت و محدودیت‌ها](docs/STATUS.md) · [آزمون‌ها](docs/TESTING.md) · [تغییرات این مرحله](docs/LIVE35.md) · [ساخت](docs/BUILDING.md)
@@ -29,6 +31,8 @@ A compact HTML/CSS interface with light, dark and AMOLED themes and a wide-windo
 Quick tests use TCP or authenticated HY2, TUIC and WireGuard/AmneziaWG protocol probes. Accurate tests use HTTPS. DNS tunnels are checked separately in Resolver Scanner and excluded from quick tests and automatic replacement; eligible/excluded counts are explicit. Manual connection remains independent of test results.
 
 Includes one subscription Paste action, managed Mahsa/Anonymous sources, profile editors, account status, local HTTP/SOCKS5 and optional Windows system proxy. Local resolver discovery selects IPv4 only and preserves the previous input when none is found; manual IPv6 remains supported. Managed source addresses stay hidden. Automatic Slipstream certificates require a valid same-source companion, bound identity and DER hash; failures preserve previous data and pins.
+
+The official Rovunet Free source is enabled in this release: the signed catalog is verified with Ed25519, every config's hash is checked, and each envelope is decrypted with AES-256-GCM before its link joins the normal tunnel path. Paths are offered in random group-first order, and the 50 GiB quota is shared by the paths of one donation.
 
 Targets Windows10 1809/build17763 and later, and Windows11 x64. The installer is not Authenticode-signed. Some supplied server paths remain unverified in live tests; adapter availability does not certify every provider. Laboratory TUN, kill-switch and service components are not activated by this consumer prerelease.
 
@@ -42,6 +46,8 @@ Targets Windows10 1809/build17763 and later, and Windows11 x64. The installer is
 
 支持单一订阅粘贴按钮、Mahsa/Anonymous、配置编辑、账户状态、本地 HTTP/SOCKS5 和可选的 Windows 系统代理。Local 仅选择 IPv4；未找到时保留原输入，手动 IPv6 仍受支持。自动获取 Slipstream 证书需要服务器提供同源证书文件，并通过身份与哈希验证；失败时保留原有数据和证书。
 
+本版本启用官方「Rovunet 免费」源：验证 Ed25519 签名的目录，逐一校验配置哈希，再用 AES-256-GCM 解密，解密后的配置与普通路径一样接入真实隧道。路径按组随机提供，50 GiB 配额由同一捐赠的路径共享。
+
 适用于 Windows10 1809/build17763 及更高版本和 Windows11 x64。安装程序没有 Authenticode 签名，部分服务器路径尚未通过实际网络测试。本消费预发布版本不启用实验性的 TUN、断网保护或系统服务组件。
 
 ## Русский
@@ -51,6 +57,8 @@ Targets Windows10 1809/build17763 and later, and Windows11 x64. The installer is
 Быстрая проверка использует TCP или подтверждённый обмен HY2, TUIC и WireGuard/AmneziaWG; точная — HTTPS. DNS-туннели проверяются отдельно в сканере резолверов и исключены из быстрой проверки и автоматической замены. Количество включённых и исключённых маршрутов указано явно. Ручное подключение не зависит от проверки.
 
 Доступны одна кнопка вставки подписки, Mahsa/Anonymous, редакторы профилей, состояние счёта, локальные HTTP/SOCKS5 и необязательный системный прокси Windows. Local выбирает только IPv4; если адрес не найден, прежний ввод сохраняется. Ручной IPv6 поддерживается. Для автоматического сертификата Slipstream сервер должен предоставить файл с того же источника; проверяются привязка личности и хеш DER. Ошибка не удаляет прежние данные и сертификаты.
+
+В этом выпуске включён официальный источник «Rovunet Free»: каталог с подписью Ed25519 проверяется, хеш каждой конфигурации сверяется, а конверт расшифровывается AES-256-GCM; после этого конфигурация подключается по обычному пути туннеля. Маршруты предлагаются случайно, сначала по группам, а квота 50 ГиБ общая для маршрутов одного пожертвования.
 
 Для Windows10 1809/build17763 и новее, и Windows11 x64. Установщик не подписан Authenticode; часть серверных маршрутов ещё не подтверждена реальными тестами. Лабораторные компоненты TUN, kill switch и системной службы в этой потребительской предварительной версии не активируются.
 

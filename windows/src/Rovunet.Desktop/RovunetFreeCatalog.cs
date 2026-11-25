@@ -107,15 +107,9 @@ internal static class RovunetFreeCatalog
     {
         get
         {
-            // Debug builds opt in explicitly with RovunetFreeDebug=1, which only the
-            // gitignored local props file sets, or with a complete local Debug
-            // secrets file. A public package therefore cannot carry the debug
-            // catalog keys even if they leak into the environment.
-            if (!string.IsNullOrEmpty(OverrideAesKey))
-                return Url.Length > 0 && PublicKey().Length == 32 && AesKey().Length == 32;
-            var local = DebugSecrets.Value;
-            bool complete = local.Aes.Length > 0 && local.Public.Length > 0 && local.Address.Length > 0;
-            if (!complete && Metadata("RovunetFreeDebug") != "1") return false;
+            // The trust values come from the build (public Release package) or from
+            // the owner's local Debug secrets file; with neither, the source is
+            // hidden instead of fetching a catalog the client cannot verify.
             try { return Url.Length > 0 && PublicKey().Length == 32 && AesKey().Length == 32; }
             catch { return false; }
         }
