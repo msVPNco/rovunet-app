@@ -46,7 +46,7 @@ if ($debugFreeBuild) { Set-Content -LiteralPath (Join-Path $outputRoot 'DEBUG-FR
 # once from the owner's local file and handed to MSBuild through the child
 # process environment, so they are never written into the repository, the
 # command line, the source manifest or this script's output.
-$freeArgs = @()
+$freeValuesPinned = $false
 if ($PublicFree) {
   if (-not (Test-Path -LiteralPath $FreeSecretsPath)) { throw 'Public Free build needs the Free v2 secrets file.' }
   $freeSecrets = Get-Content -LiteralPath $FreeSecretsPath -Raw | ConvertFrom-Json
@@ -57,7 +57,7 @@ if ($PublicFree) {
   $env:RovunetFreePublicKey = [string]$freeSecrets.public_key_base64
   $env:RovunetFreeCatalogAddress = [string]$freeSecrets.catalog_address
   $env:RovunetFreeKeyId = [string]$freeSecrets.key_id
-  $freeArgs = @('free')
+  $freeValuesPinned = $true
   Set-Content -LiteralPath (Join-Path $outputRoot 'PUBLIC-FREE-BUILD.txt') -Encoding utf8 -Value ("Public build with the Rovunet Free v2 source enabled.`nkey_id: " + $freeSecrets.key_id + "`ncatalog: " + $freeSecrets.catalog_address)
   Write-Warning 'PUBLIC FREE BUILD: the package carries the Rovunet Free v2 catalog key.'
 }
@@ -91,7 +91,6 @@ Push-Location $sourceRoot
 try {
   foreach ($entry in @(@('src/Rovunet.Desktop','desktop'),@('src/Rovunet.Agent','agent'),@('tests/Rovunet.WindowsSmoke','smoke'))) {
     $publishArgs = @("-p:SourceRevisionId=$revision")
-    if ($entry[1] -eq 'desktop' -and $freeArgs.Count -gt 0) { $publishArgs += $freeArgs }
     & $Dotnet publish $entry[0] -c Release -r win-x64 --self-contained true --no-restore -m:1 @publishArgs -o (Join-Path $outputRoot $entry[1])
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
   }
