@@ -1,9 +1,9 @@
-@font-face{font-family:Vazirmatn;src:url(Vazirmatn.ttf) format('truetype');font-display:swap}
-/* Roles mirror the Android Material scheme so both clients read as one product.
-   Dark is the default set; light, amoled and contrast only override the roles
-   that actually differ, and the accent arrives inline on <body> so no theme
-   block can shadow it. */
-:root{font-family:'Segoe UI',sans-serif;color-scheme:dark;
+/* Inter (Latin/Cyrillic) and Vazirmatn (Persian) are bundled in fonts/, both
+   SIL OFL 1.1; see licenses/. Roles mirror the Android Material scheme so both
+   clients read as one product. Dark is the default set; light, amoled and
+   contrast only override the roles that actually differ, and the accent arrives
+   inline on <body> so no theme block can shadow it. */
+:root{font-family:Inter,'Segoe UI Variable Text','Segoe UI',sans-serif;color-scheme:dark;
 --bg:#15171d;--top:#1e2129;--panel:#252f3e;--row:#2c3747;--hero:#344357;
 --ink:#f1f2f5;--muted:#c6cbd4;--line:#526074;--outline:#aaa8b5;
 --group:color-mix(in srgb,var(--accent) 22%,var(--panel));

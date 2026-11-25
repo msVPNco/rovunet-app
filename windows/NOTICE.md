@@ -56,6 +56,13 @@ Preview.4 bundles the unmodified static Vazirmatn Regular font v33.003 by
 Saber Rastikerdar and contributors under SIL Open Font License 1.1.
 See licenses/Vazirmatn-OFL.txt and Assets/font-provenance.json in the source.
 
+0.1.7 also bundles the Vazirmatn variable font (Persian) and Inter (Latin and
+Cyrillic), both under SIL Open Font License 1.1, as local woff2 subsets in
+HtmlShell/fonts so the HTML shell needs no network font. Sources:
+https://fonts.google.com/specimen/Vazirmatn and
+https://fonts.google.com/specimen/Inter. See licenses/Vazirmatn-OFL.txt and
+licenses/Inter-OFL.txt.
+
 Preview.5 uses ZXing.Net 0.16.11, Copyright ZXing.Net authors and Michael Jahn,
 under Apache-2.0. Source: https://github.com/micjahn/ZXing.Net
 See licenses/ZXing.Net-Apache-2.0.txt and the pinned NuGet package lock.

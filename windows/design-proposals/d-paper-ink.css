@@ -1,0 +1,46 @@
+/* Proposal D — Paper and ink (my own direction).
+   Editorial, not app-store: warm paper surface, ink text, one accent, hairlines
+   instead of shadows, small square power control, list rows that read like a
+   printed schedule. Dark stays charcoal paper rather than blue steel. */
+body[data-theme=light]{--bg:#f7f4ee;--top:#fbf9f4;--panel:#fffdf8;--row:#fffdf8;--hero:#fffdf8;
+  --ink:#191b1f;--muted:#6b6a63;--line:#ddd7c9;--outline:#8b887c;--shadow:#00000010}
+:root{--bg:#1b1a17;--top:#201f1b;--panel:#242320;--row:#242320;--hero:#242320;
+  --ink:#f2efe7;--muted:#a7a49a;--line:#3a3832;--outline:#a7a49a;--shadow:#00000033}
+body[data-theme=amoled]{--bg:#000;--top:#0c0b0a;--panel:#121110;--row:#121110;--hero:#121110;--line:#2a2825}
+.topbar{min-height:60px;background:var(--bg);border-bottom:1px solid var(--line)}
+.brand{font-weight:700;letter-spacing:-.5px;color:var(--ink)}
+.brand svg{fill:var(--accent)}
+.hero{border:1px solid var(--line);border-radius:4px;background:var(--panel);box-shadow:none;
+  height:calc(128px - var(--collapse)*48px);padding:14px 18px;gap:18px}
+.power-frame{width:calc(76px - var(--collapse)*26px);height:calc(76px - var(--collapse)*26px);padding:0;border:0;box-shadow:none;order:2}
+.power{border-radius:6px;background:transparent;border:1.5px solid var(--ink);color:var(--ink);box-shadow:none}
+.power svg{width:24px;height:24px;stroke-width:2}
+.power.connected{background:var(--good);border-color:var(--good);color:var(--bg)}
+.power:active{transform:translateY(1px)}
+.hero-copy{order:1}
+.hero-title{font-size:calc(19px - var(--collapse)*2px);font-weight:700;letter-spacing:-.2px}
+.hero-name{font-size:12.5px;letter-spacing:.2px;text-transform:none}
+.hero-meta{font-size:11.5px;color:var(--muted)}
+.hero-ping{font-family:Consolas,monospace;color:var(--muted)}
+.collection{margin-bottom:22px}
+.collection-head{min-height:56px;padding:6px 2px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none}
+.collection-head.selected{background:transparent;border-color:var(--line);box-shadow:inset 3px 0 0 var(--accent);padding-inline-start:10px}
+.collection-head.selected.active{box-shadow:inset 3px 0 0 var(--good);padding-inline-start:10px}
+.collection-name{font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase}
+.collection-head .summary,.collection-head .collection-status{font-size:11.5px;letter-spacing:.3px}
+.collection-label>svg{width:18px;height:18px;color:var(--muted)}
+.actions button{width:36px;height:36px;border-radius:6px}
+.profiles{gap:0;margin:4px 0 0;border-top:1px solid var(--line)}
+.profile{height:58px;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;grid-template-columns:minmax(0,1fr) 66px auto}
+.profile.selected{background:color-mix(in srgb,var(--accent) 8%,transparent);box-shadow:inset 3px 0 0 var(--accent)}
+.profile-name{font-size:13.5px;font-weight:600;letter-spacing:-.1px}
+.profile-host,.profile-result{font-family:Consolas,monospace;font-size:11px;color:var(--muted)}
+.ping{background:transparent;border:0;border-inline-start:1px solid var(--line);border-radius:0;font:500 11.5px Consolas,monospace;color:var(--muted);padding:2px 6px}
+.speed-stripe{width:2px;opacity:.7}
+.footer{border-top:1px solid var(--line);border-radius:0;background:var(--panel);box-shadow:none;font-family:Segoe UI,sans-serif}
+.footer-status{font-size:13px;letter-spacing:.2px}
+.footer-traffic{font-family:Consolas,monospace;font-size:11px;color:var(--muted)}
+.add{border-radius:6px;width:50px;height:50px;min-height:50px;background:var(--ink);color:var(--bg);box-shadow:none}
+.add svg{width:22px;height:22px}
+.n-surface,.n-button{border-radius:4px;box-shadow:none}
+.menu{border-radius:6px;box-shadow:0 20px 50px -30px #000}

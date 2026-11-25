@@ -1,0 +1,24 @@
+/* Proposal C — Bold product.
+   One confident hero in accent tint, chunky group pills, rows with a colour
+   stripe and a lifted name, big rounded action. */
+.hero{border:0;border-radius:30px;background:linear-gradient(140deg,color-mix(in srgb,var(--accent) 38%,var(--panel)),color-mix(in srgb,var(--accent) 12%,var(--panel)) 70%);box-shadow:0 18px 40px -26px color-mix(in srgb,var(--accent) 80%,transparent)}
+.power-frame{padding:0;border:0;width:calc(100px - var(--collapse)*40px);height:calc(100px - var(--collapse)*40px);box-shadow:0 0 0 6px color-mix(in srgb,var(--on-accent) 10%,transparent)}
+.power{background:var(--on-accent);color:var(--accent);border:0;box-shadow:0 14px 26px -14px #00000066}
+.power.connected{color:var(--good)}
+.power svg{width:32px;height:32px}
+.hero-title{font-size:calc(26px - var(--collapse)*5px);font-weight:750;letter-spacing:-.5px}
+.hero-name{font-size:13.5px;font-weight:500}
+.collection{margin-bottom:16px}
+.collection-head{min-height:66px;border:0;border-radius:999px;background:color-mix(in srgb,var(--accent) 16%,var(--panel));padding:6px 16px}
+.collection-head.selected{background:var(--accent);color:var(--on-accent);box-shadow:none}
+.collection-head.selected .collection-name,.collection-head.selected .summary,.collection-head.selected .muted{color:var(--on-accent)}
+.collection-head.selected .collection-label>svg{color:var(--on-accent)}
+.collection-name{font-size:15px;font-weight:700;letter-spacing:-.2px}
+.profiles{gap:9px;margin:9px 4px 0}
+.profile{height:68px;border:0;border-radius:18px;background:var(--row);box-shadow:0 10px 22px -20px var(--shadow)}
+.profile.selected{box-shadow:inset 0 0 0 2px var(--accent),0 12px 26px -18px var(--shadow)}
+.speed-stripe{width:6px;border-radius:6px;margin:6px 0}
+.profile-name{font-size:15px;font-weight:700}
+.ping{background:color-mix(in srgb,var(--accent) 18%,transparent);border:0;font-weight:700;color:var(--ink)}
+.add{border-radius:22px;width:60px;height:60px;min-height:60px}
+.footer{border-radius:28px 28px 0 0;border-top:0;box-shadow:0 -14px 34px -24px var(--shadow)}

@@ -1,0 +1,22 @@
+/* Proposal A — Refined Material.
+   Same structure and Material roles, calmer surfaces: softer depth, finer
+   typography, thinner borders, a flat accent power button. */
+.topbar{min-height:58px;background:color-mix(in srgb,var(--top) 90%,transparent);border-bottom-color:color-mix(in srgb,var(--line) 45%,transparent)}
+.brand{font-weight:700;letter-spacing:-.4px}
+.hero{border:0;border-radius:26px;background:linear-gradient(150deg,color-mix(in srgb,var(--accent) 15%,var(--panel)),var(--panel) 62%);box-shadow:0 10px 30px -18px var(--shadow),inset 0 1px 0 #ffffff10}
+.power-frame{padding:0;border:0;width:calc(92px - var(--collapse)*36px);height:calc(92px - var(--collapse)*36px);box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 45%,transparent),0 12px 26px -14px color-mix(in srgb,var(--accent) 70%,transparent)}
+.power{background:var(--accent);border:0;box-shadow:none;color:var(--on-accent)}
+.power.connected{background:var(--good);box-shadow:0 12px 26px -14px color-mix(in srgb,var(--good) 70%,transparent)}
+.power:active{transform:scale(.97)}
+.hero-title{font-size:calc(22px - var(--collapse)*3px);font-weight:700;letter-spacing:-.2px}
+.hero-name{font-size:13px;opacity:.85}
+.collection-head,.profile,.n-surface{border-color:color-mix(in srgb,var(--line) 38%,transparent);border-radius:20px;box-shadow:0 1px 2px #00000012,0 10px 22px -20px var(--shadow)}
+.profile{height:64px;background:color-mix(in srgb,var(--row) 72%,var(--panel))}
+.profile-name{font-size:14px;font-weight:600;letter-spacing:-.1px}
+.profile-host,.profile-result{font-size:11.5px;letter-spacing:.2px}
+.ping{background:transparent;border:1px solid color-mix(in srgb,var(--line) 45%,transparent);font-weight:600}
+.collection-head.selected,.profile.selected{box-shadow:inset 0 0 0 1.5px var(--accent),0 10px 22px -20px var(--shadow)}
+.actions button{border-radius:12px}
+.footer{border-top-color:color-mix(in srgb,var(--line) 40%,transparent);box-shadow:0 -10px 26px -22px var(--shadow)}
+.add{border-radius:16px;box-shadow:0 10px 24px -12px color-mix(in srgb,var(--accent) 80%,transparent)}
+.n-button{border-color:color-mix(in srgb,var(--line) 42%,transparent);box-shadow:none}
