@@ -17,16 +17,17 @@ var report = new Dictionary<string, object>();
 string[] checks = ["https://example.com/", "https://api.ipify.org"];
 
 // Debug trust values come from the owner's local secret files, passed as
-// arguments: <aes-key-file> <public-key-file> <catalog-base-url>. Nothing is
-// compiled in and nothing is printed.
+// arguments: <aes-key-file> <public-key-file> <catalog-base-url> [key-id].
+// Nothing is compiled in and nothing is printed.
 if (args.Length < 3)
 {
-    Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = "usage: <aes-key-file> <public-key-file> <catalog-base-url>" }));
+    Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = "usage: <aes-key-file> <public-key-file> <catalog-base-url> [key-id]" }));
     return 2;
 }
 RovunetFreeCatalog.OverrideAesKey = File.ReadAllText(args[0]).Trim();
 RovunetFreeCatalog.OverridePublicKey = File.ReadAllText(args[1]).Trim();
 RovunetFreeCatalog.OverrideAddress = args[2].TrimEnd('/') + "/catalog.json";
+if (args.Length > 3) RovunetFreeCatalog.OverrideKeyId = args[3].Trim();
 if (!RovunetFreeCatalog.Enabled)
 {
     Console.WriteLine(JsonSerializer.Serialize(new { suite = "free-v2-live", error = "free catalog is not enabled with these values" }));

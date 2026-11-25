@@ -24,5 +24,10 @@
       <_Parameter1>RovunetFreeDebug</_Parameter1>
       <_Parameter2>$(RovunetFreeDebug)</_Parameter2>
     </AssemblyAttribute>
+    <!-- Key id the pinned AES key is registered under; empty accepts any signed id. -->
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RovunetFreeKeyId</_Parameter1>
+      <_Parameter2>$(RovunetFreeKeyId)</_Parameter2>
+    </AssemblyAttribute>
   </ItemGroup>
 </Project>

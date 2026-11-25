@@ -26,19 +26,20 @@ string Entry(string id, string donation, DateTimeOffset created, string sha, str
         path = "configs/" + id + ".json", sha256 = sha
     });
 
-string Envelope(string id, string donation, DateTimeOffset created, string secret = link)
+string Envelope(string id, string donation, DateTimeOffset created, string secret = link,
+    string? plaintextId = null, string? aadKeyId = null, string? keyId = null)
 {
     byte[] nonce = new byte[12];
     for (int i = 0; i < nonce.Length; i++) nonce[i] = (byte)(0x40 + i);
-    byte[] plain = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { link = secret }));
-    byte[] aad = Encoding.UTF8.GetBytes($"rovunet-free-v2|{id}|{donation}|{Time(created)}|{Time(created.AddDays(30))}|fixture-key");
+    byte[] plain = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { id = plaintextId ?? id, link = secret }));
+    byte[] aad = Encoding.UTF8.GetBytes($"rovunet-free-v2|{id}|{donation}|{Time(created)}|{Time(created.AddDays(30))}|{aadKeyId ?? "fixture-key"}");
     byte[] ciphertext = new byte[plain.Length + 16];
     using (var gcm = new AesGcm(aesKey, 16))
         gcm.Encrypt(nonce, plain, ciphertext.AsSpan(0, plain.Length), ciphertext.AsSpan(plain.Length), aad);
     return JsonSerializer.Serialize(new
     {
         version = 2, algorithm = "AES-256-GCM", id, donation_id = donation,
-        created_at = Time(created), expires_at = Time(created.AddDays(30)), key_id = "fixture-key", quota_gib = 50,
+        created_at = Time(created), expires_at = Time(created.AddDays(30)), key_id = keyId ?? "fixture-key", quota_gib = 50,
         nonce = Convert.ToBase64String(nonce), ciphertext = Convert.ToBase64String(ciphertext)
     });
 }
@@ -162,6 +163,54 @@ var tests = new List<(string Name, Func<Task> Run)> {
         try { RovunetFreeCatalog.Decrypt(goodEnvelope, parsed, wrong); }
         catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { return Task.CompletedTask; }
         throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("an envelope sealed with a different AAD key id cannot be opened", () =>
+    {
+        // Metadata says fixture-key, the GCM tag covers another key id.
+        var sealedWith = Envelope(goodId, goodDonation, goodCreated, aadKeyId: "freedom-debug-20261123");
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(sealedWith))));
+        var parsed = RovunetFreeCatalog.ParseCatalog(Catalog(now, entry), now).Single();
+        try { RovunetFreeCatalog.Decrypt(sealedWith, parsed, aesKey); }
+        catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { return Task.CompletedTask; }
+        throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("plaintext must carry the signed item id", () =>
+    {
+        var other = Envelope(goodId, goodDonation, goodCreated, plaintextId: new string('f', 32));
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(other))));
+        var parsed = RovunetFreeCatalog.ParseCatalog(Catalog(now, entry), now).Single();
+        try { RovunetFreeCatalog.Decrypt(other, parsed, aesKey); }
+        catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { return Task.CompletedTask; }
+        throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("unsupported envelope version and algorithm are rejected", () =>
+    {
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(goodEnvelope))));
+        var parsed = RovunetFreeCatalog.ParseCatalog(Catalog(now, entry), now).Single();
+        foreach (var mutated in new[]
+        {
+            goodEnvelope.Replace("\"version\":2", "\"version\":1", StringComparison.Ordinal),
+            goodEnvelope.Replace("\"AES-256-GCM\"", "\"AES-256-CBC\"", StringComparison.Ordinal)
+        })
+        {
+            var sealedWith = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(mutated))));
+            var named = RovunetFreeCatalog.ParseCatalog(Catalog(now, sealedWith), now).Single();
+            try { RovunetFreeCatalog.Decrypt(mutated, named, aesKey); }
+            catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { continue; }
+            throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
+        }
+        return Task.CompletedTask;
+    }),
+    ("entries sealed under an unregistered key id are skipped", async () =>
+    {
+        var foreign = Envelope(goodId, goodDonation, goodCreated, keyId: "broker-key-001");
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(foreign))), keyId: "broker-key-001");
+        RovunetFreeCatalog.OverrideKeyId = "fixture-key";
+        try
+        {
+            await Reject(async () => { await Fetch(Catalog(now, entry)); }, "ROVUNET_FREE_UNAVAILABLE");
+        }
+        finally { RovunetFreeCatalog.OverrideKeyId = null; }
     }),
     ("entries must stay sorted by id", async () =>
     {

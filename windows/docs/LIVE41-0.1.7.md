@@ -64,6 +64,20 @@ AMOLED هیچ رنگی جز پیش‌فرض اثر نداشت. حالا رنگ �
 آرشیو منبع نمی‌رود و اسکریپت بسته‌بندی تا وقتی موجود است از ساخت بستهٔ عمومی
 امتناع می‌کند؛ یعنی هیچ بستهٔ عمومی‌ای ناخواسته کلید را حمل نمی‌کند.
 
+**انطباق کامل با قرارداد free/v2.** سه بند قرارداد که پیاده‌سازی ویندوز نداشت
+اضافه شد: شناسهٔ آیتم داخل متن رمزشده باید با شناسهٔ امضاشده در کاتالوگ یکی
+باشد؛ اگر بیلد یک `key_id` ثابت داشته باشد، پاکت‌هایی که شناسهٔ کلید دیگری را
+نام می‌برند به‌جای آزمودن با کلید اشتباه کنار گذاشته می‌شوند؛ و انتخاب تصادفی
+اول بین گروه‌های اهدا و بعد داخل هر گروه انجام می‌شود تا شش مسیر یک اهداکننده
+شبیه شش اهداکنندهٔ مستقل دیده نشود. مجموعهٔ `Rovunet.FreeCatalogTests` حالا
+۱۷ آزمون دارد، از جمله AAD با شناسهٔ کلید متفاوت، نسخه یا الگوریتم پشتیبانی‌نشده
+و متن رمزشده‌ای که شناسهٔ دیگری را ادعا می‌کند؛ هیچ‌کدام از این‌ها و همچنین
+امضای نامعتبر، هش ناهمخوان، کلید نامعتبر و سهمیهٔ نامعتبر پذیرفته نمی‌شود.
+آزمون زندهٔ تونل با `Rovunet.FreeLiveTests` و فایل‌های کلید محلی اجرا می‌شود
+(`<aes-key-file> <public-key-file> <catalog-base-url> [key-id]`) و تعداد دریافت،
+رمزگشایی، اتصال و عبور واقعی داده را جدا گزارش می‌کند؛ این اجرا هنوز انجام نشده
+و اتصال واقعی Free تأییدشده نیست.
+
 **زنجیره با هر پروفایل ذخیره‌شده کار می‌کند.** یک شرط اضافی که در اندروید
 وجود ندارد، پروفایل‌هایی را که اشتراک‌گذاری دستگاه‌شان خاموش است از لایه‌های
 زنجیره حذف می‌کرد؛ نتیجه این بود که فهرست لایهٔ دوم خالی می‌ماند. آن شرط
@@ -106,6 +120,21 @@ catalog address) into the local `windows/free-v2.local.props` file. That file is
 gitignored, never enters the source archive, and while it exists the packaging
 script refuses to produce a public package — so no public build ships the key by
 accident.
+
+**Full `free/v2` contract conformance.** Three contract clauses the Windows
+client was missing are now in place: the plaintext must carry the same item id
+the catalog signed; when a build pins a `key_id`, envelopes naming another key
+are skipped instead of being tried against the wrong secret; and selection is
+random by donation group first, then within the group, so six paths of one
+donor never look like six independent donors. `Rovunet.FreeCatalogTests` now
+runs 17 checks, adding a mismatched AAD key id, an unsupported envelope
+version or algorithm, and a plaintext claiming another id — alongside the
+existing rejection of a bad signature, a hash mismatch, a wrong key, an
+invalid quota and an unsorted catalog. The real tunnel probe runs with local
+key files through `Rovunet.FreeLiveTests`
+(`<aes-key-file> <public-key-file> <catalog-base-url> [key-id]`) and reports
+fetched, decrypted, connected and payload-verified counts separately. That
+run has not happened, so real Free connectivity is not verified.
 
 **The side menu no longer stutters.** Opening or closing it used to rebuild the
 whole view; the menu is now its own layer and only that layer is redrawn. Usage

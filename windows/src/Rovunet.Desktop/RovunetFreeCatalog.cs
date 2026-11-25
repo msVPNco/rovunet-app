@@ -52,11 +52,17 @@ internal static class RovunetFreeCatalog
     internal static string? OverrideAddress;
     internal static string? OverridePublicKey;
     internal static string? OverrideAesKey;
+    internal static string? OverrideKeyId;
 
     /// <summary>Address compiled into this build; empty when the operator did not publish one.</summary>
     internal static string Url => (OverrideAddress ?? Metadata("RovunetFreeCatalogAddress")).Trim();
 
     static string PublicKeyText => (OverridePublicKey ?? Metadata("RovunetFreeEd25519PublicKey")).Trim();
+
+    // The key id names which AES key an envelope was sealed with. When the build
+    // pins one, envelopes that name a different key are skipped instead of being
+    // tried against the wrong secret; empty means the contract key is unregistered.
+    static string KeyIdText => (OverrideKeyId ?? Metadata("RovunetFreeKeyId")).Trim();
 
     /// <summary>The quick path needs all three pinned values; otherwise it stays hidden.</summary>
     internal static bool Enabled
@@ -147,12 +153,14 @@ internal static class RovunetFreeCatalog
         string baseAddress = origin[..(origin.LastIndexOf('/') + 1)];
         var revoked = await FetchRevoked(fetch, baseAddress, cancellation, proxyPort);
 
-        var links = new List<string>();
+        var links = new List<(string Group, string Link)>();
+        string pinnedKeyId = KeyIdText;
         foreach (var entry in entries)
         {
             cancellation.ThrowIfCancellationRequested();
             if (entry.Expires <= DateTimeOffset.UtcNow) continue;
             if (revoked.Contains(entry.Id) || revoked.Contains(entry.DonationId)) continue;
+            if (pinnedKeyId.Length > 0 && !string.Equals(entry.KeyId, pinnedKeyId, StringComparison.Ordinal)) continue;
             string address;
             try { address = ConfigAddress(baseAddress + entry.Path); }
             catch (SafeError) { continue; }
@@ -163,12 +171,18 @@ internal static class RovunetFreeCatalog
             string? link;
             try { link = Decrypt(envelope.Body, entry, aes); }
             catch (SafeError) { link = null; }
-            if (link != null) links.Add(link);
+            if (link != null) links.Add((entry.DonationId, link));
         }
         if (links.Count == 0) throw new SafeError("ROVUNET_FREE_UNAVAILABLE");
-        // Every item in one catalog shares a single 50 GiB donation group, so the
-        // order is shuffled instead of always serving the same path first.
-        var ordered = links.OrderBy(_ => Random.Shared.Next()).ToList();
+        // Every item in one donation group shares a single 50 GiB budget, so the
+        // contract picks a random healthy group first and a random config inside
+        // it; six paths of one donor must never look like six independent donors.
+        var ordered = links
+            .GroupBy(item => item.Group, StringComparer.Ordinal)
+            .OrderBy(_ => Random.Shared.Next())
+            .SelectMany(group => group.OrderBy(_ => Random.Shared.Next()))
+            .Select(item => item.Link)
+            .ToList();
         return new(string.Join('\n', ordered), payload.Date, "");
     }
 
@@ -295,6 +309,10 @@ internal static class RovunetFreeCatalog
         catch (CryptographicException) { throw new SafeError("ROVUNET_FREE_UNVERIFIED"); }
 
         using var item = JsonDocument.Parse(plain);
+        // The contract binds the plaintext to its entry: the inner id must be the
+        // signed id, so a replayed link cannot ride along on another envelope.
+        if (item.RootElement.GetProperty("id").GetString() != entry.Id)
+            throw new SafeError("ROVUNET_FREE_UNVERIFIED");
         string link = item.RootElement.GetProperty("link").GetString() ?? "";
         if (link.Length is < 1 or > 65536 || link.Contains('\n') || link.Contains('\r'))
             throw new SafeError("ROVUNET_FREE_UNVERIFIED");
