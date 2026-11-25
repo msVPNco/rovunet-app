@@ -5,10 +5,14 @@
 # windows/scripts/package-windows-free-public.ps1, which carries the Rovunet Free
 # v2 trust values that this release is meant to ship.
 
+param(
+    [string]$BuildPath = 'H:\02-Rovunet-Lead\Windows\versions\v0.2.0\candidate1'
+)
+
 $ErrorActionPreference = 'Stop'
 
 $git    = 'C:\Users\Mohsen\AppData\Local\Temp\rovunet_git\git\cmd\git.exe'
-$build  = 'H:\02-Rovunet-Lead\Windows\versions\v0.2.0\candidate1'
+$build  = $BuildPath
 $body   = 'H:\02-Rovunet-Lead\Windows\work\next-0.1.5\windows\docs\releases\windows-0.2.0.md'
 $tag    = 'windows-v0.2.0'
 $name   = 'Rovunet-Windows-0.2.0-x64-Setup.exe'
