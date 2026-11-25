@@ -19,25 +19,25 @@ public sealed partial class MainWindow
         // and outline, so the native fallback and the HTML shell read as one app.
         var palette = !darkTheme ? new Dictionary<string, string>
         {
-            ["Bg"]="#F5F5F7", ["BgTop"]="#FAFAFB", ["Card"]="#EDF1F6", ["Soft"]="#E8EDF3",
-            ["Sidebar"]="#F5F5F7", ["Ink"]="#282B35", ["Muted"]="#505966", ["Accent"]="#74678B",
-            ["Outline"]="#C1CAD6", ["Selected"]="#E8E6EF", ["Green"]="#08613B", ["Red"]="#B3261E", ["Amber"]="#8A5A00",
-            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#E8E6EF", ["AddInk"]="#2D2C36",
-            ["Collection"]="#E8E6EF", ["StatusSurface"]="#EDF1F6", ["Hero"]="#E5EBF2", ["HeroEnd"]="#F5F5F7", ["ScanCyan"]="#146A78"
+            ["Bg"]="#F6F7F9", ["BgTop"]="#FFFFFF", ["Card"]="#FFFFFF", ["Soft"]="#F2F5F9",
+            ["Sidebar"]="#F6F7F9", ["Ink"]="#16181D", ["Muted"]="#5A6472", ["Accent"]="#5B4EA8",
+            ["Outline"]="#E4E7EE", ["Selected"]="#ECEAFB", ["Green"]="#1E7B44", ["Red"]="#B23A3A", ["Amber"]="#8A5A00",
+            ["PowerSurface"]="#1E7B44", ["PowerInk"]="#FFFFFF", ["AddSurface"]="#16181D", ["AddInk"]="#F6F7F9",
+            ["Collection"]="#F2F5F9", ["StatusSurface"]="#FFFFFF", ["Hero"]="#EFF3F9", ["HeroEnd"]="#F6F7F9", ["ScanCyan"]="#146A78"
         } : IsAmoled ? new Dictionary<string, string>
         {
-            ["Bg"]="#000000", ["BgTop"]="#101319", ["Card"]="#171D27", ["Soft"]="#202938",
-            ["Sidebar"]="#000000", ["Ink"]="#F1F2F5", ["Muted"]="#C6CBD4", ["Accent"]="#C6BDDB",
-            ["Outline"]="#465165", ["Selected"]="#222229", ["Green"]="#9CF0C4", ["Red"]="#FFB8BE", ["Amber"]="#E8C15A",
-            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#222229", ["AddInk"]="#EEEEF3",
-            ["Collection"]="#222229", ["StatusSurface"]="#171D27", ["Hero"]="#283445", ["HeroEnd"]="#000000", ["ScanCyan"]="#83D4DD"
+            ["Bg"]="#000000", ["BgTop"]="#0B0D10", ["Card"]="#101318", ["Soft"]="#14181F",
+            ["Sidebar"]="#000000", ["Ink"]="#ECEEF3", ["Muted"]="#9BA3B2", ["Accent"]="#B3A6FF",
+            ["Outline"]="#22262F", ["Selected"]="#1A1F27", ["Green"]="#5FE0A6", ["Red"]="#FF9AA2", ["Amber"]="#F2C65A",
+            ["PowerSurface"]="#5FE0A6", ["PowerInk"]="#04160E", ["AddSurface"]="#1A1F27", ["AddInk"]="#ECEEF3",
+            ["Collection"]="#14181F", ["StatusSurface"]="#101318", ["Hero"]="#171C24", ["HeroEnd"]="#000000", ["ScanCyan"]="#7FD3DE"
         } : new Dictionary<string, string>
         {
-            ["Bg"]="#15171D", ["BgTop"]="#1E2129", ["Card"]="#252F3E", ["Soft"]="#2C3747",
-            ["Sidebar"]="#15171D", ["Ink"]="#F1F2F5", ["Muted"]="#C6CBD4", ["Accent"]="#C6BDDB",
-            ["Outline"]="#526074", ["Selected"]="#30313B", ["Green"]="#9CF0C4", ["Red"]="#FFB8BE", ["Amber"]="#E8C15A",
-            ["PowerSurface"]="#99D7B6", ["PowerInk"]="#173E34", ["AddSurface"]="#30313B", ["AddInk"]="#EEEEF3",
-            ["Collection"]="#30313B", ["StatusSurface"]="#252F3E", ["Hero"]="#344357", ["HeroEnd"]="#15171D", ["ScanCyan"]="#83D4DD"
+            ["Bg"]="#0E1014", ["BgTop"]="#14171D", ["Card"]="#171B22", ["Soft"]="#1B2029",
+            ["Sidebar"]="#0E1014", ["Ink"]="#ECEEF3", ["Muted"]="#9BA3B2", ["Accent"]="#B3A6FF",
+            ["Outline"]="#2A303B", ["Selected"]="#1E2430", ["Green"]="#5FE0A6", ["Red"]="#FF9AA2", ["Amber"]="#F2C65A",
+            ["PowerSurface"]="#5FE0A6", ["PowerInk"]="#04160E", ["AddSurface"]="#1E2430", ["AddInk"]="#ECEEF3",
+            ["Collection"]="#1E2430", ["StatusSurface"]="#171B22", ["Hero"]="#1F2531", ["HeroEnd"]="#0E1014", ["ScanCyan"]="#7FD3DE"
         };
         foreach (var (key, color) in palette)
         {
