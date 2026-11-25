@@ -161,6 +161,11 @@ public sealed partial class MainWindow
                 }
                 var focusWindow=new Window{Owner=this,Width=200,Height=120,ShowInTaskbar=false,Title="Synthetic focus fixture"};focusWindow.Show();focusWindow.Activate();
                 checks[count+"_selection_survives_blur"]=await Wait("document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");focusWindow.Close();Activate();
+                // Tapping a card itself is a choice: the ring and the open list move
+                // to that card, which is what the owner expects when disconnected.
+                await core.ExecuteScriptAsync("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-label")+").click()");
+                checks[count+"_card_tap_selects_that_collection"]=await Wait("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-head")+")?.classList.contains('selected')&&document.querySelector("+Quote("[data-group="+Quote(other)+"] .profiles")+")!==null");
+                checks[count+"_card_tap_releases_previous"]=await Wait("!document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");
             }
             // Choosing an accent must keep Settings open instead of dropping the
             // user back on Home.

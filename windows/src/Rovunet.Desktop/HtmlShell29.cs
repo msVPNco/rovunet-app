@@ -116,6 +116,7 @@ public sealed partial class MainWindow
                 case "profile-menu":if(rows.FirstOrDefault(r=>r.Profile.Id==id) is {} row&&Visuals<System.Windows.Controls.Button>(row.Tile).FirstOrDefault(button=>Equals(button.Tag,"CARD_MORE"))?.ContextMenu is {} rowMenu)htmlPopup29=HtmlMenu29(rowMenu);break;
                 case "group-menu":if(groups.FirstOrDefault(g=>g.Key==id) is {} group)htmlPopup29=HtmlMenu29(group.Menu);break;
                 case "toggle":if(groups.FirstOrDefault(g=>g.Key==id) is {} toggle)ToggleCollection(toggle.Members);break;
+                case "select-group":if(groups.FirstOrDefault(g=>g.Key==id) is {} pick)SelectCollection(pick.Members);break;
                 case "ping":if(groups.FirstOrDefault(g=>g.Key==id) is {} ping)QuickPing29(ping.Members);break;
                 case "group-power":if(groups.FirstOrDefault(g=>g.Key==id) is {} power)ConnectCollection(power.Members);break;
                 case "stop":CancelCollectionTest();break;

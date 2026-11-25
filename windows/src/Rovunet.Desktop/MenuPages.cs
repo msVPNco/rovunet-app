@@ -78,6 +78,17 @@ public sealed partial class MainWindow
     {
         ToggleCollection26(CollectionKey(members[0]));
     }
+    // Tapping a collection card makes it the choice the user sees and opens it.
+    // The chevron button keeps the old expand-only behaviour, so opening another
+    // group never moves the selection by itself.
+    void SelectCollection(List<Profile> members)
+    {
+        if(members.Count==0)return;
+        string key=CollectionKey(members[0]);
+        if(data.OpenCollectionId!=key)ToggleCollection26(key);
+        var chosen=members.FirstOrDefault(p=>p.Id==data.SelectedId)??members.FirstOrDefault(p=>p.CanConnect);
+        if(chosen!=null)SelectProfile20(chosen);
+    }
     void TogglePin(Profile profile)
     {
         bool pinned=data.PinnedProfileIds.Contains(profile.Id);
