@@ -129,7 +129,9 @@ public sealed partial class MainWindow
     void PublicSourcesPage()
     {
         var page=Dialog("PUBLIC_SOURCES");var panel=new StackPanel{Margin=new(20)};panel.Children.Add(Text(L.Text("PUBLIC_CONSENT"),14,Muted));
-        foreach(var preset in PublicFeed.Presets){var body=new StackPanel();body.Children.Add(Text(preset.DisplayName,19));body.Children.Add(Text(L.Text("PUBLIC_PREVIEW_HINT"),12,Muted));body.Children.Add(Button("REVIEW_IMPORT",()=>SubscriptionDialog(null,preset.Url),true));panel.Children.Add(Card(body));}
+        // The Free source is drawn by its own card below, with the one-click
+        // action, so the generic review card must not show it a second time.
+        foreach(var preset in PublicFeed.Presets){if(preset.Key=="rovunet")continue;var body=new StackPanel();body.Children.Add(Text(preset.DisplayName,19));body.Children.Add(Text(L.Text("PUBLIC_PREVIEW_HINT"),12,Muted));body.Children.Add(Button("REVIEW_IMPORT",()=>SubscriptionDialog(null,preset.Url),true));panel.Children.Add(Card(body));}
         var free=new StackPanel();free.Children.Add(Text(L.Text("SOURCE_ROVUNET"),19));
         if(RovunetFreeCatalog.Enabled){free.Children.Add(Text(L.Text("ROVUNET_FREE_HINT"),12,Muted));free.Children.Add(Button("ROVUNET_FREE_GET",()=>SubscriptionDialog(null,RovunetFreeCatalog.Url),true));}
         else free.Children.Add(Text(L.Text("ROVUNET_FREE_UNAVAILABLE"),12,Muted));
