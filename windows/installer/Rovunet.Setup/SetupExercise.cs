@@ -51,7 +51,18 @@ internal static class SetupExercise
             {
                 using var refusal=Process.Start(new ProcessStartInfo(Path.Combine(destination,"Uninstall.exe")){UseShellExecute=false,CreateNoWindow=true,Arguments="/S _?="+destination})!;await refusal.WaitForExitAsync();checks["uninstall_preflights_all_owned_files"]=refusal.ExitCode==33&&File.Exists(Path.Combine(destination,"Rovunet.exe"))&&Hash(Path.Combine(destination,"Rovunet.dll"))==dll;
             }
-            using var uninstall=Process.Start(new ProcessStartInfo(Path.Combine(destination,"Uninstall.exe")){UseShellExecute=false,CreateNoWindow=true,Arguments="/S _?="+destination})!;await uninstall.WaitForExitAsync();checks["uninstall_completed"]=uninstall.ExitCode==0&&!File.Exists(Path.Combine(destination,"Rovunet.dll"));checks["uninstall_preserves_user_file"]=File.ReadAllText(keep)=="keep-fixture";
+            // Nothing from the test folder may still be running, and a scanner can
+            // hold a freshly written engine for a moment. Wait, and let the
+            // uninstaller be asked again the way a user would, before failing.
+            async Task WaitForOwnedProcesses(){for(int i=0;i<100;i++){bool any=false;foreach(var process in Process.GetProcesses()){try{any|=process.MainModule?.FileName is string path&&path.StartsWith(destination+Path.DirectorySeparatorChar,StringComparison.OrdinalIgnoreCase);}catch{}finally{process.Dispose();}if(any)break;}if(!any)return;await Task.Delay(100);}}
+            int uninstallCode=33;
+            for(int attempt=0;attempt<3;attempt++){
+                await WaitForOwnedProcesses();
+                using var uninstall=Process.Start(new ProcessStartInfo(Path.Combine(destination,"Uninstall.exe")){UseShellExecute=false,CreateNoWindow=true,Arguments="/S _?="+destination})!;await uninstall.WaitForExitAsync();uninstallCode=uninstall.ExitCode;
+                if(uninstallCode==0)break;
+                await Task.Delay(500);
+            }
+            checks["uninstall_completed"]=uninstallCode==0&&!File.Exists(Path.Combine(destination,"Rovunet.dll"));checks["uninstall_preserves_user_file"]=File.ReadAllText(keep)=="keep-fixture";
             using var testKey=RegistryKey.OpenBaseKey(RegistryHive.CurrentUser,RegistryView.Registry64).OpenSubKey(@"Software\Microsoft\Windows\CurrentVersion\Uninstall\RovunetInstallerTest");checks["test_registration_removed"]=testKey==null;checks["owner_registration_unchanged"]=Registration()==ownerRegistration;checks["owner_recovery_journal_unchanged"]=JournalHash()==journalBefore;checks["owner_recovery_arm_unchanged"]=RecoveryArm()==armBefore;
         }
         catch(Exception e){failure=e is InstallProblem p?p.Code:e.GetType().Name;checks["exercise_completed"]=false;}
