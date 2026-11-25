@@ -65,18 +65,24 @@ AMOLED هیچ رنگی جز پیش‌فرض اثر نداشت. حالا رنگ �
 امتناع می‌کند؛ یعنی هیچ بستهٔ عمومی‌ای ناخواسته کلید را حمل نمی‌کند.
 
 **انطباق کامل با قرارداد free/v2.** سه بند قرارداد که پیاده‌سازی ویندوز نداشت
-اضافه شد: شناسهٔ آیتم داخل متن رمزشده باید با شناسهٔ امضاشده در کاتالوگ یکی
-باشد؛ اگر بیلد یک `key_id` ثابت داشته باشد، پاکت‌هایی که شناسهٔ کلید دیگری را
-نام می‌برند به‌جای آزمودن با کلید اشتباه کنار گذاشته می‌شوند؛ و انتخاب تصادفی
+اضافه شد: متن رمزشده باید کنار لینک یک شناسهٔ آیتم معتبر داشته باشد (شناسهٔ اصلی
+آیتم پنل، نه شناسهٔ تصادفی پاکت)؛ اگر بیلد یک `key_id` ثابت داشته باشد، پاکت‌هایی
+که شناسهٔ کلید دیگری را نام می‌برند به‌جای آزمودن با کلید اشتباه کنار گذاشته
+می‌شوند؛ و انتخاب تصادفی
 اول بین گروه‌های اهدا و بعد داخل هر گروه انجام می‌شود تا شش مسیر یک اهداکننده
 شبیه شش اهداکنندهٔ مستقل دیده نشود. مجموعهٔ `Rovunet.FreeCatalogTests` حالا
-۱۷ آزمون دارد، از جمله AAD با شناسهٔ کلید متفاوت، نسخه یا الگوریتم پشتیبانی‌نشده
-و متن رمزشده‌ای که شناسهٔ دیگری را ادعا می‌کند؛ هیچ‌کدام از این‌ها و همچنین
+۱۸ آزمون دارد، از جمله AAD با شناسهٔ کلید متفاوت، نسخه یا الگوریتم پشتیبانی‌نشده
+و متن رمزشده‌ای بدون شناسهٔ آیتم معتبر؛ هیچ‌کدام از این‌ها و همچنین
 امضای نامعتبر، هش ناهمخوان، کلید نامعتبر و سهمیهٔ نامعتبر پذیرفته نمی‌شود.
 آزمون زندهٔ تونل با `Rovunet.FreeLiveTests` و فایل‌های کلید محلی اجرا می‌شود
 (`<aes-key-file> <public-key-file> <catalog-base-url> [key-id]`) و تعداد دریافت،
-رمزگشایی، اتصال و عبور واقعی داده را جدا گزارش می‌کند؛ این اجرا هنوز انجام نشده
-و اتصال واقعی Free تأییدشده نیست.
+رمزگشایی، اتصال و عبور واقعی داده را جدا گزارش می‌کند. با کلید Debug بیست‌وسوم
+نوامبر همین آزمون روی شش کانفیگ کاتالوگ اجرا شد: ۶ دریافت، ۶ رمزگشایی، ۶ اتصال
+و ۶ عبور واقعی داده (دو REALITY، دو XHTTP، یک TCP و یک WS؛ هرکدام ۲.۹ تا ۴.۰
+ثانیه). شناسهٔ داخل متن رمزشده شناسهٔ آیتم اصلی پنل است نه شناسهٔ تصادفی پاکت؛
+کد فقط شکل آن را بررسی می‌کند. این اجرا از مسیر خودِ کلاینت نسخهٔ نهایی
+(`PublicFeed.Fetch` → `RovunetFreeCatalog.Fetch`) و با شکل دسترس‌پذیری آزمون انجام
+شد، نه با کلیک روی دکمهٔ رابط کاربری؛ و کلید در بستهٔ عمومی نمی‌رود.
 
 **زنجیره با هر پروفایل ذخیره‌شده کار می‌کند.** یک شرط اضافی که در اندروید
 وجود ندارد، پروفایل‌هایی را که اشتراک‌گذاری دستگاه‌شان خاموش است از لایه‌های
@@ -122,19 +128,24 @@ script refuses to produce a public package — so no public build ships the key 
 accident.
 
 **Full `free/v2` contract conformance.** Three contract clauses the Windows
-client was missing are now in place: the plaintext must carry the same item id
-the catalog signed; when a build pins a `key_id`, envelopes naming another key
-are skipped instead of being tried against the wrong secret; and selection is
+client was missing are now in place: the plaintext's item id must be well formed
+and sit next to the link (it is the original panel item id, not the random
+envelope id); when a build pins a `key_id`, envelopes naming another key are
+skipped instead of being tried against the wrong secret; and selection is
 random by donation group first, then within the group, so six paths of one
 donor never look like six independent donors. `Rovunet.FreeCatalogTests` now
-runs 17 checks, adding a mismatched AAD key id, an unsupported envelope
-version or algorithm, and a plaintext claiming another id — alongside the
+runs 18 checks, adding a mismatched AAD key id, an unsupported envelope
+version or algorithm, and a plaintext without a usable item id — alongside the
 existing rejection of a bad signature, a hash mismatch, a wrong key, an
 invalid quota and an unsorted catalog. The real tunnel probe runs with local
 key files through `Rovunet.FreeLiveTests`
 (`<aes-key-file> <public-key-file> <catalog-base-url> [key-id]`) and reports
-fetched, decrypted, connected and payload-verified counts separately. That
-run has not happened, so real Free connectivity is not verified.
+fetched, decrypted, connected and payload-verified counts separately. With the
+23 November debug key against the published catalog it reported 6 fetched, 6
+decrypted, 6 connected and 6 payload-verified (two REALITY, two XHTTP, one TCP
+and one WS, 2.9–4.0 s each). The run used the production client path
+(`PublicFeed.Fetch` → `RovunetFreeCatalog.Fetch`) under a test harness, not the
+UI button, and the key never enters a public package.
 
 **The side menu no longer stutters.** Opening or closing it used to rebuild the
 whole view; the menu is now its own layer and only that layer is redrawn. Usage

@@ -174,14 +174,25 @@ var tests = new List<(string Name, Func<Task> Run)> {
         catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { return Task.CompletedTask; }
         throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
     }),
-    ("plaintext must carry the signed item id", () =>
+    ("plaintext must carry an item id next to the link", () =>
     {
-        var other = Envelope(goodId, goodDonation, goodCreated, plaintextId: new string('f', 32));
-        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(other))));
+        var missing = Envelope(goodId, goodDonation, goodCreated, plaintextId: "");
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(missing))));
         var parsed = RovunetFreeCatalog.ParseCatalog(Catalog(now, entry), now).Single();
-        try { RovunetFreeCatalog.Decrypt(other, parsed, aesKey); }
+        try { RovunetFreeCatalog.Decrypt(missing, parsed, aesKey); }
         catch (SafeError error) when (error.Code == "ROVUNET_FREE_UNVERIFIED") { return Task.CompletedTask; }
         throw new Exception("EXPECTED_ROVUNET_FREE_UNVERIFIED");
+    }),
+    ("the plaintext id is the panel item id, not the envelope id", () =>
+    {
+        // Contract: plaintext holds {"id": original item id, "link": ...}; the
+        // random envelope id never appears there, so a different id must pass.
+        var itemId = "freedom-item-0001";
+        var other = Envelope(goodId, goodDonation, goodCreated, plaintextId: itemId);
+        var entry = Entry(goodId, goodDonation, goodCreated, Hex(SHA256.HashData(Encoding.UTF8.GetBytes(other))));
+        var parsed = RovunetFreeCatalog.ParseCatalog(Catalog(now, entry), now).Single();
+        Check(RovunetFreeCatalog.Decrypt(other, parsed, aesKey) == link);
+        return Task.CompletedTask;
     }),
     ("unsupported envelope version and algorithm are rejected", () =>
     {

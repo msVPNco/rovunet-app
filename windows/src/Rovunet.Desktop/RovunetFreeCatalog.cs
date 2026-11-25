@@ -330,9 +330,9 @@ internal static class RovunetFreeCatalog
         catch (CryptographicException) { return "auth"; }
 
         using var item = JsonDocument.Parse(plain);
-        // The contract binds the plaintext to its entry: the inner id must be the
-        // signed id, so a replayed link cannot ride along on another envelope.
-        if (item.RootElement.GetProperty("id").GetString() != entry.Id)
+        // The plaintext carries the original panel item id next to the link; it is
+        // deliberately not the random envelope id, so only its shape is checked.
+        if (item.RootElement.GetProperty("id").GetString() is not { Length: >= 1 and <= 200 })
             return "inner-id";
         string value = item.RootElement.GetProperty("link").GetString() ?? "";
         if (value.Length is < 1 or > 65536 || value.Contains('\n') || value.Contains('\r'))
