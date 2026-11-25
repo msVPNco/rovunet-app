@@ -27,7 +27,9 @@ Function .onInit
     Quit
   ${EndIf}
   ReadRegStr $0 HKLM "SOFTWARE\Microsoft\Windows NT\CurrentVersion" "CurrentBuildNumber"
-  IntCmp $0 19045 supported unsupported supported
+  ; Windows 10 1809 (build 17763) is the floor for the bundled .NET 10 runtime,
+  ; the same floor the app, the agent and the setup window use.
+  IntCmp $0 17763 supported unsupported supported
   unsupported:
     SetErrorLevel 30
     Quit
