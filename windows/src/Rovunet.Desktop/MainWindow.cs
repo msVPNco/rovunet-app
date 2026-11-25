@@ -133,6 +133,10 @@ public sealed partial class MainWindow : Window
         b.Click += (_, _) => { try { action(); } catch (Exception e) { if(fixtureMode)uiEventError15?.Invoke(e);lastError = e is SafeError se ? se.Code : "UNEXPECTED_ERROR"; if (errorText != null) SetState(state); } }; System.Windows.Automation.AutomationProperties.SetName(b, L.Text(key)); return b;
     }
     void Save() { if(fixtureMode){storeSaveFixture28?.Invoke();return;}PrivateStore.Save("profiles.dpapi", data); }
+    // Which card is chosen or open is a view preference: paint it at once and let
+    // the encrypted file land in the background, so a tap never waits on the disk.
+    // Fixtures keep the synchronous path so they can assert the written store.
+    void SaveView() { if(fixtureMode){Save();return;}PrivateStore.SaveInBackground(PrivateStore.Root,"profiles.dpapi",data); }
     Profile? Selected => data.Profiles.FirstOrDefault(p => p.Id == data.SelectedId);
     async Task Run(Func<Task> operation)
     {

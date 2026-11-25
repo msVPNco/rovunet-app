@@ -173,7 +173,7 @@ public sealed partial class MainWindow
                 // to that card, which is what the owner expects when disconnected.
                 // Measure the whole felt path: encrypted store write (real), then
                 // the page's own build and label measurement reported by app.js.
-                storeSaveFixture28=()=>{var save=System.Diagnostics.Stopwatch.StartNew();Rovunet.Platform.PrivateStore.SaveIn(storeFolder,"profiles.dpapi",data);save.Stop();saveMs41=save.ElapsedMilliseconds;saves41++;};
+                storeSaveFixture28=()=>{var save=System.Diagnostics.Stopwatch.StartNew();Rovunet.Platform.PrivateStore.SaveInBackground(storeFolder,"profiles.dpapi",data);save.Stop();saveMs41=save.ElapsedMilliseconds;saves41++;};
                 await core.ExecuteScriptAsync("window.__perf41={}");
                 var tap=System.Diagnostics.Stopwatch.StartNew();
                 await core.ExecuteScriptAsync("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-label")+").click()");

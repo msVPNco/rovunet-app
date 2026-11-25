@@ -33,11 +33,11 @@ public sealed partial class MainWindow
             ["Collection"]="#14181F", ["StatusSurface"]="#101318", ["Hero"]="#171C24", ["HeroEnd"]="#000000", ["ScanCyan"]="#7FD3DE"
         } : new Dictionary<string, string>
         {
-            ["Bg"]="#0E1014", ["BgTop"]="#14171D", ["Card"]="#171B22", ["Soft"]="#1B2029",
-            ["Sidebar"]="#0E1014", ["Ink"]="#ECEEF3", ["Muted"]="#9BA3B2", ["Accent"]="#B3A6FF",
-            ["Outline"]="#2A303B", ["Selected"]="#1E2430", ["Green"]="#5FE0A6", ["Red"]="#FF9AA2", ["Amber"]="#F2C65A",
-            ["PowerSurface"]="#5FE0A6", ["PowerInk"]="#04160E", ["AddSurface"]="#1E2430", ["AddInk"]="#ECEEF3",
-            ["Collection"]="#1E2430", ["StatusSurface"]="#171B22", ["Hero"]="#1F2531", ["HeroEnd"]="#0E1014", ["ScanCyan"]="#7FD3DE"
+            ["Bg"]="#171B23", ["BgTop"]="#1D222C", ["Card"]="#222833", ["Soft"]="#262D39",
+            ["Sidebar"]="#171B23", ["Ink"]="#EEF0F5", ["Muted"]="#A9B2C0", ["Accent"]="#B3A6FF",
+            ["Outline"]="#38414F", ["Selected"]="#2B3341", ["Green"]="#67E2AB", ["Red"]="#FFA2A9", ["Amber"]="#F2C65A",
+            ["PowerSurface"]="#67E2AB", ["PowerInk"]="#04160E", ["AddSurface"]="#2B3341", ["AddInk"]="#EEF0F5",
+            ["Collection"]="#262D39", ["StatusSurface"]="#222833", ["Hero"]="#2B3341", ["HeroEnd"]="#171B23", ["ScanCyan"]="#7FD3DE"
         };
         foreach (var (key, color) in palette)
         {

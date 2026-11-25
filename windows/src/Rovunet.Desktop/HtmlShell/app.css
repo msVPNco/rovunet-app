@@ -4,10 +4,10 @@
    contrast only override the roles that actually differ, and the accent arrives
    inline on <body> so no theme block can shadow it. */
 :root{font-family:Inter,'Segoe UI Variable Text','Segoe UI',sans-serif;color-scheme:dark;
---bg:#0e1014;--top:#14171d;--panel:#171b22;--row:#1b2029;--hero:#1f2531;
---ink:#eceef3;--muted:#9ba3b2;--line:#2a303b;--outline:#6d7688;
---group:color-mix(in srgb,var(--accent) 22%,var(--panel));
---good:#5fe0a6;--bad:#ff9aa2;--accent:#b3a6ff;--on-accent:#0b0912;--shadow:#00000066}
+--bg:#171b23;--top:#1d222c;--panel:#222833;--row:#262d39;--hero:#2b3341;
+--ink:#eef0f5;--muted:#a9b2c0;--line:#38414f;--outline:#7c8698;
+--group:color-mix(in srgb,var(--accent) 20%,var(--panel));
+--good:#67e2ab;--bad:#ffa2a9;--accent:#b3a6ff;--on-accent:#0b0912;--shadow:#00000066}
 html[lang=fa]{font-family:Vazirmatn,Inter,Tahoma,sans-serif}html[lang=zh-CN]{font-family:'Microsoft YaHei UI',Inter,sans-serif}
 body[data-theme=light]{color-scheme:light;
 --bg:#f6f7f9;--top:#ffffff;--panel:#ffffff;--row:#f2f5f9;--hero:#eff3f9;

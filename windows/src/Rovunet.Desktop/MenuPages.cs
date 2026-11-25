@@ -101,7 +101,7 @@ public sealed partial class MainWindow
         var chosen=members.FirstOrDefault(p=>p.Id==data.SelectedId)??members.FirstOrDefault(p=>p.CanConnect);
         if(chosen!=null&&chosen.Id!=data.SelectedId){
             CancelRouting28();string old=data.SelectedId;data.SelectedId=chosen.Id;
-            try{Save();}catch{data.SelectedId=old;lastError="PRIVATE_STORE_FAILED";}
+            try{SaveView();}catch{data.SelectedId=old;lastError="PRIVATE_STORE_FAILED";}
             if(!htmlReady29)RefreshCards();
         }
         if(data.OpenCollectionId!=key)ToggleCollection26(key);else QueueHtml29();

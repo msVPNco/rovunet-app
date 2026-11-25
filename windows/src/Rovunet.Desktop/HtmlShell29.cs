@@ -18,6 +18,11 @@ public sealed partial class MainWindow
     internal bool HtmlFixture29;
     string htmlLastModel29="";
     readonly Dictionary<long,FrameworkElement> htmlActions29=[];
+    readonly Dictionary<long,FrameworkElement> htmlActionsPrev29=[];
+    // A click can arrive for the model that was on screen a moment ago, while the
+    // rebuild that follows a theme or page change has already replaced the ids.
+    // Resolve those against the previous posting too instead of dropping them.
+    FrameworkElement? HtmlAction29(long id)=>htmlActions29.TryGetValue(id,out var current)?current:htmlActionsPrev29.GetValueOrDefault(id);
     readonly ConditionalWeakTable<FrameworkElement,HtmlIdentity29> htmlIds29=new();
     long htmlNextId29;
     sealed record HtmlIdentity29(long Id);
@@ -82,7 +87,7 @@ public sealed partial class MainWindow
     {
         if(!htmlReady29||htmlPending29||closing||!fixtureMode&&!IsActive&&htmlInactiveSent29)return;htmlPending29=true;
         Dispatcher.BeginInvoke(()=>{htmlPending29=false;try{
-            htmlActions29.Clear();var model=HtmlModel29();string json=JsonSerializer.Serialize(model);
+            htmlActionsPrev29.Clear();foreach(var pair in htmlActions29)htmlActionsPrev29[pair.Key]=pair.Value;htmlActions29.Clear();var model=HtmlModel29();string json=JsonSerializer.Serialize(model);
             if(json!=htmlLastModel29){htmlLastModel29=json;html29!.CoreWebView2.PostWebMessageAsJson(json);}htmlInactiveSent29=!IsActive;
         }catch(Exception error){if(fixtureMode&&htmlFixtureFolder29!=null)File.AppendAllText(Path.Combine(htmlFixtureFolder29,"model-errors.txt"),error.ToString()+"\n");}},DispatcherPriority.Background);
     }
@@ -134,10 +139,10 @@ public sealed partial class MainWindow
                 case "add":htmlPopup29=HtmlAddMenu29();break;
                 case "close-menu":htmlPopup29=null;break;
                 case "scan-select":
-                    if(long.TryParse(id,out long listId)&&htmlActions29.GetValueOrDefault(listId) is ListBox list){var parts=value.Split('|',2);if(parts.Length==2&&list.Items.OfType<ScanEntry>().FirstOrDefault(entry=>entry.Address==parts[1]) is {Selectable:true,Stale:false} entry){if(parts[0]=="true"){if(!list.SelectedItems.Contains(entry))list.SelectedItems.Add(entry);}else list.SelectedItems.Remove(entry);}}break;
-                case "scan-page":if(long.TryParse(id,out long pageId)&&htmlActions29.GetValueOrDefault(pageId) is ListBox paged&&int.TryParse(value,out int offset))htmlScanOffsets29[pageId]=Math.Clamp(offset,0,Math.Max(0,paged.Items.Count-1));break;
+                    if(long.TryParse(id,out long listId)&&HtmlAction29(listId) is ListBox list){var parts=value.Split('|',2);if(parts.Length==2&&list.Items.OfType<ScanEntry>().FirstOrDefault(entry=>entry.Address==parts[1]) is {Selectable:true,Stale:false} entry){if(parts[0]=="true"){if(!list.SelectedItems.Contains(entry))list.SelectedItems.Add(entry);}else list.SelectedItems.Remove(entry);}}break;
+                case "scan-page":if(long.TryParse(id,out long pageId)&&HtmlAction29(pageId) is ListBox paged&&int.TryParse(value,out int offset))htmlScanOffsets29[pageId]=Math.Clamp(offset,0,Math.Max(0,paged.Items.Count-1));break;
                 case "native":
-                    if(!long.TryParse(id,out var action)||!htmlActions29.TryGetValue(action,out var target)||!target.IsEnabled)return;
+                    if(!long.TryParse(id,out var action)||HtmlAction29(action) is not {} target||!target.IsEnabled)return;
                     var openedMenu=htmlPopup29;htmlPopup29=null;
                     switch(target){
                         case MenuItem item:if(item.IsCheckable)item.IsChecked=!item.IsChecked;item.RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));if(item.StaysOpenOnClick)htmlPopup29=openedMenu;break;

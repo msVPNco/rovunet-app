@@ -12,7 +12,7 @@ public sealed partial class MainWindow
     void SelectProfile20(Profile profile)
     {
         if(busy||data.SelectedId==profile.Id)return;CancelRouting28();string old=data.SelectedId;data.SelectedId=profile.Id;
-        try{Save();}catch{data.SelectedId=old;lastError="PRIVATE_STORE_FAILED";}
+        try{SaveView();}catch{data.SelectedId=old;lastError="PRIVATE_STORE_FAILED";}
         if(htmlReady29){nativeCardsDeferred29=true;QueueHtml29();}else RefreshCards();
     }
     void ActivateProfileCard20(Profile profile)

@@ -35,17 +35,39 @@ public static class PrivateStore
         return Path.Combine(Path.GetFullPath(directory),name);
     }
     public static void Save<T>(string name,T value)=>SaveIn(Root,name,value);
+    // A selection or an open group is a view preference. Persisting it must not
+    // hold the UI while the encrypted file is flushed to disk, which can take
+    // over a second on a busy disk. The plaintext is serialized on the caller's
+    // thread, so the write never races a later edit.
+    public static void SaveInBackground<T>(string directory,string name,T value)
+    {
+        var path=StorePath(directory,name);byte[] plain=JsonSerializer.SerializeToUtf8Bytes(value);
+        if(plain.Length>MaxBytes-4096){CryptographicOperations.ZeroMemory(plain);throw new SafeError("PRIVATE_STORE_FAILED");}
+        Task.Run(()=>{
+            try{lock(WriteGate)WriteEncrypted(path,plain);}
+            finally{CryptographicOperations.ZeroMemory(plain);}
+        });
+    }
+    static readonly object WriteGate=new();
     // The explicit directory permits independent Windows fixtures without an
     // environment-variable override of the real user's store.
     public static void SaveIn<T>(string directory,string name,T value)
     {
-        var path=StorePath(directory,name);string temp=path+"."+Guid.NewGuid().ToString("N")+".tmp";
+        var path=StorePath(directory,name);byte[] plain=JsonSerializer.SerializeToUtf8Bytes(value);
+        try{lock(WriteGate)WriteEncrypted(path,plain);}finally{CryptographicOperations.ZeroMemory(plain);}
+    }
+    static void WriteEncrypted(string path,byte[] plain)
+    {
+        string temp=path+"."+Guid.NewGuid().ToString("N")+".tmp";
         try{
-            Directory.CreateDirectory(directory);byte[] plain=JsonSerializer.SerializeToUtf8Bytes(value);byte[] encrypted;
-            try{if(plain.Length>MaxBytes-4096)throw new SafeError("PRIVATE_STORE_FAILED");encrypted=Crypt(plain,true);}finally{CryptographicOperations.ZeroMemory(plain);}
-            var sid=WindowsIdentity.GetCurrent().User!;var acl=new FileSecurity();acl.SetAccessRuleProtection(true,false);acl.SetOwner(sid);acl.AddAccessRule(new FileSystemAccessRule(sid,FileSystemRights.FullControl,AccessControlType.Allow));
-            using(var file=new FileInfo(temp).Create(FileMode.CreateNew,FileSystemRights.Read|FileSystemRights.Write|FileSystemRights.Delete,FileShare.None,4096,FileOptions.WriteThrough,acl)){file.Write(encrypted);file.Flush(true);}
-            File.Move(temp,path,true);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);byte[] encrypted;
+            if(plain.Length>MaxBytes-4096)throw new SafeError("PRIVATE_STORE_FAILED");
+            encrypted=Crypt(plain,true);
+            try{
+                var sid=WindowsIdentity.GetCurrent().User!;var acl=new FileSecurity();acl.SetAccessRuleProtection(true,false);acl.SetOwner(sid);acl.AddAccessRule(new FileSystemAccessRule(sid,FileSystemRights.FullControl,AccessControlType.Allow));
+                using(var file=new FileInfo(temp).Create(FileMode.CreateNew,FileSystemRights.Read|FileSystemRights.Write|FileSystemRights.Delete,FileShare.None,4096,FileOptions.WriteThrough,acl)){file.Write(encrypted);file.Flush(true);}
+                File.Move(temp,path,true);
+            }finally{CryptographicOperations.ZeroMemory(encrypted);}
         }catch(SafeError){throw;}catch{throw new SafeError("PRIVATE_STORE_FAILED");}
         finally{try{if(File.Exists(temp))File.Delete(temp);}catch{/* Encrypted, owner-only transient; never delete the destination on failure. */}}
     }

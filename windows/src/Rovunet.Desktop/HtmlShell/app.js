@@ -210,8 +210,62 @@
     if (popupNode) { popupNode.remove(); popupNode = null; }
     if (data.popup) { popupNode = popup(data.popup, data); document.body.append(popupNode); }
   }
+  function sameKeys(left,right,skip){
+    if(!left||!right||typeof left!=='object'||typeof right!=='object')return false;
+    const a=Object.keys(left).filter(key=>!skip.includes(key));
+    if(a.length!==Object.keys(right).filter(key=>!skip.includes(key)).length)return false;
+    for(const key of a)if(JSON.stringify(left[key])!==JSON.stringify(right[key]))return false;
+    return true;
+  }
+  // Tapping a collection changes only which group is open and which one is the
+  // choice. Rebuilding the whole shell for that made a large group feel like a
+  // freeze, so apply exactly those two changes to the live DOM.
+  function patchGroups(data,started){
+    if(!model||data.depth!==0||model.depth!==0)return false;
+    const {groups:next,popup,compact,focused,header:headerModel,navigation,...rest}=data;
+    const {groups:previous,popup:oldPopup,compact:oldCompact,focused:oldFocused,header:oldHeader,navigation:oldNav,...oldRest}=model;
+    if(JSON.stringify(rest)!==JSON.stringify(oldRest))return false;
+    if(!!compact!==!!oldCompact||JSON.stringify(headerModel)!==JSON.stringify(oldHeader)||JSON.stringify(navigation)!==JSON.stringify(oldNav))return false;
+    if(next.length!==previous.length)return false;
+    for(let i=0;i<next.length;i++){
+      if(next[i].id!==previous[i].id)return false;
+      if(next[i].open!==previous[i].open){if(!sameKeys(next[i],previous[i],['open','selected','active','rows','status','summary']))return false;}
+      else if(!sameKeys(next[i],previous[i],['selected','active']))return false;
+    }
+    const sections=[...app.querySelectorAll('.home-scroll .collection')];
+    if(sections.length!==next.length)return false;
+    for(let i=0;i<next.length;i++)if(sections[i].dataset.group!==next[i].id)return false;
+    for(let i=0;i<next.length;i++){
+      const group=next[i],section=sections[i],head=section.querySelector('.collection-head');
+      if(!head)return false;
+      if(group.open!==previous[i].open){
+        const existing=section.querySelector('.profiles');
+        if(group.open){
+          const profiles=el('div','profiles');group.rows.forEach(item=>profiles.append(profile(item,data)));section.append(profiles);
+        }else if(existing)existing.remove();
+        const toggle=head.querySelector('.actions button:first-child');
+        if(toggle){toggle.setAttribute('aria-expanded',String(group.open));toggle.replaceChildren(icon(group.open?'up':'down'));}
+      }
+      head.classList.toggle('selected',!!group.selected);head.classList.toggle('active',!!group.active);
+      if(group.selected)section.setAttribute('aria-current','true');else section.removeAttribute('aria-current');
+      const profiles=section.querySelector('.profiles');
+      if(profiles)for(const row of profiles.children){
+        const item=group.rows.find(entry=>entry.id===row.dataset.profile);
+        if(!item)continue;
+        row.classList.toggle('selected',!!item.selected);row.classList.toggle('active',!!item.active);
+        row.setAttribute('aria-pressed',String(!!item.selected));
+      }
+    }
+    model=data;hostFocused=!!focused;activity();
+    const {popup:ignoredBodyPopup,compact:ignoredCompact,focused:ignoredFocus,header:ignoredHeader,navigation:ignoredNavigation,...body}=data;
+    lastBase=JSON.stringify(body);lastHeader=JSON.stringify(headerModel);lastNavigation=JSON.stringify(navigation);
+    syncPopup(data);scheduleMeasure();
+    window.__perf41=Object.assign(window.__perf41||{}, {buildMs:Math.round(performance.now()-started),rows:document.querySelectorAll('.profile').length,patched:true});
+    return true;
+  }
   function render(data) {
     const renderStart=performance.now();
+    if(patchGroups(data,renderStart))return;
     // Width, host focus and popup updates do not change home/page content.
     // Preserve the live cards, scroll nodes, inputs and animation clocks.
     const {popup:ignoredPopup,compact,focused,header:headerModel,navigation,...body}=data;
