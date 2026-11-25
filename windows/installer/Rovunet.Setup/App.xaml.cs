@@ -62,30 +62,49 @@ public sealed class SetupWindow : Window
     {
         var assembly=Assembly.GetExecutingAssembly();using var stream=assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n=>n.EndsWith($".Locales.{language}.json")))!;var strings=JsonSerializer.Deserialize<Dictionary<string,string>>(stream)!;string T(string key)=>strings[key];
         Brush ColorBrush(string value)=>new SolidColorBrush((Color)ColorConverter.ConvertFromString(value));
-        Brush ink=ColorBrush(dark?"#F1F1FA":"#202534"),bg=ColorBrush(dark?"#1B1D2C":"#F4F2FA"),card=ColorBrush(dark?"#242D40":"#FFFFFF");
+        Brush ink=ColorBrush(dark?"#ECEEF3":"#16181D"),bg=ColorBrush(dark?"#0E1014":"#F6F7F9"),card=ColorBrush(dark?"#171B22":"#FFFFFF"),muted=ColorBrush(dark?"#9BA3B2":"#5A6472"),accent=ColorBrush(dark?"#B3A6FF":"#5B4EA8"),line=ColorBrush(dark?"#2A303B":"#E4E7EE");
         Resources["SetupInk"]=ink;Resources["SetupBg"]=bg;Resources["SetupCard"]=card;
-        Title="Rovunet · "+T("title");Width=Math.Min(520,SystemParameters.WorkArea.Width-24);Height=Math.Min(680,SystemParameters.WorkArea.Height-24);MinWidth=Math.Min(460,Width);MinHeight=Math.Min(550,Height);
+        Title="Rovunet · "+T("title");Width=Math.Min(520,SystemParameters.WorkArea.Width-24);Height=Math.Min(640,SystemParameters.WorkArea.Height-24);MinWidth=Math.Min(460,Width);MinHeight=Math.Min(540,Height);ResizeMode=ResizeMode.NoResize;
         FontFamily=language=="fa"?new FontFamily(new Uri($"pack://application:,,,/{assembly.GetName().Name};component/"),"./Assets/#Vazirmatn"):new FontFamily(language=="zh-CN"?"Microsoft YaHei UI":"Segoe UI");FontSize=14;Foreground=ink;Background=bg;FlowDirection=FlowDirection.LeftToRight;WindowStartupLocation=WindowStartupLocation.CenterScreen;
         if(!fixture&&closeAppWhenLastWindow)Closed+=(_,_)=>Dispatcher.BeginInvoke(()=>{if(Application.Current.Windows.Count==0)Application.Current.Shutdown();});
+        // Everything fits in one window: header, location, options and footer.
+        // The scroll viewer remains only as a fallback for very short screens.
         var root=new DockPanel{FlowDirection=language=="fa"?FlowDirection.RightToLeft:FlowDirection.LeftToRight,Background=bg};
-        var footer=new DockPanel{Margin=new(20,8,20,20)};DockPanel.SetDock(footer,Dock.Bottom);
-        var close=new Button{Content=T("close")};close.Click+=(_,_)=>Close();DockPanel.SetDock(close,Dock.Left);footer.Children.Add(close);
-        InstallButton=new Button{Content=T("install"),IsEnabled=InstallService.Available&&!fixture,Background=ColorBrush("#BFB1F0"),Foreground=ColorBrush("#232033"),MinWidth=160,HorizontalAlignment=HorizontalAlignment.Right,IsDefault=true};footer.Children.Add(InstallButton);root.Children.Add(footer);
-        var content=new StackPanel{Margin=new(16,10,16,10)};
-        TextBlock Text(string value,double size=14)=>new(){Text=value,FontSize=size,Foreground=ink,Margin=new(0,6,0,8)};
-        void Card(StackPanel body)=>content.Children.Add(new Border{Background=card,CornerRadius=new(18),Padding=new(12),Margin=new(0,5,0,4),Child=body});
-        var preferences=new WrapPanel();var languages=new ComboBox{MinHeight=48,MinWidth=140,Margin=new(4),VerticalContentAlignment=VerticalAlignment.Center,ItemsSource=new[]{"فارسی","English","Русский","简体中文"},SelectedIndex=Array.IndexOf(new[]{"fa","en","ru","zh-CN"},language)};var theme=new Button{Content=T(dark?"lightTheme":"darkTheme")};preferences.Children.Add(languages);preferences.Children.Add(theme);content.Children.Add(preferences);
-        content.Children.Add(Text("Rovunet",26));content.Children.Add(Text(T("intro"),15));if(fixture)content.Children.Add(Text(T("preview")));
-        var location=new StackPanel();location.Children.Add(Text(T("location"),18));
-        var path=new TextBox{Text=chosenPath??InstallService.ProgramFilesTarget,FlowDirection=FlowDirection.LeftToRight,Background=bg,Foreground=ink,Tag="INSTALL_PATH",TextWrapping=TextWrapping.Wrap};location.Children.Add(path);
-        var browse=new Button{Content=T("browse"),HorizontalAlignment=HorizontalAlignment.Left};browse.Click+=(_,_)=>{var picker=new Microsoft.Win32.OpenFolderDialog();if(picker.ShowDialog(this)==true)path.Text=new[]{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)}.Contains(picker.FolderName,StringComparer.OrdinalIgnoreCase)?Path.Combine(picker.FolderName,"Rovunet"):picker.FolderName;};location.Children.Add(browse);
-        string? previous=fixture?null:InstallService.RegisteredPaths().FirstOrDefault();Button? upgrade=null;
-        if(previous!=null){upgrade=new Button{Content=T("upgrade"),HorizontalAlignment=HorizontalAlignment.Left};upgrade.Click+=(_,_)=>path.Text=previous;location.Children.Add(upgrade);}
-        location.Children.Add(Text(T("private"),12));location.Children.Add(Text(T("admin"),12));Card(location);
-        var options=new StackPanel();var desktopChoice=DesktopChoice=new CheckBox{Foreground=ink,Content=T("shortcut"),IsChecked=desktop,Tag="DESKTOP_SHORTCUT"};var launchChoice=LaunchChoice=new CheckBox{Foreground=ink,Content=T("launch"),IsChecked=launch&&!InstallService.Elevated,IsEnabled=!InstallService.Elevated,ToolTip=InstallService.Elevated?T("launchUser"):null};options.Children.Add(desktopChoice);options.Children.Add(launchChoice);
-        var license=new Button{Content=T("license"),HorizontalAlignment=HorizontalAlignment.Left};license.Click+=(_,_)=>{using var source=assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n=>n.EndsWith(".LICENSE")))!;using var reader=new StreamReader(source);new Window{Title=T("license"),Owner=this,Width=500,Height=650,Content=new TextBox{Text=reader.ReadToEnd(),IsReadOnly=true,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,FlowDirection=FlowDirection.LeftToRight},WindowStartupLocation=WindowStartupLocation.CenterOwner}.ShowDialog();};options.Children.Add(license);Card(options);
-        var status=Text("");status.Tag="INSTALL_STATUS";content.Children.Add(status);var progress=new ProgressBar{Height=6,IsIndeterminate=true,Visibility=Visibility.Collapsed};content.Children.Add(progress);
-        var scroll=new ScrollViewer{Content=content,VerticalScrollBarVisibility=ScrollBarVisibility.Auto};root.Children.Add(scroll);Content=root;
+        var footer=new DockPanel{Margin=new(20,4,20,16),FlowDirection=language=="fa"?FlowDirection.RightToLeft:FlowDirection.LeftToRight};DockPanel.SetDock(footer,Dock.Bottom);
+        var close=new Button{Content=T("close"),MinWidth=110};close.Click+=(_,_)=>Close();DockPanel.SetDock(close,Dock.Right);footer.Children.Add(close);
+        InstallButton=new Button{Content=T("install"),IsEnabled=InstallService.Available&&!fixture,Background=accent,Foreground=ColorBrush(dark?"#0B0912":"#FFFFFF"),MinWidth=170,MinHeight=48,HorizontalAlignment=HorizontalAlignment.Left,IsDefault=true};footer.Children.Add(InstallButton);root.Children.Add(footer);
+        var content=new StackPanel{Margin=new(20,8,20,4)};
+        TextBlock Text(string value,double size=14,Brush? color=null)=>new(){Text=value,FontSize=size,Foreground=color??ink,Margin=new(0,1,0,4)};
+        void Card(StackPanel body)=>content.Children.Add(new Border{Background=card,CornerRadius=new(14),Padding=new(12,10,12,10),Margin=new(0,3,0,6),BorderBrush=line,BorderThickness=new(1),Child=body});
+        // Header: brand and intro on the reading side, language and theme on the other.
+        var head=new Grid{Margin=new(0,2,0,6)};
+        head.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(1,GridUnitType.Star)});
+        head.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});
+        head.RowDefinitions.Add(new RowDefinition{Height=GridLength.Auto});
+        var brandRow=new StackPanel{VerticalAlignment=VerticalAlignment.Center};
+        brandRow.Children.Add(Text("Rovunet",26));brandRow.Children.Add(Text(T("intro"),13,muted));
+        var preferences=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Center};
+        var languages=new ComboBox{MinHeight=42,MinWidth=130,Margin=new(4,0,4,0),VerticalContentAlignment=VerticalAlignment.Center,ItemsSource=new[]{"فارسی","English","Русский","简体中文"},SelectedIndex=Array.IndexOf(new[]{"fa","en","ru","zh-CN"},language)};
+        var theme=new Button{Content=T(dark?"lightTheme":"darkTheme"),MinHeight=42,MinWidth=110,Margin=new(4,0,0,0)};preferences.Children.Add(languages);preferences.Children.Add(theme);
+        head.Children.Add(brandRow);Grid.SetColumn(preferences,1);head.Children.Add(preferences);content.Children.Add(head);
+        if(fixture)content.Children.Add(Text(T("preview"),12,muted));
+        var location=new StackPanel();
+        var locationTitle=new DockPanel();var locationLabel=Text(T("location"),16);DockPanel.SetDock(locationLabel,Dock.Left);locationTitle.Children.Add(locationLabel);location.Children.Add(locationTitle);
+        var path=new TextBox{Text=chosenPath??InstallService.ProgramFilesTarget,FlowDirection=FlowDirection.LeftToRight,Background=bg,Foreground=ink,Tag="INSTALL_PATH",MinHeight=44};
+        var browse=new Button{Content="…",MinWidth=52,MinHeight=44,Margin=new(8,0,0,0),ToolTip=T("browse"),Tag="BROWSE"};
+        browse.Click+=(_,_)=>{var picker=new Microsoft.Win32.OpenFolderDialog();if(picker.ShowDialog(this)==true)path.Text=new[]{Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86)}.Contains(picker.FolderName,StringComparer.OrdinalIgnoreCase)?Path.Combine(picker.FolderName,"Rovunet"):picker.FolderName;};
+        var pathRow=new DockPanel{LastChildFill=true};DockPanel.SetDock(browse,Dock.Right);pathRow.Children.Add(browse);pathRow.Children.Add(path);location.Children.Add(pathRow);
+        string? previous=fixture?null:InstallService.RegisteredPaths().FirstOrDefault();
+        if(previous!=null){var upgrade=new Button{Content=T("upgrade"),HorizontalAlignment=HorizontalAlignment.Left,MinHeight=44,Margin=new(0,6,0,0),Tag="CURRENT_FOLDER"};upgrade.Click+=(_,_)=>path.Text=previous;location.Children.Add(upgrade);}
+        location.Children.Add(Text(T("private"),12,muted));location.Children.Add(Text(T("admin"),12,muted));Card(location);
+        var options=new StackPanel();
+        var desktopChoice=DesktopChoice=new CheckBox{Foreground=ink,Content=T("shortcut"),IsChecked=desktop,Tag="DESKTOP_SHORTCUT",MinHeight=44};
+        var launchChoice=LaunchChoice=new CheckBox{Foreground=ink,Content=T("launch"),IsChecked=launch&&!InstallService.Elevated,IsEnabled=!InstallService.Elevated,ToolTip=InstallService.Elevated?T("launchUser"):null,MinHeight=44};
+        var license=new Button{Content=T("license"),HorizontalAlignment=HorizontalAlignment.Left,MinHeight=40,Margin=new(0,1,0,0)};
+        license.Click+=(_,_)=>{using var source=assembly.GetManifestResourceStream(assembly.GetManifestResourceNames().Single(n=>n.EndsWith(".LICENSE")))!;using var reader=new StreamReader(source);new Window{Title=T("license"),Owner=this,Width=500,Height=650,Content=new TextBox{Text=reader.ReadToEnd(),IsReadOnly=true,TextWrapping=TextWrapping.Wrap,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,FlowDirection=FlowDirection.LeftToRight},WindowStartupLocation=WindowStartupLocation.CenterOwner}.ShowDialog();};
+        options.Children.Add(desktopChoice);options.Children.Add(launchChoice);options.Children.Add(license);Card(options);
+        var status=Text("",12,muted);status.Tag="INSTALL_STATUS";content.Children.Add(status);var progress=new ProgressBar{Height=4,IsIndeterminate=true,Visibility=Visibility.Collapsed};content.Children.Add(progress);
+        var scroll=new ScrollViewer{Content=content,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,PanningMode=PanningMode.VerticalOnly};root.Children.Add(scroll);Content=root;
         void Switch(string lang,bool nextDark){new SetupWindow(lang,nextDark,fixture,path.Text,desktopChoice.IsChecked==true,launchChoice.IsChecked==true).Show();Close();}
         languages.SelectionChanged+=(_,_)=>Switch(new[]{"fa","en","ru","zh-CN"}[languages.SelectedIndex],dark);theme.Click+=(_,_)=>Switch(language,!dark);
         bool installing=false;Closing+=(_,args)=>{if(installing)args.Cancel=true;};

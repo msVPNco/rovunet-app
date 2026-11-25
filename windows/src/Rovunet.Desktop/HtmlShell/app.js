@@ -225,7 +225,7 @@
     const rollKey=node=>(node.closest('[data-profile]')?.dataset.profile||node.closest('[data-group]')?.dataset.group||node.closest('.hero')&&'hero'||node.closest('.footer')&&'footer'||'page')+':'+node.textContent;
     app.querySelectorAll('.roll').forEach(node=>{const animation=node.firstElementChild?.getAnimations()[0];if(animation)animations.set(rollKey(node),animation.currentTime);});
     model=data;hostFocused=!!data.focused;motion=!!data.motion;document.documentElement.lang=data.language;document.documentElement.dir=data.rtl?'rtl':'ltr';document.body.dataset.theme=data.theme;accent(data);activity();
-    const focus=document.activeElement,field=focus?.dataset?.field,nativeId=focus?.dataset?.native,start=focus?.selectionStart,end=focus?.selectionEnd,pendingValue=field&&fieldTimers.has(field)?focus.value:null;
+    const focus=document.activeElement,field=focus?.dataset?.field,nativeId=focus?.dataset?.native,profileId=focus?.dataset?.profile,start=focus?.selectionStart,end=focus?.selectionEnd,pendingValue=field&&fieldTimers.has(field)?focus.value:null;
     const oldScroll=app.querySelector('.home-scroll'),homeOffset=oldScroll?.scrollTop||0,pageOffset=app.querySelector('.page-scroll')?.scrollTop||0;
     const shell=el('div','shell');shell.append(header(data));const work=el('div','workspace'+(data.compact?' compact':''));work.append(sidebar(data));const content=el('main','content');
     if(data.depth){const page=el('div','page-scroll');const body=el('div','native-page');body.append(native(data.page));page.append(body);content.append(page);}else{
@@ -234,8 +234,11 @@
     }
     content.append(footer(data));work.append(content);shell.append(work);app.replaceChildren(shell);syncPopup(data);
     const nextHome=app.querySelector('.home-scroll');if(nextHome){nextHome.scrollTop=homeOffset;collapse(nextHome);}const nextPage=app.querySelector('.page-scroll');if(nextPage&&currentPage===data.pageKey)nextPage.scrollTop=pageOffset;currentPage=data.pageKey;
-    let replacement=field?app.querySelector('[data-field="'+CSS.escape(field)+'"]'):nativeId?app.querySelector('[data-native="'+CSS.escape(nativeId)+'"]'):null;
-    if(replacement&&hostFocused){if(pendingValue!==null)replacement.value=pendingValue;replacement.focus({preventScroll:true});if(Number.isInteger(start)&&replacement.setSelectionRange)try{replacement.setSelectionRange(start,end);}catch{}}
+    // A card click changes the model, which rebuilds the list; without this the
+    // replaced card would drop keyboard focus and the old card would keep it.
+    let replacement=field?app.querySelector('[data-field="'+CSS.escape(field)+'"]'):nativeId?app.querySelector('[data-native="'+CSS.escape(nativeId)+'"]'):profileId?app.querySelector('[data-profile="'+CSS.escape(profileId)+'"]'):null;
+    if(replacement&&hostFocused&&(field||nativeId)){if(pendingValue!==null)replacement.value=pendingValue;replacement.focus({preventScroll:true});if(Number.isInteger(start)&&replacement.setSelectionRange)try{replacement.setSelectionRange(start,end);}catch{}}
+    else if(replacement&&hostFocused)replacement.focus({preventScroll:true});
     // Restore clocks before the next paint, including the frame that deactivates the window.
     measureRolls();app.querySelectorAll('.roll').forEach(node=>{const time=animations.get(rollKey(node)),animation=node.firstElementChild?.getAnimations()[0];if(animation&&Number.isFinite(time))animation.currentTime=time;});
   }

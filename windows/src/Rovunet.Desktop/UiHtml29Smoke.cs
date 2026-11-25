@@ -32,8 +32,11 @@ public sealed partial class MainWindow
             }
             L.Language=data.Language="fa";data.Theme="dark";Width=480;ApplyTheme();Build();Activate();html29!.Focus();QueueHtml29();await Wait("document.documentElement.lang==='fa'&&document.querySelector('.profile')!==null");
             string selected=data.SelectedId,order=string.Join(',',data.Profiles.Select(p=>p.Id));
-            await html29.CoreWebView2.ExecuteScriptAsync("document.querySelectorAll('.profile')[1].click()");await Task.Delay(120);
+            // A real pointer click focuses the card before the click fires.
+            await html29.CoreWebView2.ExecuteScriptAsync("(()=>{const n=document.querySelectorAll('.profile')[1];n.focus();n.click();})()");await Task.Delay(120);
             checks["html_first_click_selects_without_reordering_or_connecting"]=data.SelectedId!=selected&&state.State=="disconnected"&&string.Join(',',data.Profiles.Select(p=>p.Id))==order;
+            // The rebuilt list must keep keyboard focus on the card the user clicked.
+            checks["card_click_keeps_focus_on_clicked_card"]=await Wait("document.activeElement?.dataset?.profile==="+JsonSerializer.Serialize(data.SelectedId)+"&&document.querySelector('.profile.selected')?.dataset.profile==="+JsonSerializer.Serialize(data.SelectedId));
             await html29.CoreWebView2.ExecuteScriptAsync("document.querySelector('.profile .actions button:nth-child(2)').click()");
             checks["html_menu_has_ping_and_accurate_https"]=await Wait("document.querySelector('.menu')?.textContent.includes("+JsonSerializer.Serialize(L.Text("QUICK_PING"))+")&&document.querySelector('.menu')?.textContent.includes("+JsonSerializer.Serialize(L.Text("DETAILED_HTTPS"))+")");
             if(!checks["html_menu_has_ping_and_accurate_https"])File.WriteAllText(Path.Combine(folder,"menu-debug.json"),await html29.CoreWebView2.ExecuteScriptAsync("document.body.innerText"));
