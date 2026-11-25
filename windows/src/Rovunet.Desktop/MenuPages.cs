@@ -80,14 +80,20 @@ public sealed partial class MainWindow
     }
     // Tapping a collection card makes it the choice the user sees and opens it.
     // The chevron button keeps the old expand-only behaviour, so opening another
-    // group never moves the selection by itself.
+    // group never moves the selection by itself. The selection is written before
+    // the accordion opens, so one queued model paints both.
     void SelectCollection(List<Profile> members)
     {
         if(members.Count==0)return;
         string key=CollectionKey(members[0]);
-        if(data.OpenCollectionId!=key)ToggleCollection26(key);
+        if(busy){if(data.OpenCollectionId!=key)ToggleCollection26(key);return;}
         var chosen=members.FirstOrDefault(p=>p.Id==data.SelectedId)??members.FirstOrDefault(p=>p.CanConnect);
-        if(chosen!=null)SelectProfile20(chosen);
+        if(chosen!=null&&chosen.Id!=data.SelectedId){
+            CancelRouting28();string old=data.SelectedId;data.SelectedId=chosen.Id;
+            try{Save();}catch{data.SelectedId=old;lastError="PRIVATE_STORE_FAILED";}
+            if(!htmlReady29)RefreshCards();
+        }
+        if(data.OpenCollectionId!=key)ToggleCollection26(key);else QueueHtml29();
     }
     void TogglePin(Profile profile)
     {

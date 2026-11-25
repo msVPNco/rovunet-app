@@ -23,7 +23,10 @@ public sealed partial class MainWindow
             QueueHtml29();
             Dispatcher.InvokeAsync(()=>{
                 try{Save();}catch{data.OpenCollectionId=before;data.ExpandedCollections=old;data.CollectionExpansionRevision=oldRevision;QueueHtml29();return;}
-                RefreshCards();QueueHtml29();
+                // The native cards stay hidden behind the shell; rebuilding them
+                // here made a large collection take seconds to open.
+                if(htmlReady29)nativeCardsDeferred29=true;else RefreshCards();
+                QueueHtml29();
             },System.Windows.Threading.DispatcherPriority.Background);
             return;
         }

@@ -163,9 +163,14 @@ public sealed partial class MainWindow
                 checks[count+"_selection_survives_blur"]=await Wait("document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");focusWindow.Close();Activate();
                 // Tapping a card itself is a choice: the ring and the open list move
                 // to that card, which is what the owner expects when disconnected.
+                var tap=System.Diagnostics.Stopwatch.StartNew();
                 await core.ExecuteScriptAsync("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-label")+").click()");
                 checks[count+"_card_tap_selects_that_collection"]=await Wait("document.querySelector("+Quote("[data-group="+Quote(other)+"] .collection-head")+")?.classList.contains('selected')&&document.querySelector("+Quote("[data-group="+Quote(other)+"] .profiles")+")!==null");
                 checks[count+"_card_tap_releases_previous"]=await Wait("!document.querySelector("+Quote(groupSelector)+")?.classList.contains('selected')");
+                tap.Stop();
+                // A card with hundreds of paths must open without a multi-second stall.
+                samples.Add(new{count,cardTapMs=tap.ElapsedMilliseconds});
+                checks[count+"_card_tap_under_1200ms"]=tap.ElapsedMilliseconds<1200;
             }
             // Choosing an accent must keep Settings open instead of dropping the
             // user back on Home.

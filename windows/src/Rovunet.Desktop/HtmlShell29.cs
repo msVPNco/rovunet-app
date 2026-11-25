@@ -58,6 +58,10 @@ public sealed partial class MainWindow
             Closed+=(_,_)=>{htmlPageTimer29.Stop();html29?.Dispose();};
         }catch{HtmlFailed29();}finally{htmlStarting29=false;}
     }
+    // Native cards are the fallback view. While the HTML shell is live they are
+    // updated lazily, so expanding or selecting inside a large collection never
+    // rebuilds hundreds of hidden WPF tiles.
+    bool nativeCardsDeferred29;
     void HtmlFailed29()
     {
         htmlReady29=false;
@@ -65,6 +69,7 @@ public sealed partial class MainWindow
         // Reveal the native tree before rebuilding it: a collapsed element
         // reports no width, and the rebuild reads one to pick compact or wide.
         if(nativeLayoutDeferred41) RebuildForResize();
+        if(nativeCardsDeferred29){nativeCardsDeferred29=false;RefreshCards();}
         RefreshHeroCollapse19();
         if(html29!=null)html29.Visibility=Visibility.Collapsed;
         Notify(L.Text("HTML_RUNTIME_REQUIRED"),Amber);
