@@ -64,6 +64,14 @@ AMOLED هیچ رنگی جز پیش‌فرض اثر نداشت. حالا رنگ �
 آرشیو منبع نمی‌رود و اسکریپت بسته‌بندی تا وقتی موجود است از ساخت بستهٔ عمومی
 امتناع می‌کند؛ یعنی هیچ بستهٔ عمومی‌ای ناخواسته کلید را حمل نمی‌کند.
 
+در بیلد Debug ویندوز راه دومی هم هست که کلید را اصلاً داخل باینری نمی‌برد:
+اگر `%LOCALAPPDATA%\Rovunet\DebugSecrets\free-v2.local.json` با
+`key_id`، `aes_key_base64`، `public_key_base64` و `catalog_address` وجود داشته
+باشد، همان برنامه در زمان اجرا آن را می‌خواند. این مسیر فقط در پیکربندی Debug
+کامپایل می‌شود؛ بیلد Release آن را اصلاً نمی‌خواند، پس بستهٔ عمومی حتی با وجود
+این فایل هم Free را فعال نمی‌کند. نمونهٔ آزمون این نسخه در
+`versions/v0.1.7-beta/candidate4-free-debug` است.
+
 **انطباق کامل با قرارداد free/v2.** سه بند قرارداد که پیاده‌سازی ویندوز نداشت
 اضافه شد: متن رمزشده باید کنار لینک یک شناسهٔ آیتم معتبر داشته باشد (شناسهٔ اصلی
 آیتم پنل، نه شناسهٔ تصادفی پاکت)؛ اگر بیلد یک `key_id` ثابت داشته باشد، پاکت‌هایی
@@ -126,6 +134,14 @@ catalog address) into the local `windows/free-v2.local.props` file. That file is
 gitignored, never enters the source archive, and while it exists the packaging
 script refuses to produce a public package — so no public build ships the key by
 accident.
+
+A Debug build has a second route that keeps the key out of the binary: if
+`%LOCALAPPDATA%\Rovunet\DebugSecrets\free-v2.local.json` exists with `key_id`,
+`aes_key_base64`, `public_key_base64` and `catalog_address`, the app reads it at
+runtime. That path is compiled only into the Debug configuration; a Release
+build never reads it, so a public package stays inert even if the file is
+present. The sample build for this review is
+`versions/v0.1.7-beta/candidate4-free-debug`.
 
 **Full `free/v2` contract conformance.** Three contract clauses the Windows
 client was missing are now in place: the plaintext's item id must be well formed

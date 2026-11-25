@@ -54,15 +54,53 @@ internal static class RovunetFreeCatalog
     internal static string? OverrideAesKey;
     internal static string? OverrideKeyId;
 
-    /// <summary>Address compiled into this build; empty when the operator did not publish one.</summary>
-    internal static string Url => (OverrideAddress ?? Metadata("RovunetFreeCatalogAddress")).Trim();
+    /// <summary>
+    /// Debug builds may read the shared debug values from a local, gitignored file
+    /// instead of compiling them into the binary, so no package ever carries the
+    /// key. Release builds compile this path out and never look at the file.
+    /// </summary>
+    internal static string DebugSecretsPath { get; set; } = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Rovunet", "DebugSecrets", "free-v2.local.json");
 
-    static string PublicKeyText => (OverridePublicKey ?? Metadata("RovunetFreeEd25519PublicKey")).Trim();
+    static readonly Lazy<(string KeyId, string Aes, string Public, string Address)> DebugSecrets = new(ReadDebugSecrets);
+
+    static (string KeyId, string Aes, string Public, string Address) ReadDebugSecrets()
+    {
+#if DEBUG
+        try
+        {
+            string path = DebugSecretsPath;
+            if (File.Exists(path) && new FileInfo(path).Length is > 0 and <= 8192)
+            {
+                using var document = JsonDocument.Parse(File.ReadAllText(path));
+                string Value(string name) => document.RootElement.TryGetProperty(name, out var node) &&
+                                             node.ValueKind == JsonValueKind.String
+                    ? (node.GetString() ?? "").Trim() : "";
+                return (Value("key_id"), Value("aes_key_base64"), Value("public_key_base64"), Value("catalog_address"));
+            }
+        }
+        catch (Exception error) when (error is IOException or JsonException or UnauthorizedAccessException
+                                          or ArgumentException or NotSupportedException) { }
+#endif
+        return ("", "", "", "");
+    }
+
+    static string Pick(params string?[] values)
+    {
+        foreach (var value in values) if (!string.IsNullOrWhiteSpace(value)) return value.Trim();
+        return "";
+    }
+
+    /// <summary>Address compiled into this build; empty when the operator did not publish one.</summary>
+    internal static string Url => Pick(OverrideAddress, DebugSecrets.Value.Address, Metadata("RovunetFreeCatalogAddress"));
+
+    static string PublicKeyText => Pick(OverridePublicKey, DebugSecrets.Value.Public, Metadata("RovunetFreeEd25519PublicKey"));
 
     // The key id names which AES key an envelope was sealed with. When the build
     // pins one, envelopes that name a different key are skipped instead of being
     // tried against the wrong secret; empty means the contract key is unregistered.
-    static string KeyIdText => (OverrideKeyId ?? Metadata("RovunetFreeKeyId")).Trim();
+    static string KeyIdText => Pick(OverrideKeyId, DebugSecrets.Value.KeyId, Metadata("RovunetFreeKeyId"));
 
     /// <summary>The quick path needs all three pinned values; otherwise it stays hidden.</summary>
     internal static bool Enabled
@@ -70,11 +108,14 @@ internal static class RovunetFreeCatalog
         get
         {
             // Debug builds opt in explicitly with RovunetFreeDebug=1, which only the
-            // gitignored local props file sets. A public package therefore cannot
-            // carry the debug catalog keys even if they leak into the environment.
+            // gitignored local props file sets, or with a complete local Debug
+            // secrets file. A public package therefore cannot carry the debug
+            // catalog keys even if they leak into the environment.
             if (!string.IsNullOrEmpty(OverrideAesKey))
                 return Url.Length > 0 && PublicKey().Length == 32 && AesKey().Length == 32;
-            if (Metadata("RovunetFreeDebug") != "1") return false;
+            var local = DebugSecrets.Value;
+            bool complete = local.Aes.Length > 0 && local.Public.Length > 0 && local.Address.Length > 0;
+            if (!complete && Metadata("RovunetFreeDebug") != "1") return false;
             try { return Url.Length > 0 && PublicKey().Length == 32 && AesKey().Length == 32; }
             catch { return false; }
         }
@@ -97,7 +138,7 @@ internal static class RovunetFreeCatalog
     {
         try
         {
-            byte[] key = Convert.FromBase64String((OverrideAesKey ?? Metadata("RovunetFreeAesKey")).Trim());
+            byte[] key = Convert.FromBase64String(Pick(OverrideAesKey, DebugSecrets.Value.Aes, Metadata("RovunetFreeAesKey")));
             return key.Length == 32 ? key : throw new SafeError("ROVUNET_FREE_UNVERIFIED");
         }
         catch (FormatException) { throw new SafeError("ROVUNET_FREE_UNVERIFIED"); }
