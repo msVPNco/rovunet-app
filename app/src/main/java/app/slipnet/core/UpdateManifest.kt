@@ -77,11 +77,11 @@ object UpdateManifest {
         return apk
     }
 
-    fun parse(body: String, current: String, lite: Boolean): UpdateAsset? {
+    fun parse(body: String, current: String, lite: Boolean, installedVersionCode: Long? = null): UpdateAsset? {
         val json = JSONObject(body)
         val version = json.getString("tag_name").removePrefix("v")
         require(!json.optBoolean("draft") && ReleaseVersion.supports(version) && ReleaseVersion.supports(current)) { "Unrecognized release information" }
-        if (!ReleaseVersion.isNewer(version, current.removeSuffix("-lite"))) return null
+        if (!ReleaseVersion.isNewer(version, current.removeSuffix("-lite"), installedVersionCode)) return null
         val apk = compatibleApk(json, lite) ?: error("No compatible verified Android APK in release")
         return UpdateAsset(version, apk.getString("browser_download_url"), apk.getLong("size"),
             digest(apk), checksumsUrl(json), json.optString("body").take(2000))
