@@ -52,7 +52,10 @@ object UpdateChecker {
             check(++page <= 10) { "Release listing incomplete" }
         }
         val body = newest?.toString() ?: return@withContext null
-        val manifest = UpdateManifest.parse(body, currentVersionName, lite) ?: return@withContext null
+        val installed = context.packageManager.getPackageInfo(context.packageName, 0)
+        @Suppress("DEPRECATION")
+        val installedCode = if (Build.VERSION.SDK_INT >= 28) installed.longVersionCode else installed.versionCode.toLong()
+        val manifest = UpdateManifest.parse(body, currentVersionName, lite, installedCode) ?: return@withContext null
         val digest = manifest.digest.ifEmpty { UpdateManifest.checksum(readText(route, manifest.checksumsUrl, 64_000), manifest.url) }
         AppUpdate(manifest.version, manifest.url, manifest.notes, digest, manifest.size)
     }

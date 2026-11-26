@@ -15,9 +15,17 @@ object ReleaseVersion {
         return listOf(major, minor, patch, stage) + (0 until 8).map { revisions.getOrElse(it) { 0L } } + buildCode
     }
     fun supports(version: String): Boolean = parse(version) != null
-    fun isNewer(remote: String, current: String): Boolean {
+    fun isNewer(remote: String, current: String, installedVersionCode: Long? = null): Boolean {
         val r = parse(remote) ?: return false
-        val c = parse(current) ?: return false
+        val parsedCurrent = parse(current) ?: return false
+        // versionName commonly omits -codeNN. Use PackageManager's installed code,
+        // and never offer a tagged APK that Android would reject as equal/older.
+        if (installedVersionCode != null) {
+            require(installedVersionCode > 0) { "Invalid installed version code" }
+            if (r.last() > 0 && r.last() <= installedVersionCode) return false
+        }
+        val c = if (installedVersionCode == null) parsedCurrent else
+            parsedCurrent.dropLast(1) + installedVersionCode
         for (i in 0 until maxOf(r.size, c.size)) {
             val remotePart = r.getOrElse(i) { 0L }
             val currentPart = c.getOrElse(i) { 0L }
