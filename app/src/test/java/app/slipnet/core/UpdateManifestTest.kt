@@ -141,4 +141,26 @@ class UpdateManifestTest {
         assertFalse(ReleaseVersion.supports("v0.3.0-alpha22-codebad"))
     }
 
+
+    @Test fun installedPackageCodePreventsRepeatedSameVersionPrompts() {
+        val same = release("v0.3.0-alpha23.1-code58")
+        assertNull(UpdateManifest.parse(same.toString(), "0.3.0-alpha23.1", false, 58L))
+        assertNull(UpdateManifest.parse(same.toString(), "0.3.0-alpha23.1-code58", false, 58L))
+        assertNull(UpdateManifest.parse(same.toString(), "0.3.0-alpha23.1", false, 59L))
+        assertNotNull(UpdateManifest.parse(same.toString(), "0.3.0-alpha23.1", false, 57L))
+    }
+
+    @Test fun actualCodeStillAllowsNewerBuildsAndLegacySemanticUpdates() {
+        assertNotNull(UpdateManifest.parse(release("v0.3.0-alpha23.1-code59").toString(),
+            "0.3.0-alpha23.1", false, 58L))
+        assertNotNull(UpdateManifest.parse(release("v0.3.0-alpha24").toString(),
+            "0.3.0-alpha23.1", false, 58L))
+        assertNull(UpdateManifest.parse(release("v0.3.0-alpha24-code58").toString(),
+            "0.3.0-alpha23.1", false, 58L))
+        assertNull(UpdateManifest.parse(release("v0.3.0-alpha23-code60").toString(),
+            "0.3.0-alpha23.1", false, 58L))
+        assertNull(UpdateManifest.parse(release("v0.3.0-alpha23.1-code58",
+            listOf("Rovunet-Lite.apk")).toString(), "0.3.0-alpha23.1-lite", true, 58L))
+    }
+
 }
